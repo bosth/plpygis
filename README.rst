@@ -26,3 +26,7 @@ The ``Geometry`` class can be used to convert to and from PostGIS geometries. Th
       else:
           return None
     $$ LANGUAGE plpythonu;
+
+.. image:: https://readthedocs.org/projects/plpygis/badge/?version=latest
+    :target: http://plpygis.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status

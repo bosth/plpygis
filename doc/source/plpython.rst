@@ -306,5 +306,3 @@ Another application of ``plpygis`` is accessing external services or commands di
      American Samoa          | Aunu u, Sa'Ole County, Eastern District, American Samoa
      Andorra                 | Bordes de Rigoder, les Bons, Encamp, AD200, Andorra
     (5 rows)
-
-
