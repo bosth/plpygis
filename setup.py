@@ -27,5 +27,5 @@ setup(
     ],
     test_suite="nose.collector",
     tests_require=["nose"],
-    keywords=["gis geospatial postgis postgresql"]
+    keywords=["gis geospatial postgis postgresql plpython"]
 )
