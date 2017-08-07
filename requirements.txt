@@ -1,1 +1,1 @@
-Shapely>=1.5
+Shapely>=1.5[shapely_support]

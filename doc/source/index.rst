@@ -13,5 +13,6 @@ Welcome to plpygis's documentation!
 
    installation
    usage
+   subclasses
    plpython
    plpygis

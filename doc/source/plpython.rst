@@ -58,7 +58,7 @@ The mapping between types in PL/Python and is PostgreSQL is covered in the `Data
 PostGIS types
 ~~~~~~~~~~~~~
 
-When authoring a Postgres function that takes a PostGIS geometry as an input parameter or returns a geometry as output, ``Geometry`` objects will provide the automatic conversion between types.
+When authoring a Postgres function that takes a PostGIS geometry as an input parameter or returns a geometry as output, :class:`Geometry <plpygis.geometry.Geometry>` objects will provide the automatic conversion between types.
 
 .. code-block:: postgres
 
@@ -74,7 +74,7 @@ When authoring a Postgres function that takes a PostGIS geometry as an input par
 Input parameter
 ^^^^^^^^^^^^^^^
 
-A PostGIS geometry passed as the argument to ``Geometry()`` will initialize the instance.
+A PostGIS geometry passed as the argument to :meth:`Geometry() <plpygis.geometry.Geometry>` will initialize the instance.
 
 .. code-block:: postgres
 
@@ -117,16 +117,15 @@ A PostGIS geometry passed as the argument to ``Geometry()`` will initialize the 
 Return value
 ^^^^^^^^^^^^
 
-A ``Geometry`` can be returned directly from a PL/Python function.
+A :class:`Geometry <plpygis.geometry.Geometry>` can be returned directly from a PL/Python function.
 
 .. code-block:: postgres
 
     CREATE OR REPLACE FUNCTION make_point(x FLOAT, y FLOAT)
       RETURNS geometry 
     AS $$
-      from plpygis import Geometry
-      point = Geometry.from_wkt("POINT({} {})".format(x, y))
-      return point
+      from plpygis import Point 
+      return Point((x, y))
     $$ LANGUAGE plpythonu;
 
 .. code-block:: psql
@@ -175,7 +174,7 @@ Imagine two PL/Python functions that both create a polygon with lower-left coord
 Arrays and sets
 ---------------
 
-In addition to returning single values, ``plpygis`` functions may return a *list* of geometries that can be either interpreted as a PostgreSQL `array <https://www.postgresql.org/docs/current/static/arrays.html>`_ or `set <https://www.postgresql.org/docs/current/static/xfunc-sql.html>`_.
+In addition to returning single values, ``plpygis`` functions may return a list of geometries that can be either interpreted as a PostgreSQL `array <https://www.postgresql.org/docs/current/static/arrays.html>`_ or `set <https://www.postgresql.org/docs/current/static/xfunc-sql.html>`_.
 
 .. code-block:: psql
 
