@@ -9,7 +9,7 @@ def readme():
 setup(
     name="plpygis",
     version=__version__,
-    url="http://github.com/bosth/plpygis",
+    url="https://github.com/bosth/plpygis",
     license="GNU GPLv3",
     author="Benjamin Trigona-Harany",
     author_email="bosth@alumni.sfu.ca",

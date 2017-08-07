@@ -96,8 +96,41 @@ Adding a new dimension to a :class:`Point <plpygis.geometry.Point>` that is a ve
 Performance considerations
 --------------------------
 
-``plpygis`` will cache the initial WKB state if an object is created directly from a WKB. As soon as any coordinates or composite geometries are referenced the cached WKB is lost and a subsequent request that requires the WKB will necessitate it being generated from scratch. For large geometries with many points, this can affect performance. Therefore, if doing a conversion to a Shapely geometry - an action which relies on the availability of the WKB - it is recommended that this conversion be done before any other operations on the ``plpygis`` geometry.
+Lazy evaluation
+^^^^^^^^^^^^^^^
+
+``plpygis`` uses native WKB parsing to extract header information that indicates the geometry type, SRID and the presence of a Z or M dimension. Full parsing of the entire geometry only occurs when needed. It is therefore possible to test the type and dimensionality of a :class:`Geometry <plpygis.geometry.Geometry>` with only the first few bytes of data having been read. Perform these checks before performing any action that will require reading the remainder of the WKB.
+
+Caching
+^^^^^^^
+
+``plpygis`` will cache the initial WKB it was created from. As soon as any coordinates or composite geometries are referenced, the cached WKB is lost and a subsequent request that requires the WKB will necessitate it being generated from scratch. For sets of large geometries, this can have a noticeable affect on performance. Therefore, if doing a conversion to a Shapely geometry - an action which relies on the availability of the WKB - it is recommended that this conversion be done before any other operations on the ``plpygis`` geometry.
 
 .. note::
 
     Getting :meth:`type <plpygis.geometry.Geometry.type>`, :meth:`srid <plpygis.geometry.Geometry.srid>`, :meth:`dimz <plpygis.geometry.Geometry.dimz>` and :meth:`dimm <plpygis.geometry.Geometry.dimm>` are considered "safe" operations. However writing a new SRID or changing the dimensionality will also result in the cached WKB being lost. The geometries type may never be changed.
+
+As a summary, getting the following properties will not affect performance:
+
+* :meth:`type <plpygis.geometry.Geometry.type>`
+* :meth:`srid <plpygis.geometry.Geometry.srid>`
+* :meth:`dimz <plpygis.geometry.Geometry.dimz>`
+* :meth:`dimm <plpygis.geometry.Geometry.dimm>`
+
+Setting the following properties will cause any cached WKB to be cleared: 
+
+* :meth:`srid <plpygis.geometry.Geometry.srid>`
+* :meth:`dimz <plpygis.geometry.Geometry.dimz>`
+* :meth:`dimm <plpygis.geometry.Geometry.dimm>`
+
+Getting the following property relies on the presence of the WKB (cached or generated):
+
+* :meth:`shapely <plpygis.geometry.Geometry.shapely>`
+
+If the :class:`Geometry <plpygis.geometry.Geometry>` was created from a WKB, the follwing actions will trigger a full parse and will clear the cached copy of the WKB:
+
+* getting :meth:`geojson <plpygis.geometry.Geometry.geojson>` and :meth:`__geo_interface__ <plpygis.geometry.Geometry.__geo_interface__>`
+* getting :meth:`shapely <plpygis.geometry.Geometry.shapely>`
+* getting any :class:`Point <plpygis.geometry.Point>` coordinate
+* getting :meth:`vertices <plpygis.geometry.LineString.vertices>`, :meth:`rings <plpygis.geometry.Polygon.rings>`
+* getting any component goemetry from :class:`MultiPoint <plpygis.geometry.MultiPoint>`, :class:`MultiLineString <plpygis.geometry.MultiLineString>`, :class:`MultiPolygon <plpygis.geometry.MultiPolygon>` or :class:`GeometryCollection <plpygis.geometry.GeometryCollection>`

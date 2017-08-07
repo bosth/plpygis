@@ -1,7 +1,7 @@
 Basic usage
 ===========
 
-``plpygis`` is a Python conveter to and from the PostGIS `geometry <https://postgis.net/docs/using_postgis_dbmanagement.html#RefObject>`_ type, WKB, EWKB, GeoJSON and Shapely geometries, or using ``__geo_interface__``. ``plpygis`` is intended for use in PL/Python allowing procedural Python code to complement PostGIS types and functions.
+``plpygis`` is a Python conveter to and from the PostGIS `geometry <https://postgis.net/docs/using_postgis_dbmanagement.html#RefObject>`_ type, WKB, EWKB, GeoJSON, Shapely geometries and any object that supports ``__geo_interface__``. ``plpygis`` is intended for use in PL/Python, allowing procedural Python code to complement PostGIS types and functions.
 
 :class:`Geometry <plpygis.geometry.Geometry>`
 ---------------------------------------------
@@ -76,8 +76,3 @@ Conversion
 :class:`Geometry <plpygis.geometry.Geometry>` also implements :attr:`__geo_interface__ <plpygis.geometry.Geometry.__geo_interface__>`.
 
 Conversion to GeoJSON or Shapely will result in the M dimension being lost as these representation only support X, Y and Z coordinates (see `RFC 7946 <ttps://tools.ietf.org/html/rfc7946#section-3.1.1>`_).
-
-Lazy evaluation
----------------
-
-``plpygis`` uses native WKB parsing to extract header information that indicates the geometry type, SRID and the presence of a Z or M dimension. Full parsing of the entire geometry only occurs when needed, such as requesting conversion to GeoJSON.
