@@ -18,13 +18,7 @@
 #
 import os
 import sys
-import mock
- 
-MOCK_MODULES = ["shapely.geos", "shapely.wkb", "shapely.wkt", "shapely.geometry"]
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.Mock()
 sys.path.insert(0, os.path.abspath('../..'))
-
 import plpygis
 
 # -- General configuration ------------------------------------------------
@@ -164,5 +158,4 @@ texinfo_documents = [
      'Miscellaneous'),
 ]
 
-
-
+autodoc_member_order = 'bysource'

@@ -22,9 +22,9 @@ setup(
         "Topic :: Database",
         "Topic :: Scientific/Engineering :: GIS"
     ],
-    install_requires = [
-      "Shapely>=1.5.0"
-    ],
+    extras_require = {
+        "shapely_support":  ["Shapely>=1.5.0"]
+    },
     test_suite="nose.collector",
     tests_require=["nose"],
     keywords=["gis geospatial postgis postgresql plpython"]

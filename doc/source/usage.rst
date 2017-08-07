@@ -1,12 +1,12 @@
 Basic usage
 ===========
 
-``plpygis`` is a Python conveter to and from the PostGIS `geometry <https://postgis.net/docs/using_postgis_dbmanagement.html#RefObject>`_ type, WKT, EWKT, WKB, EWKB, GeoJSON and Shapely geometries, or using ``__geo_interface__``. ``plpygis`` is intended for use in PL/Python allowing procedural Python code to complement PostGIS types and functions.
+``plpygis`` is a Python conveter to and from the PostGIS `geometry <https://postgis.net/docs/using_postgis_dbmanagement.html#RefObject>`_ type, WKB, EWKB, GeoJSON and Shapely geometries, or using ``__geo_interface__``. ``plpygis`` is intended for use in PL/Python allowing procedural Python code to complement PostGIS types and functions.
 
-``Geometry``
-------------
+:class:`Geometry <plpygis.geometry.Geometry>`
+---------------------------------------------
 
-New ``Geometry`` instances can be created using a `Well-Known Binary (WKB) <https://en.wikipedia.org/wiki/Well-known_text#Well-known_binary>`_ representation of the geometry.
+New :class:`Geometry <plpygis.geometry.Geometry>` instances can be created using a `Well-Known Binary (WKB) <https://en.wikipedia.org/wiki/Well-known_text#Well-known_binary>`_ representation of the geometry.
 
 .. code-block:: python
 
@@ -16,28 +16,26 @@ New ``Geometry`` instances can be created using a `Well-Known Binary (WKB) <http
 Creation
 ~~~~~~~~
 
-``Geometry`` instances may also be created from different representations of a geometry.
+:class:`Geometry <plpygis.geometry.Geometry>` instances may also be created from different representations of a geometry.
 
-``Geometry`` instances can be converted using the following methods:
+:class:`Geometry <plpygis.geometry.Geometry>` instances can be converted using the following methods:
 
-* ``from_wkt()``
-* ``from_ewk()``
-* ``from_geojson()``
-* ``from_shapely()``
+* :meth:`from_geojson() <plpygis.geometry.Geometry.from_geojson()>`
+* :meth:`from_shapely() <plpygis.geometry.Geometry.from_shapely()>`
 
 .. code-block:: python
 
     >>> from plpygis import Geometry
-    >>> geom = Geometry.from_wkt("POINT(-52 0)")
+    >>> geom = Geometry.from_geojson({'type': 'Point', 'coordinates': [-52.0, 0.0]})
 
-The ``shape()`` method can convert from any instance that provides ``__geo_interface__`` (see `A Python Protocol for Geospatial Data <https://gist.github.com/sgillies/2217756>`_).
+The :meth:`shape() <plpygis.geometry.Geometry.shape()>` method can convert from any instance that provides ``__geo_interface__`` (see `A Python Protocol for Geospatial Data <https://gist.github.com/sgillies/2217756>`_).
 
-An optional ``srid`` keyword argument may be used with any of the above to set the geometry's SRID. If the representation already provides an SRID (EWKT and Shapely) or implies a particular SRID (GeoJSON), it will be overridden by the user-specified value.
+An optional ``srid`` keyword argument may be used with any of the above to set the geometry's SRID. If the representation already provides an SRID (such as with some Shapely geometries) or implies a particular SRID (GeoJSON), it will be overridden by the user-specified value.
 
-Type
-~~~~
+Geometry types
+~~~~~~~~~~~~~~
 
-Every ``Geometry`` has a type that can be accessed using the instance's ``type`` property. The following types are supported:
+Every :class:`Geometry <plpygis.geometry.Geometry>` has a type that can be accessed using the instance's :meth:`type <plpygis.geometry.Geometry.type>` property. The following geometry types are supported:
 
 * Point
 * LineString
@@ -62,24 +60,24 @@ The following EWKB types are not supported:
 Conversion
 ~~~~~~~~~~
 
-``Geometry`` instances can also be converted to other representations using the following properties:
+:class:`Geometry <plpygis.geometry.Geometry>` instances can also be converted to other representations using the following properties:
 
-* ``wkt``
-* ``ewkt``
-* ``geojson``
-* ``shapely``
-* ``wkb``
+* :meth:`geojson <plpygis.geometry.Geometry.geojson>`
+* :meth:`shapely <plpygis.geometry.Geometry.shapely>`
+* :meth:`wkb <plpygis.geometry.Geometry.wkb>`
 
 .. code-block:: python
 
     >>> from plpygis import Geometry
-    >>> geom = Geometry.from_wkt("POINT(-52 0)", 4326)
-    >>> print geom.ewkt
-    SRID=4326;POINT (-52 0)
+    >>> geom = Geometry("01010000000000000000004AC00000000000000000")
+    >>> print geom.shapely
+    POINT (-52 0)
 
-``Geometry`` also implements ``__geo_interface__``.
+:class:`Geometry <plpygis.geometry.Geometry>` also implements :attr:`__geo_interface__ <plpygis.geometry.Geometry.__geo_interface__>`.
+
+Conversion to GeoJSON or Shapely will result in the M dimension being lost as these representation only support X, Y and Z coordinates (see `RFC 7946 <ttps://tools.ietf.org/html/rfc7946#section-3.1.1>`_).
 
 Lazy evaluation
 ---------------
 
-``plpygis`` uses `Shapely <https://pypi.python.org/pypi/Shapely>`_ for most of its type conversions. However, it uses native WKB parsing to extract header information that indicates the geometry type, SRID and the presence of a Z or M dimension. Full parsing of the entire geometry only occurs when needed.
+``plpygis`` uses native WKB parsing to extract header information that indicates the geometry type, SRID and the presence of a Z or M dimension. Full parsing of the entire geometry only occurs when needed, such as requesting conversion to GeoJSON.
