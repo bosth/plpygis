@@ -27,6 +27,11 @@ The ``Geometry`` class and its subclasses can be used to convert to and from Pos
           return None
     $$ LANGUAGE plpythonu;
 
+Documentation
+=============
+
+Full ``plpygis`` documentation is available at http://plpygis.readthedocs.io/.
+
 .. image:: https://readthedocs.org/projects/plpygis/badge/?version=latest
     :target: http://plpygis.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
