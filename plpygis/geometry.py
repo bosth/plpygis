@@ -10,7 +10,7 @@ except ImportError:
 class Geometry(object):
     """
     A representation of a PostGIS geometry.
-    
+
     PostGIS geometries are either an OpenGIS Consortium Simple Features for SQL
     specification type or a PostGIS extended type. The object's canonical form
     is stored in WKB or EWKB format along with an SRID and flags indicating
@@ -106,7 +106,7 @@ class Geometry(object):
         else:
             raise Exception("Shapely not available.")
 
-    @staticmethod    
+    @staticmethod
     def shape(shape, srid=None):
         """
         Create a Geometry using ``__geo_interface__`` and the specified SRID.
