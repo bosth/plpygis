@@ -22,10 +22,26 @@ New instances of the three base shapes (points, lines and polygons) may be creat
     >>> line = LineString([(0, 0), (0, 1)])
     >>> poly = Polygon([[(0, 0), (0, 10), (10, 10), (10, 0), (0, 0)], [(4, 4), (4, 6), (6, 6), (6, 4), (4, 4)]])
 
+Editing
+-------
+
+Coordinates may be accessed and modified after creation.
+
+.. code-block:: python
+
+    >>> point = Point((0, 0))
+    >>> print point.x
+    0
+    >>> point.x = 10
+    >>> print Point.x
+    10
+
 Composition
 -----------
 
 Individual :class:`LineString <plpygis.geometry.LineString>` instances are composed of a list of :class:`Point <plpygis.geometry.Point>` instances that each represent a vertex in the line. Similarly, :class:`Polygon <plpygis.geometry.Polygon>` instances are composed of a list of :class:`LineString <plpygis.geometry.LineString>` instances that each represent linear rings.
+
+The lists of vertices or linear rings can be modified, for example by adding a new :class:`Point <plpygis.geometry.Point>` to the end of a :class:`LineString <plpygis.geometry.LineString>`.
 
 .. note::
 
@@ -85,6 +101,8 @@ Adding a new dimension to a :class:`Point <plpygis.geometry.Point>` that is a ve
     >>> print mp.dimz
     False
     >>> p1.z = 2
+    >>> print p1.miz
+    True
     >>> print mp.dimz
     False
     >>> mp.dimz = True
