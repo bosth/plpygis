@@ -7,6 +7,7 @@ try:
 except ImportError:
     SHAPELY = False
 
+
 class Geometry(object):
     """
     A representation of a PostGIS geometry.
@@ -49,6 +50,12 @@ class Geometry(object):
     types: ``Point``, ``LineString``, ``Polygon``, ``MultiPoint``, ``MultiLineString``,
     ``MultiPolygon`` or ``GeometryCollection``. The M dimension will be preserved.
     """
+
+    _WKBTYPE = 0x1fffffff
+    _WKBZFLAG = 0x80000000
+    _WKBMFLAG = 0x40000000
+    _WKBSRIDFLAG = 0x20000000
+
     def __new__(cls, wkb, srid=None, dimz=False, dimm=False):
         if cls == Geometry:
             newcls, dimz, dimm, srid, reader = Geometry._from_wkb(wkb)
@@ -119,14 +126,14 @@ class Geometry(object):
         The geometry type.
         """
         return self.__class__.__name__
-    
+
     @property
     def srid(self):
         """
         The geometry SRID.
         """
         return self._srid
-    
+
     @srid.setter
     def srid(self, value):
         self._srid = value
@@ -203,7 +210,7 @@ class Geometry(object):
     def _to_geojson(self, dimz):
         coordinates = self._to_geojson_coordinates(dimz)
         geojson = {
-                "type" : self.type,
+                "type": self.type,
                 "coordinates": coordinates
         }
         return geojson
@@ -254,36 +261,28 @@ class Geometry(object):
 
     @staticmethod
     def _read_wkb_header(reader):
-        WKBZFLAG    = 0x80000000
-        WKBMFLAG    = 0x40000000
-        WKBSRIDFLAG = 0x20000000
-        WKBTYPE     = 0x1fffffff
-        
         reader.get_char()
         header = reader.get_int()
-        lwgeomtype = header & WKBTYPE
-        dimz = bool(header & WKBZFLAG)
-        dimm = bool(header & WKBMFLAG)
-        if header & WKBSRIDFLAG:
+        lwgeomtype = header & Geometry._WKBTYPE
+        dimz = bool(header & Geometry._WKBZFLAG)
+        dimm = bool(header & Geometry._WKBMFLAG)
+        if header & Geometry._WKBSRIDFLAG:
             srid = reader.get_int()
         else:
             srid = None
         return lwgeomtype, dimz, dimm, srid
 
     def _write_wkb_header(self, writer, use_srid, dimz, dimm):
-        WKBZFLAG    = 0x80000000
-        WKBMFLAG    = 0x40000000
-        WKBSRIDFLAG = 0x20000000
-
         writer.add_order()
         header = (self._LWGEOMTYPE |
-                  (WKBZFLAG if dimz else 0) |
-                  (WKBMFLAG if dimm else 0) | 
-                  (WKBSRIDFLAG if self._srid else 0))
+                  (Geometry._WKBZFLAG if dimz else 0) |
+                  (Geometry._WKBMFLAG if dimm else 0) |
+                  (Geometry._WKBSRIDFLAG if self._srid else 0))
         writer.add_int(header)
         if use_srid and self._srid:
             writer.add_int(self._srid)
         return writer
+
 
 class _MultiGeometry(Geometry):
     @property
@@ -359,7 +358,7 @@ class _MultiGeometry(Geometry):
     def _to_geojson_coordinates(self, dimz):
         coordinates = [g._to_geojson_coordinates(dimz=dimz) for g in self.geometries]
         return coordinates
-            
+
     @classmethod
     def _from_wkb(cls, reader):
         lwgeomtype, dimz, dimm, srid = Geometry._read_wkb_header(reader)
@@ -382,10 +381,11 @@ class _MultiGeometry(Geometry):
             geometry._write_wkb_header(writer, False, dimz, dimm)
             geometry._write_wkb(writer, dimz, dimm)
 
+
 class Point(Geometry):
     """
     A representation of a PostGIS Point.
-    
+
     ``Point`` objects can be created directly.
 
         >>> Point((0, -52, 5), dimm=True, srid=4326)
@@ -412,7 +412,7 @@ class Point(Geometry):
             num = len(coordinates)
             if num > 4:
                 raise Exception("Maximum dimensionality supported for coordinates is 4: {}".format(coordinates))
-            elif num == 2: # fill in Z and M if we are supposed to have them, else None
+            elif num == 2:  # fill in Z and M if we are supposed to have them, else None
                 if dimz and dimm:
                     coordinates.append(0)
                     coordinates.append(0)
@@ -425,7 +425,7 @@ class Point(Geometry):
                 else:
                     coordinates.append(None)
                     coordinates.append(None)
-            elif num == 3: # use the 3rd coordinate for Z or M as directed or as Z
+            elif num == 3:  # use the 3rd coordinate for Z or M as directed or as Z
                 if dimz and dimm:
                     if coordinates[2] is None:
                         coordinates[2] = 0
@@ -444,7 +444,7 @@ class Point(Geometry):
                     if coordinates[2] is not None:
                         dimz = True
                     coordinates.append(None)
-            else: # use both the 3rd and 4th coordinates, ensure not None
+            else:  # use both the 3rd and 4th coordinates, ensure not None
                 if dimz and dimm:
                     if coordinates[2] is None:
                         coordinates[2] = 0
@@ -470,7 +470,7 @@ class Point(Geometry):
             self._dimm = dimm
             self._z = coordinates[2]
             self._m = coordinates[3]
-        
+
     @property
     def x(self):
         """
@@ -485,7 +485,7 @@ class Point(Geometry):
         if self._x is None:
             self._load_data()
         self._x = value
-        
+
     @property
     def y(self):
         """
@@ -500,7 +500,7 @@ class Point(Geometry):
         if self._y is None:
             self._load_data()
         self._y = value
-    
+
     @property
     def z(self):
         """
@@ -521,7 +521,7 @@ class Point(Geometry):
             self._dimz = False
         else:
             self._dimz = True
-    
+
     @property
     def m(self):
         """
@@ -632,10 +632,11 @@ class Point(Geometry):
         elif dimm:
             writer.add_double(self.m)
 
+
 class LineString(Geometry):
     """
     A representation of a PostGIS Line.
-    
+
     ``LineString`` objects can be created directly.
 
         >>> LineString([(0, 0, 0, 0), (1, 1, 0, 0), (2, 2, 0, 0)])
@@ -657,7 +658,7 @@ class LineString(Geometry):
             self._dimm = dimm
             self._vertices = LineString._from_coordinates(vertices, dimz=dimz, dimm=dimm)
             self._set_dimensionality(self._vertices)
-        
+
     @property
     def vertices(self):
         """
@@ -714,12 +715,12 @@ class LineString(Geometry):
     @staticmethod
     def _from_coordinates(vertices, dimz, dimm):
         return [Point(vertex, dimz=dimz, dimm=dimm) for vertex in vertices]
-        
+
     def _load_data(self):
         vertices = LineString._read_wkb(self._reader, self._dimz, self._dimm)
         self._vertices = LineString._from_coordinates(vertices, self._dimz, self._dimm)
         self._wkb = None
-           
+
     @classmethod
     def _from_wkb(cls, reader):
         lwgeomtype, dimz, dimm, srid = Geometry._read_wkb_header(reader)
@@ -739,10 +740,11 @@ class LineString(Geometry):
         for vertex in self._vertices:
             vertex._write_wkb(writer, dimz, dimm)
 
+
 class Polygon(Geometry):
     """
     A representation of a PostGIS Polygon.
-    
+
     ``Polygon`` objects can be created directly.
 
         >>> Polygon([[(0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0), (0, 0, 0)]])
@@ -767,7 +769,7 @@ class Polygon(Geometry):
             self._dimm = dimm
             self._rings = Polygon._from_coordinates(rings, dimz, dimm)
             self._set_dimensionality(self._rings)
-        
+
     @property
     def rings(self):
         """
@@ -834,11 +836,11 @@ class Polygon(Geometry):
     def _to_geojson_coordinates(self, dimz):
         coordinates = [r._to_geojson_coordinates(dimz=dimz) for r in self.rings]
         return coordinates
-        
+
     @staticmethod
     def _from_coordinates(rings, dimz, dimm):
         return [LineString(vertices, dimz, dimm) for vertices in rings]
-            
+
     def _load_data(self):
         rings = Polygon._read_wkb(self._reader, self._dimz, self._dimm)
         self._rings = Polygon._from_coordinates(rings, self._dimz, self._dimm)
@@ -857,16 +859,17 @@ class Polygon(Geometry):
             vertices = LineString._read_wkb(reader, dimz, dimm)
             rings.append(vertices)
         return rings
-   
+
     def _write_wkb(self, writer, dimz, dimm):
         writer.add_int(len(self.rings))
         for ring in self.rings:
             ring._write_wkb(writer, dimz, dimm)
 
+
 class MultiPoint(_MultiGeometry):
     """
     A representation of a PostGIS MultiPoint.
-    
+
     ``MultiPoint`` objects can be created directly from a list of ``Point``
     objects.
 
@@ -887,7 +890,7 @@ class MultiPoint(_MultiGeometry):
             self._points = points
             self._srid = srid
             self._set_multi_metadata()
-        
+
     @property
     def points(self):
         """
@@ -907,6 +910,7 @@ class MultiPoint(_MultiGeometry):
     def _load_data(self):
         self._points = MultiPoint._read_wkb(self._reader, self._dimz, self._dimm)
         self._wkb = None
+
 
 class MultiLineString(_MultiGeometry):
     """
@@ -929,10 +933,10 @@ class MultiLineString(_MultiGeometry):
         if self._wkb:
             self._linestrings = None
         else:
-            self._linestrings = linestrings 
+            self._linestrings = linestrings
             self._srid = srid
             self._set_multi_metadata()
-        
+
     @property
     def linestrings(self):
         """
@@ -952,11 +956,12 @@ class MultiLineString(_MultiGeometry):
     def _load_data(self):
         self._linestrings = MultiLineString._read_wkb(self._reader, self._dimz, self._dimm)
         self._wkb = None
-            
+
+
 class MultiPolygon(_MultiGeometry):
     """
     A representation of a PostGIS MultiPolygon.
-    
+
     ``MultiPolygon`` objects can be created directly from a list of ``Polygon``
     objects.
 
@@ -977,7 +982,7 @@ class MultiPolygon(_MultiGeometry):
             self._srid = srid
             self._dimz = dimz
             self._dimm = dimm
-            self._polygons = polygons 
+            self._polygons = polygons
             self._set_multi_metadata()
 
     @property
@@ -995,15 +1000,16 @@ class MultiPolygon(_MultiGeometry):
         List of all component polygons.
         """
         return self.polygons
-            
+
     def _load_data(self):
         self._polygons = MultiPolygon._read_wkb(self._reader, self._dimz, self._dimm)
         self._wkb = None
 
+
 class GeometryCollection(_MultiGeometry):
     """
     A representation of a PostGIS GeometryCollection.
-    
+
     ``GeometryCollection`` objects can be created directly from a list of
     geometries, including other collections.
 
@@ -1021,10 +1027,10 @@ class GeometryCollection(_MultiGeometry):
         if self._wkb:
             self._geometries = None
         else:
-            self._geometries = geometries 
+            self._geometries = geometries
             self._srid = srid
             self._set_multi_metadata()
-        
+
     @property
     def geometries(self):
         """
@@ -1037,7 +1043,7 @@ class GeometryCollection(_MultiGeometry):
     def _to_geojson(self, dimz):
         geometries = [g._to_geojson(dimz=dimz) for g in self.geometries]
         geojson = {
-                "type" : self.__class__.__name__,
+                "type": self.__class__.__name__,
                 "geometries": geometries
         }
         return geojson

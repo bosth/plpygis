@@ -1,6 +1,7 @@
 from binascii import hexlify, unhexlify
 import struct
 
+
 class HexReader():
     """
     A reader for generic hex data. The current position in the stream of bytes
@@ -44,6 +45,7 @@ class HexReader():
         :rtype: int
         """
         return self._get_value("d")
+
 
 class HexWriter():
     def __init__(self, order):
