@@ -15,4 +15,5 @@ Welcome to plpygis's documentation!
    usage
    subclasses
    plpython
+   examples
    plpygis
