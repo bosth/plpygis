@@ -21,7 +21,7 @@ Prior to using PL/Python, it must be loaded in the current database:
 Python 2 and Python 3
 ~~~~~~~~~~~~~~~~~~~~~
 
-``plpygis`` is compatible with both Python 2 and Python 3. However, ``plpythonu`` refers to Python 2 in PostgreSQL. For Python 3, the language is ``plpython3u`` (Python 2 can also explicitly be used with ``plpython2u``).
+``plpygis`` is compatible with both Python 2 and Python 3. ``plpythonu``, however, always refers to Python 2 in PostgreSQL. For Python 3, the language is ``plpython3u`` (Python 2 can also explicitly be used with ``plpython2u``).
 
 Function declarations
 ---------------------
@@ -65,10 +65,9 @@ When authoring a Postgres function that takes a PostGIS geometry as an input par
     CREATE OR REPLACE FUNCTION make_point(x FLOAT, y FLOAT)
       RETURNS geometry 
     AS $$
-      from plpygis import Geometry
-      from shapely.geometry import Point
+      from plpygis import Point
       p = Point(x, y)
-      return Geometry.shape(p)
+      return p
     $$ LANGUAGE plpythonu;
 
 Input parameter
@@ -194,7 +193,7 @@ In addition to returning single values, ``plpygis`` functions may return a list 
      POINT(10 20)
      POINT(20 10)
 
-Python's ``yield`` keyword may also be used to return elements in a set rather than returning them in as elements in a list.
+Python's ``yield`` keyword may also be used to return elements in a set rather than returning them as elements in a list.
 
 Shared data
 -----------
@@ -203,11 +202,6 @@ Each PL/Python function has access to a shared dictionary ``SD`` that can be use
 
 As with other data, ``plpygis.Geometry`` instances may be stored in the ``SD`` dictionary for future reference in later function calls.
 
-.. TODO
-
-    Trigger functions
-    -----------------
-
 ``plpy``
 --------
 
@@ -215,20 +209,62 @@ The ``plpy`` module provides access to helper functions, notably around logging 
 
 See `Utility Functions <https://www.postgresql.org/docs/current/static/plpython-util.html>`_  in the PostgreSQL documentation.
 
-.. TODO
+Aggregate functions
+-------------------
 
-    Aggregate functions
-    -------------------
-    
-    PostGIS includes several spatial aggregate functions that accept a set of geometries as input parameters. It is also possible to write aggregate PL/Python functions, although the PostgreSQL documentation does not provide documentation.
-    
-    CREATE AGGREGATE aggregate_func (
-    sfunc = state_func,
-    basetype = geometry,
-    stype = geometry, 
-    finalfunc = wrapup_func, -- optional
-    initcond = "POINT(9 3)" -- optional
+PostGIS includes several spatial aggregate functions that accept a set of geometries as input parameters. An aggregate function definition requires different syntax from a normal PL/Python function:
+
+.. code-block:: postgres
+
+    CREATE AGGREGATE agg_fn (
+        SFUNC = _state_function,
+        STYPE = geometry,
+        BASETYPE = geometry, -- optional
+        FINALFUNC = wrapup_func, -- optional
+        INITCOND = 'POINT(0 0)' -- optional
     );
-    
-    https://www.postgresql.org/docs/7.3/static/xaggr.html
-    http://www.cottinghams.com/david/aggregatePlPerl.shtml
+
+An aggregate will accept individual inputs of the type defined by ``BASETYPE`` and incrementally producing a single type defined by ``STYPE``. If many geometries will be collapsed down to a single geometry, then both ``BASETYPE`` and ``STYPE`` will be ``geometry``. If many geometries will produce more than one geometry, then the types will be ``geometry`` and ``geometry[]`` respectively.
+
+An example aggregate function would be ``point_cluster``, which takes `n` input geometries and outputs `m` geometries, where `m < n`.
+
+.. code-block:: postgres
+
+    CREATE AGGREGATE point_cluster (
+        SFUNC = _point_cluster,
+        BASETYPE = geometry,
+        STYPE = geometry[],
+        INITCOND = '{}'
+    );
+
+The function indicated by ``SFUNC`` must accept the ``STYPE`` as the first parameter and ``BASETYPE`` as the second parameter, returning another instance of ``STYPE``. If ``INITCOND`` is provided, this will be the value of the first argument passed to the first call of ``SFUNC``. If it is omitted, the value will be initially set to ``None``.
+
+.. code-block:: postgres
+
+    CREATE FUNCTION _point_cluster(geoms geometry[], newgeom geometry)
+      RETURNS geometry[]
+    AS $$
+      # incremental clustering algorithm here
+    $$ LANGUAGE plpythonu;
+
+Alternatively, the ``SFUNC`` can simply collect all the individual geometries into a list and then rely on a single ``FINALFUNC`` to create a new list of geometries that represents the clustered points.
+
+.. code-block:: postgres
+
+    CREATE AGGREGATE point_cluster (
+        SFUNC = array_append,
+        BASETYPE = geometry,
+        STYPE = geometry[],
+        INITCOND = '{}',
+        FINALFUNC = _point_cluster
+    );
+
+The parameter of the ``FINALFUNC`` will be a single ``geometry[]``, representing the collection of individual points.
+
+.. code-block:: postgres
+
+    CREATE FUNCTION _point_cluster(geoms geometry[])
+      RETURNS geometry[]
+    AS $$
+      # clustering algorithm here
+    $$ LANGUAGE plpythonu;

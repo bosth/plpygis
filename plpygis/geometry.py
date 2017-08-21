@@ -393,7 +393,7 @@ class Point(Geometry):
 
     The ``dimz`` and ``dimm`` parameters will indicate how to interpret the
     coordinates that have been passed as the first argument. By default, the
-    third parameter will be interpreted as representing the Z dimension.
+    third coordinate will be interpreted as representing the Z dimension.
     """
 
     _LWGEOMTYPE = 1
@@ -644,7 +644,7 @@ class LineString(Geometry):
 
     The ``dimz`` and ``dimm`` parameters will indicate how to interpret the
     coordinates that have been passed as the first argument. By default, the
-    third parameter will be interpreted as representing the Z dimension.
+    third coordinate will be interpreted as representing the Z dimension.
     """
 
     _LWGEOMTYPE = 2
@@ -755,7 +755,7 @@ class Polygon(Geometry):
 
     The ``dimz`` and ``dimm`` parameters will indicate how to interpret the
     coordinates that have been passed as the first argument. By default, the
-    third parameter will be interpreted as representing the Z dimension.
+    third coordinate will be interpreted as representing the Z dimension.
     """
 
     _LWGEOMTYPE = 3
