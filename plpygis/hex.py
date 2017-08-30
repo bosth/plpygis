@@ -1,5 +1,5 @@
 from binascii import hexlify, unhexlify
-import struct
+from struct import calcsize, unpack_from, pack
 
 
 class HexReader():
@@ -23,8 +23,8 @@ class HexReader():
         self._cur_offset = self._ini_offset
 
     def _get_value(self, fmt):
-        value = struct.unpack_from("{}{}".format(self._order, fmt), self._data, self._cur_offset)[0]
-        self._cur_offset += struct.calcsize(fmt)
+        value = unpack_from("{}{}".format(self._order, fmt), self._data, self._cur_offset)[0]
+        self._cur_offset += calcsize(fmt)
         return value
 
     def get_char(self):
@@ -75,5 +75,5 @@ class HexWriter():
     @property
     def data(self):
         fmt = self._order + "".join(self._fmts)
-        data = struct.pack(fmt, *self._values)
+        data = pack(fmt, *self._values)
         return hexlify(data).decode("ascii")

@@ -55,6 +55,7 @@ class Geometry(object):
     _WKBZFLAG = 0x80000000
     _WKBMFLAG = 0x40000000
     _WKBSRIDFLAG = 0x20000000
+    __slots__ = ["_wkb", "_reader", "_srid", "_dimz", "_dimm"]
 
     def __new__(cls, wkb, srid=None, dimz=False, dimm=False):
         if cls == Geometry:
@@ -397,6 +398,7 @@ class Point(Geometry):
     """
 
     _LWGEOMTYPE = 1
+    __slots__ = ["_x", "_y", "_z", "_m"]
 
     def __init__(self, coordinates=None, srid=None, dimz=False, dimm=False):
         if self._wkb:
@@ -648,6 +650,7 @@ class LineString(Geometry):
     """
 
     _LWGEOMTYPE = 2
+    __slots__ = ["_vertices"]
 
     def __init__(self, vertices=None, srid=None, dimz=False, dimm=False):
         if self._wkb:
@@ -759,6 +762,7 @@ class Polygon(Geometry):
     """
 
     _LWGEOMTYPE = 3
+    __slots__ = ["_rings"]
 
     def __init__(self, rings=None, srid=None, dimz=False, dimm=False):
         if self._wkb:
@@ -882,6 +886,7 @@ class MultiPoint(_MultiGeometry):
     """
 
     _LWGEOMTYPE = 4
+    __slots__ = ["_points"]
 
     def __init__(self, points=None, srid=None):
         if self._wkb:
@@ -928,6 +933,7 @@ class MultiLineString(_MultiGeometry):
     """
 
     _LWGEOMTYPE = 5
+    __slots__ = ["_linestrings"]
 
     def __init__(self, linestrings=None, srid=None):
         if self._wkb:
@@ -974,6 +980,7 @@ class MultiPolygon(_MultiGeometry):
     """
 
     _LWGEOMTYPE = 6
+    __slots__ = ["__polygons__"]
 
     def __init__(self, polygons=None, srid=None, dimz=False, dimm=False):
         if self._wkb:
@@ -1022,6 +1029,7 @@ class GeometryCollection(_MultiGeometry):
     """
 
     _LWGEOMTYPE = 7
+    __slots__ = ["_geometries"]
 
     def __init__(self, geometries=None, srid=None, dimz=False, dimm=False):
         if self._wkb:
