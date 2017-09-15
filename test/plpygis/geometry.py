@@ -14,6 +14,7 @@ geojson_mpt = {"type":"MultiPoint","coordinates":[[0,0],[1,1]]}
 geojson_mln = {"type":"MultiLineString","coordinates":[[[0,0],[1,1]],[[2,2],[3,3]]]}
 geojson_mpg = {"type":"MultiPolygon","coordinates":[[[[1,0],[111,0.0],[101.0,1.0],[100.0,1.0],[1,0]]],[[[100,0],[101.0,0.0],[101.0,1.0],[100.0,1.0],[100.0,0.0]]]]}
 geojson_gc = {"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[10,0]},{"type":"LineString","coordinates":[[11,0],[12,1]]}]}
+wkb_ln = "0102000000050000000000000040BE40409D640199EB373F400000000080AC3E40BF244710FD1939400000000000503940D2A6484BEB41374000000000801D3740248729C89C832A400000000000833340940338EFAFBB2C40"
 
 class GeometryTestCase(unittest.TestCase):
     def test_missing_ewkb(self):
@@ -109,25 +110,20 @@ class GeometryTestCase(unittest.TestCase):
         self.assertEquals(geom.__repr__(), "<Point: 'geometry(PointZM,4326)'>")
         self.assertEquals(geom.__str__(), wkb)
 
-#    def test_translate_wkt(self):
-#        """
-#        load and dump WKT
-#        """
-#        point = "Point (59410.57968 7208125.2)"
-#        geom = Geometry.from_wkt(point, 3857)
-#        self.assertEquals(geom.srid, 3857)
-#        wkt = geom.wkt
-#        self.assertEquals(wkt.upper(), point.upper())
-#
-#    def test_translate_ewkt(self):
-#        """
-#        load and dump EWKT
-#        """
-#        point = "SRID=900913;Point (0 0)"
-#        geom = Geometry.from_ewkt(point)
-#        self.assertEquals(geom.srid, 900913)
-#        ewkt = geom.ewkt
-#        self.assertEquals(ewkt.upper(), point.upper())
+    def test_read_ewkb_linestring(self):
+        """
+        read EWKB LineString
+        """
+        wkb = wkb_ln
+        geom = Geometry(wkb)
+        self.assertEquals(geom.type, "LineString")
+        self.assertEquals(geom.srid, None)
+        self.assertEquals(geom.dimz, False)
+        self.assertEquals(geom.dimm, False)
+        postgis_type = "geometry(LineString)"
+        self.assertEquals(geom.postgis_type, postgis_type)
+        self.assertEquals(geom.__repr__(), "<LineString: 'geometry(LineString)'>")
+        self.assertEquals(geom.__str__(), wkb)
 
     def test_translate_geojson_pt(self):
         """
