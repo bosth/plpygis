@@ -33,7 +33,7 @@ Coordinates may be accessed and modified after creation.
     >>> print point.x
     0
     >>> point.x = 10
-    >>> print Point.x
+    >>> print point.x
     10
 
 Composition
