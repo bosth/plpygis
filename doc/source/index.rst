@@ -7,6 +7,8 @@
 Welcome to plpygis's documentation!
 ###################################
 
+``plpygis`` is a Python conveter to and from the PostGIS ``geometry`` type, WKB, EWKB, GeoJSON and Shapely geometries and additionally supports ``__geo_interface__``. ``plpygis`` is intended for use in PL/Python functions.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

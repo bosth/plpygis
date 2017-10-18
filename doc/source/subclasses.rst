@@ -126,7 +126,7 @@ Caching
 
 .. note::
 
-    Getting :meth:`type <plpygis.geometry.Geometry.type>`, :meth:`srid <plpygis.geometry.Geometry.srid>`, :meth:`dimz <plpygis.geometry.Geometry.dimz>` and :meth:`dimm <plpygis.geometry.Geometry.dimm>` are considered "safe" operations. However writing a new SRID or changing the dimensionality will also result in the cached WKB being lost. The geometries type may never be changed.
+    Getting :meth:`type <plpygis.geometry.Geometry.type>`, :meth:`srid <plpygis.geometry.Geometry.srid>`, :meth:`dimz <plpygis.geometry.Geometry.dimz>` and :meth:`dimm <plpygis.geometry.Geometry.dimm>` are considered "safe" operations. However writing a new SRID or changing the dimensionality will also result in the cached WKB being lost. A geometry's type may never be changed.
 
 As a summary, getting the following properties will not affect performance:
 

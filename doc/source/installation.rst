@@ -4,7 +4,7 @@ Installation
 Requirements
 ------------
 
-``plpygis`` optionally depends on `Shapely <https://github.com/Toblerity/Shapely>`_ >= 1.5. Without it, conversion to and from Shapely geometries will be impossible.
+``plpygis`` has no dependencies beyond an installation of Python 2.7.x or 3.6.x. Additionally, ``plpygis`` can use `Shapely <https://github.com/Toblerity/Shapely>`_ (version 1.6 or greater) if available. Without it, conversion to and from Shapely geometries will be impossible.
 
 Python Package Index
 --------------------
