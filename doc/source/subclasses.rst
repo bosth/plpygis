@@ -150,5 +150,6 @@ If the :class:`Geometry <plpygis.geometry.Geometry>` was created from a WKB, the
 * getting :meth:`geojson <plpygis.geometry.Geometry.geojson>` and :meth:`__geo_interface__ <plpygis.geometry.Geometry.__geo_interface__>`
 * getting :meth:`shapely <plpygis.geometry.Geometry.shapely>`
 * getting any :class:`Point <plpygis.geometry.Point>` coordinate
+* getting :meth:`bounds <plpygis.geometry.Geometry.bounds>`
 * getting :meth:`vertices <plpygis.geometry.LineString.vertices>`, :meth:`rings <plpygis.geometry.Polygon.rings>`
-* getting any component goemetry from :class:`MultiPoint <plpygis.geometry.MultiPoint>`, :class:`MultiLineString <plpygis.geometry.MultiLineString>`, :class:`MultiPolygon <plpygis.geometry.MultiPolygon>` or :class:`GeometryCollection <plpygis.geometry.GeometryCollection>`
+* getting any component geometry from :class:`MultiPoint <plpygis.geometry.MultiPoint>`, :class:`MultiLineString <plpygis.geometry.MultiLineString>`, :class:`MultiPolygon <plpygis.geometry.MultiPolygon>` or :class:`GeometryCollection <plpygis.geometry.GeometryCollection>`

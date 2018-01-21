@@ -164,6 +164,14 @@ class Geometry(object):
         return self._to_shapely()
 
     @property
+    def bounds(self):
+        """
+        Get the minimum and maximum extents of the geometry: (minx, miny, maxx,
+        maxy).
+        """
+        return self._bounds()
+
+    @property
     def postgis_type(self):
         """
         Get the type of the geometry in PostGIS format, including additional
@@ -326,6 +334,14 @@ class _MultiGeometry(Geometry):
         self._dimm = value
         self._wkb = None
 
+    def _bounds(self):
+        bounds = [g.bounds for g in self.geometries]
+        minx = min([b[0] for b in bounds])
+        miny = min([b[1] for b in bounds])
+        maxx = max([b[2] for b in bounds])
+        maxy = max([b[3] for b in bounds])
+        return (minx, miny, maxx, maxy)
+
     @staticmethod
     def _multi_from_geojson(geojson, cls):
         geometries = []
@@ -359,12 +375,6 @@ class _MultiGeometry(Geometry):
     def _to_geojson_coordinates(self, dimz):
         coordinates = [g._to_geojson_coordinates(dimz=dimz) for g in self.geometries]
         return coordinates
-
-    @classmethod
-    def _from_wkb(cls, reader):
-        lwgeomtype, dimz, dimm, srid = Geometry._read_wkb_header(reader)
-        points = MultiPoint._read_wkb(reader, dimz, dimm)
-        return cls(points, dimz=dimz, dimm=dimm)
 
     @staticmethod
     def _read_wkb(reader, dimz, dimm):
@@ -595,15 +605,12 @@ class Point(Geometry):
             coordinates.append(self.z)
         return coordinates
 
+    def _bounds(self):
+        return (self.x, self.y, self.x, self.y)
+
     def _load_data(self):
         self._x, self._y, self._z, self._m = Point._read_wkb(self._reader, self._dimz, self._dimm)
         self._wkb = None
-
-    @classmethod
-    def _from_wkb(cls, reader):
-        lwgeomtype, dimz, dimm, srid = Geometry._read_wkb_header(reader)
-        x, y, z, m = Point._read_wkb(reader, dimz, dimm)
-        return cls((x, y, z, m), dimz=dimz, dimm=dimm)
 
     @staticmethod
     def _read_wkb(reader, dimz, dimm):
@@ -715,6 +722,11 @@ class LineString(Geometry):
         coordinates = [v._to_geojson_coordinates(dimz=dimz) for v in self.vertices]
         return coordinates
 
+    def _bounds(self):
+        x = [v.x for v in self.vertices]
+        y = [v.y for v in self.vertices]
+        return (min(x), min(y), max(x), max(y))
+
     @staticmethod
     def _from_coordinates(vertices, dimz, dimm):
         return [Point(vertex, dimz=dimz, dimm=dimm) for vertex in vertices]
@@ -723,12 +735,6 @@ class LineString(Geometry):
         vertices = LineString._read_wkb(self._reader, self._dimz, self._dimm)
         self._vertices = LineString._from_coordinates(vertices, self._dimz, self._dimm)
         self._wkb = None
-
-    @classmethod
-    def _from_wkb(cls, reader):
-        lwgeomtype, dimz, dimm, srid = Geometry._read_wkb_header(reader)
-        vertices = LineString._read_wkb(reader, dimz, dimm)
-        return cls(vertices, dimz=dimz, dimm=dimm)
 
     @staticmethod
     def _read_wkb(reader, dimz, dimm):
@@ -788,14 +794,14 @@ class Polygon(Geometry):
         """
         The exterior ring of the polygon.
         """
-        return self._rings[0]
+        return self.rings[0]
 
     @property
     def interior(self):
         """
         A list of interior rings of the polygon.
         """
-        return self._rings[1:]
+        return self.rings[1:]
 
     @property
     def dimz(self):
@@ -841,6 +847,9 @@ class Polygon(Geometry):
         coordinates = [r._to_geojson_coordinates(dimz=dimz) for r in self.rings]
         return coordinates
 
+    def _bounds(self):
+        return self.exterior.bounds
+
     @staticmethod
     def _from_coordinates(rings, dimz, dimm):
         return [LineString(vertices, dimz, dimm) for vertices in rings]
@@ -849,12 +858,6 @@ class Polygon(Geometry):
         rings = Polygon._read_wkb(self._reader, self._dimz, self._dimm)
         self._rings = Polygon._from_coordinates(rings, self._dimz, self._dimm)
         self._wkb = None
-
-    @classmethod
-    def _from_wkb(cls, reader):
-        lwgeomtype, dimz, dimm, srid = Geometry._read_wkb_header(reader)
-        rings = Polygon._read_wkb(reader, dimz, dimm)
-        return cls(rings, dimz=dimz, dimm=dimm)
 
     @staticmethod
     def _read_wkb(reader, dimz, dimm):
@@ -1055,9 +1058,3 @@ class GeometryCollection(_MultiGeometry):
                 "geometries": geometries
         }
         return geojson
-
-    @classmethod
-    def _from_wkb(cls, reader):
-        lwgeomtype, dimz, dimm, srid = Geometry._read_wkb_header(reader)
-        geometries = _MultiGeometry._read_wkb(reader, dimz, dimm)
-        return cls(geometries, dimz=dimz, dimm=dimm)
