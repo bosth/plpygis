@@ -521,3 +521,6 @@ class GeometryTestCase(unittest.TestCase):
         p = Point((0, 1, 2), dimm=True)
         self.assertFalse(p.dimz)
         self.assertTrue(p.dimm)
+        p = Point((0, 1, 2), dimz=True, dimm=True)
+        self.assertTrue(p.dimz)
+        self.assertTrue(p.dimm)

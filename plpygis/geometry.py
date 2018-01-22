@@ -426,62 +426,33 @@ class Point(Geometry):
                 raise Exception("Maximum dimensionality supported for coordinates is 4: {}".format(coordinates))
             elif num == 2:  # fill in Z and M if we are supposed to have them, else None
                 if dimz and dimm:
-                    coordinates.append(0)
-                    coordinates.append(0)
+                    self._z = 0
+                    self._m = 0
                 elif dimz:
-                    coordinates.append(0)
-                    coordinates.append(None)
+                    self._z = 0
+                    self._m = None
                 elif dimm:
-                    coordinates.append(None)
-                    coordinates.append(0)
+                    self._z = None
+                    self._m = 0
                 else:
-                    coordinates.append(None)
-                    coordinates.append(None)
+                    self._z = None
+                    self._m = None
             elif num == 3:  # use the 3rd coordinate for Z or M as directed or as Z
                 if dimz and dimm:
-                    if coordinates[2] is None:
-                        coordinates[2] = 0
-                    coordinates.append(0)
-                elif dimz:
-                    if coordinates[2] is None:
-                        coordinates[2] = 0
-                    coordinates.append(None)
+                    self._z = coordinates[2]
+                    self._m = 0
                 elif dimm:
-                    if coordinates[2] is None:
-                        coordinates.append(0)
-                    else:
-                        coordinates.append(coordinates[2])
-                        coordinates[2] = None
+                    self._z = None
+                    self._m = coordinates[2]
                 else:
-                    if coordinates[2] is not None:
-                        dimz = True
-                    coordinates.append(None)
+                    self._z = coordinates[2]
+                    self._m = None
             else:  # use both the 3rd and 4th coordinates, ensure not None
-                if dimz and dimm:
-                    if coordinates[2] is None:
-                        coordinates[2] = 0
-                    if coordinates[3] is None:
-                        coordinates[3] = 0
-                elif dimz:
-                    if coordinates[2] is None:
-                        coordinates[2] = 0
-                    if coordinates[3] is not None:
-                        dimm = True
-                elif dimm:
-                    if coordinates[3] is None:
-                        coordinates[3] = 0
-                    if coordinates[2] is not None:
-                        dimz = True
-                else:
-                    if coordinates[2] is not None:
-                        dimz = True
-                    if coordinates[3] is not None:
-                        dimm = True
+                    self._z = coordinates[2]
+                    self._m = coordinates[3]
 
-            self._dimz = dimz
-            self._dimm = dimm
-            self._z = coordinates[2]
-            self._m = coordinates[3]
+            self._dimz = self._z is not None
+            self._dimm = self._m is not None
 
     @property
     def x(self):
