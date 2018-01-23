@@ -6,3 +6,8 @@ plpygis package
     :undoc-members:
     :show-inheritance:
     :inherited-members:
+
+.. automodule:: plpygis.exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:

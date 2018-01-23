@@ -1,3 +1,4 @@
+from .exceptions import DependencyError, WkbError, SridError, DimensionalityError
 from .hex import HexReader, HexWriter
 
 try:
@@ -112,7 +113,7 @@ class Geometry(object):
                 lgeos.GEOSSetSRID(sgeom._geom, srid)
             return Geometry(sgeom.wkb_hex)
         else:
-            raise Exception("Shapely not available.")
+            raise DependencyError("Shapely")
 
     @staticmethod
     def shape(shape, srid=None):
@@ -186,14 +187,17 @@ class Geometry(object):
 
     @staticmethod
     def _from_wkb(wkb):
-        if not wkb:
-            raise TypeError("No EWKB provided")
-        if wkb.startswith("00"):
-            reader = Reader(wkb, ">")  # big-endian reader
-        elif wkb.startswith("01"):
-            reader = HexReader(wkb, "<")  # little-endian reader
-        else:
-            raise Exception("First byte in WKB must be 0 or 1.")
+        try:
+            if not wkb:
+                raise WkbError("No EWKB provided")
+            if wkb.startswith("00"):
+                reader = Reader(wkb, ">")  # big-endian reader
+            elif wkb.startswith("01"):
+                reader = HexReader(wkb, "<")  # little-endian reader
+            else:
+                raise WkbError("First byte in WKB must be 0 or 1.")
+        except TypeError:
+            raise WkbError()
         return Geometry._get_wkb_type(reader) + (reader,)
 
     def _to_wkb(self, use_srid, dimz, dimm):
@@ -211,10 +215,10 @@ class Geometry(object):
             if srid == 0:
                 srid = None
             if (srid or self._srid) and srid != self._srid:
-                raise ValueError("SRID mismatch: {} {}".format(srid, self._srid))
+                raise SridError("SRID mismatch: {} {}".format(srid, self._srid))
             return sgeom
         else:
-            raise Exception("Shapely not available.")
+            raise DependencyError("Shapely")
 
     def _to_geojson(self, dimz):
         coordinates = self._to_geojson_coordinates(dimz)
@@ -241,11 +245,11 @@ class Geometry(object):
             if self._dimz is None:
                 self._dimz = geometry.dimz
             elif self._dimz != geometry.dimz:
-                raise Exception("Mixed dimensionality in MultiGeometry")
+                raise DimensionalityError("Mixed dimensionality in MultiGeometry")
             if self._dimm is None:
                 self._dimm = geometry.dimm
             elif self._dimm != geometry.dimm:
-                raise Exception("Mixed dimensionality in MultiGeometry")
+                raise DimensionalityError("Mixed dimensionality in MultiGeometry")
 
     @staticmethod
     def _get_wkb_type(reader):
@@ -265,20 +269,23 @@ class Geometry(object):
         elif lwgeomtype == 7:
             cls = GeometryCollection
         else:
-            raise Exception("Unsupported type: {}".format(lwgeomtype))
+            raise WkbError("Unsupported WKB type: {}".format(lwgeomtype))
         return cls, dimz, dimm, srid
 
     @staticmethod
     def _read_wkb_header(reader):
-        reader.get_char()
-        header = reader.get_int()
-        lwgeomtype = header & Geometry._WKBTYPE
-        dimz = bool(header & Geometry._WKBZFLAG)
-        dimm = bool(header & Geometry._WKBMFLAG)
-        if header & Geometry._WKBSRIDFLAG:
-            srid = reader.get_int()
-        else:
-            srid = None
+        try:
+            reader.get_char()
+            header = reader.get_int()
+            lwgeomtype = header & Geometry._WKBTYPE
+            dimz = bool(header & Geometry._WKBZFLAG)
+            dimm = bool(header & Geometry._WKBMFLAG)
+            if header & Geometry._WKBSRIDFLAG:
+                srid = reader.get_int()
+            else:
+                srid = None
+        except TypeError:
+            raise WkbError()
         return lwgeomtype, dimz, dimm, srid
 
     def _write_wkb_header(self, writer, use_srid, dimz, dimm):
@@ -361,16 +368,16 @@ class _MultiGeometry(Geometry):
             if self._dimz is None:
                 self._dimz = geometry.dimz
             elif self._dimz != geometry.dimz:
-                raise Exception("Mixed dimensionality in MultiGeometry")
+                raise DimensionalityError("Mixed dimensionality in MultiGeometry")
             if self._dimm is None:
                 self._dimm = geometry.dimm
             elif self._dimm != geometry.dimm:
-                raise Exception("Mixed dimensionality in MultiGeometry")
+                raise DimensionalityError("Mixed dimensionality in MultiGeometry")
             if self._srid is None:
                 if geometry.srid is not None:
                     self._srid = geometry.srid
             elif self._srid != geometry.srid and geometry.srid is not None:
-                raise Exception("Mixed SRIDs in MultiGeometry")
+                raise SridError("Mixed SRIDs in MultiGeometry")
 
     def _to_geojson_coordinates(self, dimz):
         coordinates = [g._to_geojson_coordinates(dimz=dimz) for g in self.geometries]
@@ -379,11 +386,14 @@ class _MultiGeometry(Geometry):
     @staticmethod
     def _read_wkb(reader, dimz, dimm):
         geometries = []
-        for _ in range(reader.get_int()):
-            cls, dimz, dimm, srid = Geometry._get_wkb_type(reader)
-            coordinates = cls._read_wkb(reader, dimz, dimm)
-            geometry = cls(coordinates, srid=srid, dimz=dimz, dimm=dimm)
-            geometries.append(geometry)
+        try:
+            for _ in range(reader.get_int()):
+                cls, dimz, dimm, srid = Geometry._get_wkb_type(reader)
+                coordinates = cls._read_wkb(reader, dimz, dimm)
+                geometry = cls(coordinates, srid=srid, dimz=dimz, dimm=dimm)
+                geometries.append(geometry)
+        except TypeError:
+            raise WkbError()
         return geometries
 
     def _write_wkb(self, writer, dimz, dimm):
@@ -423,7 +433,7 @@ class Point(Geometry):
             self._y = coordinates[1]
             num = len(coordinates)
             if num > 4:
-                raise Exception("Maximum dimensionality supported for coordinates is 4: {}".format(coordinates))
+                raise DimensionalityError("Maximum dimensionality supported for coordinates is 4: {}".format(coordinates))
             elif num == 2:  # fill in Z and M if we are supposed to have them, else None
                 if dimz and dimm:
                     self._z = 0
@@ -585,20 +595,23 @@ class Point(Geometry):
 
     @staticmethod
     def _read_wkb(reader, dimz, dimm):
-        x = reader.get_double()
-        y = reader.get_double()
-        if dimz and dimm:
-            z = reader.get_double()
-            m = reader.get_double()
-        elif dimz:
-            z = reader.get_double()
-            m = None
-        elif dimm:
-            z = None
-            m = reader.get_double()
-        else:
-            z = None
-            m = None
+        try:
+            x = reader.get_double()
+            y = reader.get_double()
+            if dimz and dimm:
+                z = reader.get_double()
+                m = reader.get_double()
+            elif dimz:
+                z = reader.get_double()
+                m = None
+            elif dimm:
+                z = None
+                m = reader.get_double()
+            else:
+                z = None
+                m = None
+        except TypeError:
+            raise WkbError()
         return x, y, z, m
 
     def _write_wkb(self, writer, dimz, dimm):
@@ -710,9 +723,12 @@ class LineString(Geometry):
     @staticmethod
     def _read_wkb(reader, dimz, dimm):
         vertices = []
-        for _ in range(reader.get_int()):
-            coordinates = Point._read_wkb(reader, dimz, dimm)
-            vertices.append(coordinates)
+        try:
+            for _ in range(reader.get_int()):
+                coordinates = Point._read_wkb(reader, dimz, dimm)
+                vertices.append(coordinates)
+        except TypeError:
+            raise WkbError()
         return vertices
 
     def _write_wkb(self, writer, dimz, dimm):
@@ -833,9 +849,12 @@ class Polygon(Geometry):
     @staticmethod
     def _read_wkb(reader, dimz, dimm):
         rings = []
-        for _ in range(reader.get_int()):
-            vertices = LineString._read_wkb(reader, dimz, dimm)
-            rings.append(vertices)
+        try:
+            for _ in range(reader.get_int()):
+                vertices = LineString._read_wkb(reader, dimz, dimm)
+                rings.append(vertices)
+        except TypeError:
+            raise WkbError()
         return rings
 
     def _write_wkb(self, writer, dimz, dimm):

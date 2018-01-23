@@ -76,3 +76,13 @@ Conversion
 :class:`Geometry <plpygis.geometry.Geometry>` also implements :attr:`__geo_interface__ <plpygis.geometry.Geometry.__geo_interface__>`.
 
 Conversion to GeoJSON or Shapely will result in the M dimension being lost as these representation only support X, Y and Z coordinates (see `RFC 7946 <ttps://tools.ietf.org/html/rfc7946#section-3.1.1>`_).
+
+Exceptions
+----------
+
+All ``plpygis`` exceptions inherit from the :class:`PlpygisError <plpygis.exceptions.PlpygisError>` class. The specific exceptions that may be raised are:
+
+* :class:`DependencyError <plpygis.exceptions.DependencyError>`: missing dependency required for an optional feature, such as :meth:`shapely <plpygis.geometry.Geometry.shapely>`
+* :class:`DimensionalityError <plpygis.exceptions.DimensionalityError>`: error pertaining to the Z or M coordinates of a :class:`Geometry <plpygis.geometry.Geometry>`
+* :class:`SridError <plpygis.exceptions.SridError>`: error pertaining to a :class:`Geometry <plpygis.geometry.Geometry>`'s SRIDs
+* :class:`WkbError <plpygis.exceptions.WkbError>`: error reading or writing a WKB

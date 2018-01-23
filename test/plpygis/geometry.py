@@ -6,6 +6,7 @@ import unittest
 from shapely import geometry
 from plpygis import Geometry, Point, LineString, Polygon
 from plpygis import MultiPoint, MultiLineString, MultiPolygon, GeometryCollection
+from plpygis.exceptions import DependencyError, WkbError, SridError, DimensionalityError
 
 geojson_pt = {"type":"Point","coordinates":[0.0,0.0]}
 geojson_ln = {"type":"LineString","coordinates":[[107,60],[102,59]]}
@@ -26,7 +27,7 @@ class GeometryTestCase(unittest.TestCase):
         """
         missing EWKB
         """
-        self.assertRaises(TypeError, Geometry, None, None)
+        self.assertRaises(WkbError, Geometry, None, None)
 
     def test_malformed_ewkb_len(self):
         """
@@ -38,14 +39,14 @@ class GeometryTestCase(unittest.TestCase):
         """
         malformed EWKB (bad first byte)
         """
-        self.assertRaises(Exception, Geometry, "5101", None)
+        self.assertRaises(WkbError, Geometry, "5101", None)
 
     def test_unsupported_ewkb_type(self):
         """
         unsupported EWKB type
         """
         "010100000000000000000000000000000000000000"
-        self.assertRaises(Exception, Geometry, "010800000000000000000000000000000000000000", None)
+        self.assertRaises(WkbError, Geometry, "010800000000000000000000000000000000000000", None)
 
     def test_read_wkb_point(self):
         """
@@ -481,14 +482,14 @@ class GeometryTestCase(unittest.TestCase):
         """
         p1 = Point((0, 1, 2))
         p2 = Point((0, 1))
-        self.assertRaises(Exception, MultiPoint, [p1, p2], None)
+        self.assertRaises(DimensionalityError, MultiPoint, [p1, p2], None)
 
     def test_invalid_point_dimension(self):
         """
         detect extra dimensions in Point creation
         """
         p1 = Point((0, 1, 2, 3))
-        self.assertRaises(Exception, Point, ((0, 1, 2, 3, 4)), None)
+        self.assertRaises(DimensionalityError, Point, ((0, 1, 2, 3, 4)), None)
 
     def test_dimension_reading(self):
         """
@@ -524,3 +525,42 @@ class GeometryTestCase(unittest.TestCase):
         p = Point((0, 1, 2), dimz=True, dimm=True)
         self.assertTrue(p.dimz)
         self.assertTrue(p.dimm)
+
+    def test_modify_point(self):
+        """
+        modify Point
+        """
+        wkb = "010100000000000000000000000000000000000000"
+        p = Geometry(wkb)
+        oldx = p.x
+        oldy = p.y
+        oldsrid = p.srid
+        self.assertFalse(p.dimz)
+        self.assertFalse(p.dimm)
+        newx = -99
+        newy = -101
+        newz = 88
+        newm = 8
+        newsrid = 900913
+        self.assertNotEquals(p.x, newx)
+        self.assertNotEquals(p.y, newy)
+        self.assertNotEquals(p.z, newz)
+        self.assertNotEquals(p.m, newm)
+        self.assertNotEquals(p.srid, newsrid)
+        p.x = newx
+        p.y = newy
+        p.z = newz
+        p.m = newm
+        p.srid = newsrid
+        self.assertEquals(p.x, newx)
+        self.assertEquals(p.y, newy)
+        self.assertEquals(p.z, newz)
+        self.assertEquals(p.m, newm)
+        self.assertEquals(p.srid, newsrid)
+        self.assertNotEquals(p.__str__().lower(), wkb.lower())
+        p.x = oldx
+        p.y = oldy
+        p.srid = oldsrid
+        p.dimz = None
+        p.dimm = None
+        self.assertEquals(p.__str__().lower(), wkb.lower())
