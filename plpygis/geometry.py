@@ -653,6 +653,7 @@ class LineString(Geometry):
         """
         List of vertices that comprise the line.
         """
+        self._wkb = None
         return self._vertices
 
     @property
@@ -761,6 +762,7 @@ class Polygon(Geometry):
         """
         List of linearrings that comprise the polygon.
         """
+        self._wkb = None
         return self._rings
 
     @property
@@ -768,6 +770,7 @@ class Polygon(Geometry):
         """
         The exterior ring of the polygon.
         """
+        self._wkb = None
         return self.rings[0]
 
     @property
@@ -775,6 +778,7 @@ class Polygon(Geometry):
         """
         A list of interior rings of the polygon.
         """
+        self._wkb = None
         return self.rings[1:]
 
     @property
@@ -877,6 +881,7 @@ class MultiPoint(_MultiGeometry):
         """
         List of all component points.
         """
+        self._wkb = None
         return self._points
 
     @property
@@ -920,6 +925,7 @@ class MultiLineString(_MultiGeometry):
         """
         List of all component lines.
         """
+        self._wkb = None
         return self._linestrings
 
     @property
@@ -963,6 +969,7 @@ class MultiPolygon(_MultiGeometry):
         """
         List of all component polygons.
         """
+        self._wkb = None
         return self._polygons
 
     @property
@@ -1006,6 +1013,7 @@ class GeometryCollection(_MultiGeometry):
         """
         List of all component geometries.
         """
+        self._wkb = None
         return self._geometries
 
     def _to_geojson(self, dimz):
