@@ -117,7 +117,7 @@ Performance considerations
 Lazy evaluation
 ^^^^^^^^^^^^^^^
 
-``plpygis`` uses native WKB parsing to extract header information that indicates the geometry type, SRID and the presence of a Z or M dimension. Full parsing of the entire geometry only occurs when needed. It is therefore possible to test the type and dimensionality of a :class:`Geometry <plpygis.geometry.Geometry>` with only the first few bytes of data having been read. Perform these checks before performing any action that will require reading the remainder of the WKB.
+``plpygis`` uses native WKB parsing to extract header information that indicates the geometry type, SRID and the presence of a Z or M dimension. Full parsing of the entire geometry occurs immediately, and therefore it is not possible to test the type and dimensionality of a :class:`Geometry <plpygis.geometry.Geometry>` without reading the entire WKB, which can be expensive for complex geometries.
 
 Caching
 ^^^^^^^
