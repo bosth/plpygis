@@ -56,21 +56,25 @@ class Geometry(object):
     _WKBZFLAG = 0x80000000
     _WKBMFLAG = 0x40000000
     _WKBSRIDFLAG = 0x20000000
-    __slots__ = ["_wkb", "_reader", "_srid", "_dimz", "_dimm"]
+    __slots__ = ["_wkb", "_srid", "_dimz", "_dimm"]
 
-    def __new__(cls, wkb, srid=None, dimz=False, dimm=False):
+    def __new__(cls, wkb, srid=None, dimz=None, dimm=None):
         if cls == Geometry:
-            newcls, dimz, dimm, srid, reader = Geometry._from_wkb(wkb)
+            newcls, wkb_srid, wkb_dimz, wkb_dimm, reader = Geometry._from_wkb(wkb)
             geom = super(Geometry, cls).__new__(newcls)
+            geom._srid = wkb_srid
+            geom._dimz = wkb_dimz
+            geom._dimm = wkb_dimm
             geom._wkb = wkb
-            geom._reader = reader
-            geom._srid = srid
-            geom._dimz = dimz
-            geom._dimm = dimm
+            geom._load_geometry(reader)
+            if srid is not None:
+                geom.srid = srid
+            if dimz is not None:
+                geom.dimz = dimz
+            if dimm is not None:
+                geom.dimm = dimm
         else:
             geom = super(Geometry, cls).__new__(cls)
-            geom._wkb = None
-            geom._reader = None
         return geom
 
     @staticmethod
@@ -83,7 +87,7 @@ class Geometry(object):
         if type_ == "geometrycollection":
             geometries = []
             for geometry in geojson["geometries"]:
-                geometries.append(Geometry.from_geojson(geometry, srid=None))
+                geometries.append(Geometry.from_geojson(geometry, srid=srid))
             return GeometryCollection(geometries, srid)
         elif type_ == "point":
             return Point(geojson["coordinates"], srid=srid)
@@ -139,8 +143,9 @@ class Geometry(object):
 
     @srid.setter
     def srid(self, value):
-        self._check_cache()
-        self._srid = value
+        if self._srid != value:
+            self._wkb = None
+            self._srid = value
 
     @property
     def geojson(self):
@@ -187,6 +192,15 @@ class Geometry(object):
             return "geometry({}{}{})".format(self.type, dimz, dimm)
 
     @staticmethod
+    def wkb_type(wkb):
+        """
+        Extract information from a WKB header, returned as a tuple of name,
+        SRID, z dimension and m dimension.
+        """
+        newcls, srid, dimz, dimm, _ = Geometry._from_wkb(wkb)
+        return (newcls.__name__, srid, dimz, dimm)
+
+    @staticmethod
     def _from_wkb(wkb):
         try:
             if not wkb:
@@ -200,12 +214,6 @@ class Geometry(object):
         except TypeError:
             raise WkbError()
         return Geometry._get_wkb_type(reader) + (reader,)
-
-    def _check_cache(self):
-        if self._reader is not None:
-            self._load_geometry()
-            self._wkb = None
-            self._reader = None
 
     def _to_wkb(self, use_srid, dimz, dimm):
         if self._wkb is not None:
@@ -260,7 +268,7 @@ class Geometry(object):
 
     @staticmethod
     def _get_wkb_type(reader):
-        lwgeomtype, dimz, dimm, srid = Geometry._read_wkb_header(reader)
+        lwgeomtype, srid, dimz, dimm = Geometry._read_wkb_header(reader)
         if lwgeomtype == 1:
             cls = Point
         elif lwgeomtype == 2:
@@ -277,7 +285,7 @@ class Geometry(object):
             cls = GeometryCollection
         else:
             raise WkbError("Unsupported WKB type: {}".format(lwgeomtype))
-        return cls, dimz, dimm, srid
+        return cls, srid, dimz, dimm
 
     @staticmethod
     def _read_wkb_header(reader):
@@ -293,7 +301,7 @@ class Geometry(object):
                 srid = None
         except TypeError:
             raise WkbError()
-        return lwgeomtype, dimz, dimm, srid
+        return lwgeomtype, srid, dimz, dimm
 
     def _write_wkb_header(self, writer, use_srid, dimz, dimm):
         writer.add_order()
@@ -321,11 +329,11 @@ class _MultiGeometry(Geometry):
 
     @dimz.setter
     def dimz(self, value):
-        if self._dimz == value:
-            return
-        for geometry in self.geometries:
-            geometry.dimz = value
-        self._dimz = value
+        if self._dimz != value:
+            for geometry in self.geometries:
+                geometry.dimz = value
+            self._wkb = None
+            self._dimz = value
 
     @property
     def dimm(self):
@@ -340,11 +348,11 @@ class _MultiGeometry(Geometry):
 
     @dimm.setter
     def dimm(self, value):
-        if self._dimm == value:
-            return
-        for geometry in self.geometries:
-            geometry.dimm = value
-        self._dimm = value
+        if self._dimm != value:
+            for geometry in self.geometries:
+                geometry.dimm = value
+            self._wkb = None
+            self._dimm = value
 
     def _bounds(self):
         bounds = [g.bounds for g in self.geometries]
@@ -362,8 +370,8 @@ class _MultiGeometry(Geometry):
             geometries.append(geometry)
         return geometries
 
-    def _load_geometry(self):
-        self._geometries = self.__class__._read_wkb(self._reader, self._dimz, self._dimm)
+    def _load_geometry(self, reader):
+        self._geometries = self.__class__._read_wkb(reader, self._dimz, self._dimm)
 
     def _set_multi_metadata(self):
         self._dimz = None
@@ -392,7 +400,7 @@ class _MultiGeometry(Geometry):
         geometries = []
         try:
             for _ in range(reader.get_int()):
-                cls, dimz, dimm, srid = Geometry._get_wkb_type(reader)
+                cls, srid, dimz, dimm = Geometry._get_wkb_type(reader)
                 coordinates = cls._read_wkb(reader, dimz, dimm)
                 geometry = cls(coordinates, srid=srid, dimz=dimz, dimm=dimm)
                 geometries.append(geometry)
@@ -425,14 +433,9 @@ class Point(Geometry):
     __slots__ = ["_x", "_y", "_z", "_m"]
 
     def __init__(self, coordinates=None, srid=None, dimz=False, dimm=False):
-        if self._wkb:
-            self._x = None
-            self._y = None
-            self._z = None
-            self._m = None
-        else:
+        if not hasattr(self, "_wkb"):
+            self._wkb = None
             self._srid = srid
-            coordinates = list(coordinates)
             self._x = coordinates[0]
             self._y = coordinates[1]
             num = len(coordinates)
@@ -473,26 +476,26 @@ class Point(Geometry):
         """
         X coordinate.
         """
-        self._check_cache()
         return self._x
 
     @x.setter
     def x(self, value):
-        self._check_cache()
-        self._x = value
+        if self._x != value:
+            self._wkb = None
+            self._x = value
 
     @property
     def y(self):
         """
-        M coordinate.
+        Y coordinate.
         """
-        self._check_cache()
         return self._y
 
     @y.setter
     def y(self, value):
-        self._check_cache()
-        self._y = value
+        if self._y != value:
+            self._wkb = None
+            self._y = value
 
     @property
     def z(self):
@@ -501,17 +504,17 @@ class Point(Geometry):
         """
         if not self._dimz:
             return None
-        self._check_cache()
         return self._z
 
     @z.setter
     def z(self, value):
-        self._check_cache()
-        self._z = value
-        if value is None:
-            self._dimz = False
-        else:
-            self._dimz = True
+        if self._z != value:
+            self._wkb = None
+            self._z = value
+            if value is None:
+                self._dimz = False
+            else:
+                self._dimz = True
 
     @property
     def m(self):
@@ -520,17 +523,17 @@ class Point(Geometry):
         """
         if not self._dimm:
             return None
-        self._check_cache()
         return self._m
 
     @m.setter
     def m(self, value):
-        self._check_cache()
-        self._m = value
-        if value is None:
-            self._dimm = False
-        else:
-            self._dimm = True
+        if self._m != value:
+            self._wkb = None
+            self._m = value
+            if value is None:
+                self._dimm = False
+            else:
+                self._dimm = True
 
     @property
     def dimz(self):
@@ -545,14 +548,13 @@ class Point(Geometry):
 
     @dimz.setter
     def dimz(self, value):
-        if self._dimz == value:
-            return None
-        self._check_cache()
-        if value and self._z is None:
-            self._z = 0
-        elif value is None:
-            self._z = None
-        self._dimz = value
+        if self._dimz != value:
+            if value:
+                self._z = 0
+            else:
+                self._z = None
+            self._wkb = None
+            self._dimz = value
 
     @property
     def dimm(self):
@@ -567,14 +569,13 @@ class Point(Geometry):
 
     @dimm.setter
     def dimm(self, value):
-        if self._dimm == value:
-            return None
-        self._check_cache()
-        if value and self._m is None:
-            self._m = 0
-        elif value is None:
-            self._m = None
-        self._dimm = value
+        if self._dimm != value:
+            if value:
+                self._m = 0
+            else:
+                self._m = None
+            self._wkb = None
+            self._dimm = value
 
     def _to_geojson_coordinates(self, dimz):
         coordinates = [self.x, self.y]
@@ -585,8 +586,8 @@ class Point(Geometry):
     def _bounds(self):
         return (self.x, self.y, self.x, self.y)
 
-    def _load_geometry(self):
-        self._x, self._y, self._z, self._m = Point._read_wkb(self._reader, self._dimz, self._dimm)
+    def _load_geometry(self, reader):
+        self._x, self._y, self._z, self._m = Point._read_wkb(reader, self._dimz, self._dimm)
 
     @staticmethod
     def _read_wkb(reader, dimz, dimm):
@@ -639,9 +640,8 @@ class LineString(Geometry):
     __slots__ = ["_vertices"]
 
     def __init__(self, vertices=None, srid=None, dimz=False, dimm=False):
-        if self._wkb:
-            self._vertices = None
-        else:
+        if not hasattr(self, "_wkb"):
+            self._wkb = None
             self._srid = srid
             self._dimz = dimz
             self._dimm = dimm
@@ -653,7 +653,6 @@ class LineString(Geometry):
         """
         List of vertices that comprise the line.
         """
-        self._check_cache()
         return self._vertices
 
     @property
@@ -669,11 +668,11 @@ class LineString(Geometry):
 
     @dimz.setter
     def dimz(self, value):
-        if self.dimz == value:
-            return
-        for vertex in self.vertices:
-            vertex.dimz = value
-        self._dimz = value
+        if self.dimz != value:
+            for vertex in self.vertices:
+                vertex.dimz = value
+            self._wkb = None
+            self._dimz = value
 
     @property
     def dimm(self):
@@ -688,11 +687,11 @@ class LineString(Geometry):
 
     @dimm.setter
     def dimm(self, value):
-        if self.dimm == value:
-            return
-        for vertex in self.vertices:
-            vertex.dimm = value
-        self._dimm = value
+        if self.dimm != value:
+            for vertex in self.vertices:
+                vertex.dimm = value
+            self._wkb = None
+            self._dimm = value
 
     def _to_geojson_coordinates(self, dimz):
         coordinates = [v._to_geojson_coordinates(dimz=dimz) for v in self.vertices]
@@ -707,8 +706,8 @@ class LineString(Geometry):
     def _from_coordinates(vertices, dimz, dimm):
         return [Point(vertex, dimz=dimz, dimm=dimm) for vertex in vertices]
 
-    def _load_geometry(self):
-        vertices = LineString._read_wkb(self._reader, self._dimz, self._dimm)
+    def _load_geometry(self, reader):
+        vertices = LineString._read_wkb(reader, self._dimz, self._dimm)
         self._vertices = LineString._from_coordinates(vertices, self._dimz, self._dimm)
 
     @staticmethod
@@ -749,9 +748,8 @@ class Polygon(Geometry):
     __slots__ = ["_rings"]
 
     def __init__(self, rings=None, srid=None, dimz=False, dimm=False):
-        if self._wkb:
-            self._rings = None
-        else:
+        if not hasattr(self, "_wkb"):
+            self._wkb = None
             self._srid = srid
             self._dimz = dimz
             self._dimm = dimm
@@ -763,7 +761,6 @@ class Polygon(Geometry):
         """
         List of linearrings that comprise the polygon.
         """
-        self._check_cache()
         return self._rings
 
     @property
@@ -793,11 +790,11 @@ class Polygon(Geometry):
 
     @dimz.setter
     def dimz(self, value):
-        if self._dimz == value:
-            return
-        for ring in self.rings:
-            ring.dimz = value
-        self._dimz = value
+        if self._dimz != value:
+            for ring in self.rings:
+                ring.dimz = value
+            self._wkb = None
+            self._dimz = value
 
     @property
     def dimm(self):
@@ -812,11 +809,11 @@ class Polygon(Geometry):
 
     @dimm.setter
     def dimm(self, value):
-        if self._dimm == value:
-            return
-        for ring in self.rings:
-            ring.dimm = value
-        self._dimm = value
+        if self._dimm != value:
+            for ring in self.rings:
+                ring.dimm = value
+            self._wkb = None
+            self._dimm = value
 
     def _to_geojson_coordinates(self, dimz):
         coordinates = [r._to_geojson_coordinates(dimz=dimz) for r in self.rings]
@@ -829,8 +826,8 @@ class Polygon(Geometry):
     def _from_coordinates(rings, dimz, dimm):
         return [LineString(vertices, dimz, dimm) for vertices in rings]
 
-    def _load_geometry(self):
-        rings = Polygon._read_wkb(self._reader, self._dimz, self._dimm)
+    def _load_geometry(self, reader):
+        rings = Polygon._read_wkb(reader, self._dimz, self._dimm)
         self._rings = Polygon._from_coordinates(rings, self._dimz, self._dimm)
 
     @staticmethod
@@ -869,9 +866,8 @@ class MultiPoint(_MultiGeometry):
     __slots__ = ["_points"]
 
     def __init__(self, points=None, srid=None):
-        if self._wkb:
-            self._points = None
-        else:
+        if not hasattr(self, "_wkb"):
+            self._wkb = None
             self._points = points
             self._srid = srid
             self._set_multi_metadata()
@@ -881,7 +877,6 @@ class MultiPoint(_MultiGeometry):
         """
         List of all component points.
         """
-        self._check_cache()
         return self._points
 
     @property
@@ -891,8 +886,8 @@ class MultiPoint(_MultiGeometry):
         """
         return self.points
 
-    def _load_geometry(self):
-        self._points = MultiPoint._read_wkb(self._reader, self._dimz, self._dimm)
+    def _load_geometry(self, reader):
+        self._points = MultiPoint._read_wkb(reader, self._dimz, self._dimm)
 
 
 class MultiLineString(_MultiGeometry):
@@ -914,9 +909,8 @@ class MultiLineString(_MultiGeometry):
     __slots__ = ["_linestrings"]
 
     def __init__(self, linestrings=None, srid=None):
-        if self._wkb:
-            self._linestrings = None
-        else:
+        if not hasattr(self, "_wkb"):
+            self._wkb = None
             self._linestrings = linestrings
             self._srid = srid
             self._set_multi_metadata()
@@ -926,7 +920,6 @@ class MultiLineString(_MultiGeometry):
         """
         List of all component lines.
         """
-        self._check_cache()
         return self._linestrings
 
     @property
@@ -936,8 +929,8 @@ class MultiLineString(_MultiGeometry):
         """
         return self.linestrings
 
-    def _load_geometry(self):
-        self._linestrings = MultiLineString._read_wkb(self._reader, self._dimz, self._dimm)
+    def _load_geometry(self, reader):
+        self._linestrings = MultiLineString._read_wkb(reader, self._dimz, self._dimm)
 
 
 class MultiPolygon(_MultiGeometry):
@@ -958,13 +951,10 @@ class MultiPolygon(_MultiGeometry):
     _LWGEOMTYPE = 6
     __slots__ = ["__polygons__"]
 
-    def __init__(self, polygons=None, srid=None, dimz=False, dimm=False):
-        if self._wkb:
-            self._polygons = None
-        else:
+    def __init__(self, polygons=None, srid=None):
+        if not hasattr(self, "_wkb"):
+            self._wkb = None
             self._srid = srid
-            self._dimz = dimz
-            self._dimm = dimm
             self._polygons = polygons
             self._set_multi_metadata()
 
@@ -973,7 +963,6 @@ class MultiPolygon(_MultiGeometry):
         """
         List of all component polygons.
         """
-        self._check_cache()
         return self._polygons
 
     @property
@@ -983,8 +972,8 @@ class MultiPolygon(_MultiGeometry):
         """
         return self.polygons
 
-    def _load_geometry(self):
-        self._polygons = MultiPolygon._read_wkb(self._reader, self._dimz, self._dimm)
+    def _load_geometry(self, reader):
+        self._polygons = MultiPolygon._read_wkb(reader, self._dimz, self._dimm)
 
 
 class GeometryCollection(_MultiGeometry):
@@ -1005,10 +994,9 @@ class GeometryCollection(_MultiGeometry):
     _LWGEOMTYPE = 7
     __slots__ = ["_geometries"]
 
-    def __init__(self, geometries=None, srid=None, dimz=False, dimm=False):
-        if self._wkb:
-            self._geometries = None
-        else:
+    def __init__(self, geometries=None, srid=None):
+        if not hasattr(self, "_wkb"):
+            self._wkb = None
             self._geometries = geometries
             self._srid = srid
             self._set_multi_metadata()
@@ -1018,7 +1006,6 @@ class GeometryCollection(_MultiGeometry):
         """
         List of all component geometries.
         """
-        self._check_cache()
         return self._geometries
 
     def _to_geojson(self, dimz):

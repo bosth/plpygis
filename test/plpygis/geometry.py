@@ -15,12 +15,14 @@ geojson_mpt = {"type":"MultiPoint","coordinates":[[0,0],[1,1]]}
 geojson_mln = {"type":"MultiLineString","coordinates":[[[0,0],[1,1]],[[2,2],[3,3]]]}
 geojson_mpg = {"type":"MultiPolygon","coordinates":[[[[1,0],[111,0.0],[101.0,1.0],[100.0,1.0],[1,0]]],[[[100,0],[101.0,0.0],[101.0,1.0],[100.0,1.0],[100.0,0.0]]]]}
 geojson_gc = {"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[10,0]},{"type":"LineString","coordinates":[[11,0],[12,1]]}]}
+wkb_pt = "010100000000000000000008400000000000000840"
 wkb_ln = "0102000000050000000000000040BE40409D640199EB373F400000000080AC3E40BF244710FD1939400000000000503940D2A6484BEB41374000000000801D3740248729C89C832A400000000000833340940338EFAFBB2C40"
 wkb_pg = "010300000002000000060000000000000000003440000000000080414000000000000024400000000000003E40000000000000244000000000000024400000000000003E4000000000000014400000000000804640000000000000344000000000000034400000000000804140040000000000000000003E40000000000000344000000000000034400000000000002E40000000000000344000000000000039400000000000003E400000000000003440"
 wkb_mpt = "010400008002000000010100008000000000000059400000000000006940000000000000000001010000800000000000000000000000000000F03F0000000000000000"
 wkb_mln = "010500004002000000010200004002000000000000000000000000000000000000000000000000004940000000000000F03F000000000000F03F0000000000003940010200004002000000000000000000F0BF000000000000F0BF000000000000F03F2DB29DEFA7C60140ED0DBE3099AA0A400000000000388F40"
 wkb_mpg = "01060000000200000001030000000100000004000000000000000000444000000000000044400000000000003440000000000080464000000000008046400000000000003E4000000000000044400000000000004440010300000002000000060000000000000000003440000000000080414000000000000024400000000000003E40000000000000244000000000000024400000000000003E4000000000000014400000000000804640000000000000344000000000000034400000000000804140040000000000000000003E40000000000000344000000000000034400000000000002E40000000000000344000000000000039400000000000003E400000000000003440"
 wkb_gc = "0107000000020000000101000000000000000000000000000000000000000102000000020000000000000000000000000000000000F03F000000000000F03F000000000000F03F"
+wkb_types = [wkb_pt, wkb_ln, wkb_pg, wkb_mpt, wkb_mln, wkb_mpg, wkb_gc]
 
 class GeometryTestCase(unittest.TestCase):
     def test_missing_ewkb(self):
@@ -61,7 +63,6 @@ class GeometryTestCase(unittest.TestCase):
         postgis_type = "geometry(Point)"
         self.assertEquals(geom.postgis_type, postgis_type)
         self.assertEquals(geom.__repr__(), "<Point: 'geometry(Point)'>")
-        geom.srid = geom.srid # clear cached WKB
         self.assertEquals(geom.__str__().lower(), wkb.lower())
 
     def test_read_ewkb_point_srid(self):
@@ -77,7 +78,6 @@ class GeometryTestCase(unittest.TestCase):
         postgis_type = "geometry(Point,4326)"
         self.assertEquals(geom.postgis_type, postgis_type)
         self.assertEquals(geom.__repr__(), "<Point: 'geometry(Point,4326)'>")
-        geom.srid = geom.srid # clear cached WKB
         self.assertEquals(geom.__str__().lower(), wkb.lower())
 
     def test_read_ewkb_pointz(self):
@@ -93,7 +93,6 @@ class GeometryTestCase(unittest.TestCase):
         postgis_type = "geometry(PointZ,4326)"
         self.assertEquals(geom.postgis_type, postgis_type)
         self.assertEquals(geom.__repr__(), "<Point: 'geometry(PointZ,4326)'>")
-        geom.srid = geom.srid # clear cached WKB
         self.assertEquals(geom.__str__().lower(), wkb.lower())
 
     def test_read_ewkb_pointm(self):
@@ -109,7 +108,6 @@ class GeometryTestCase(unittest.TestCase):
         postgis_type = "geometry(PointM,4326)"
         self.assertEquals(geom.postgis_type, postgis_type)
         self.assertEquals(geom.__repr__(), "<Point: 'geometry(PointM,4326)'>")
-        geom.srid = geom.srid # clear cached WKB
         self.assertEquals(geom.__str__().lower(), wkb.lower())
 
     def test_read_ewkb_pointzm(self):
@@ -122,11 +120,9 @@ class GeometryTestCase(unittest.TestCase):
         self.assertEquals(geom.srid, 4326)
         self.assertEquals(geom.dimz, True)
         self.assertEquals(geom.dimm, True)
-        geom.srid = geom.srid # clear cached WKB
         postgis_type = "geometry(PointZM,4326)"
         self.assertEquals(geom.postgis_type, postgis_type)
         self.assertEquals(geom.__repr__(), "<Point: 'geometry(PointZM,4326)'>")
-        geom.srid = geom.srid # clear cached WKB
         self.assertEquals(geom.__str__().lower(), wkb.lower())
 
     def test_read_wkb_linestring(self):
@@ -140,10 +136,8 @@ class GeometryTestCase(unittest.TestCase):
         self.assertEquals(geom.dimz, False)
         self.assertEquals(geom.dimm, False)
         postgis_type = "geometry(LineString)"
-        geom.vertices
         self.assertEquals(geom.postgis_type, postgis_type)
         self.assertEquals(geom.__repr__(), "<LineString: 'geometry(LineString)'>")
-        geom.srid = geom.srid # clear cached WKB
         self.assertEquals(geom.__str__().lower(), wkb.lower())
 
     def test_read_wkb_polygon(self):
@@ -160,7 +154,6 @@ class GeometryTestCase(unittest.TestCase):
         self.assertEquals(geom.exterior.type, "LineString")
         self.assertEquals(geom.postgis_type, postgis_type)
         self.assertEquals(geom.__repr__(), "<Polygon: 'geometry(Polygon)'>")
-        geom.srid = geom.srid # clear cached WKB
         self.assertEquals(geom.__str__().lower(), wkb.lower())
 
     def test_read_wkb_multipoint(self):
@@ -176,7 +169,6 @@ class GeometryTestCase(unittest.TestCase):
         postgis_type = "geometry(MultiPointZ)"
         self.assertEquals(geom.postgis_type, postgis_type)
         self.assertEquals(geom.__repr__(), "<MultiPoint: 'geometry(MultiPointZ)'>")
-        geom.srid = geom.srid # clear cached WKB
         self.assertEquals(geom.__str__().lower(), wkb.lower())
         for g in geom.geometries:
             self.assertEquals(g.type, "Point")
@@ -194,7 +186,6 @@ class GeometryTestCase(unittest.TestCase):
         postgis_type = "geometry(MultiLineStringM)"
         self.assertEquals(geom.postgis_type, postgis_type)
         self.assertEquals(geom.__repr__(), "<MultiLineString: 'geometry(MultiLineStringM)'>")
-        geom.srid = geom.srid # clear cached WKB
         self.assertEquals(geom.__str__().lower(), wkb.lower())
         for g in geom.geometries:
             self.assertEquals(g.type, "LineString")
@@ -212,7 +203,6 @@ class GeometryTestCase(unittest.TestCase):
         postgis_type = "geometry(MultiPolygon)"
         self.assertEquals(geom.postgis_type, postgis_type)
         self.assertEquals(geom.__repr__(), "<MultiPolygon: 'geometry(MultiPolygon)'>")
-        geom.srid = geom.srid # clear cached WKB
         self.assertEquals(geom.__str__().lower(), wkb.lower())
         for g in geom.geometries:
             self.assertEquals(g.type, "Polygon")
@@ -230,7 +220,6 @@ class GeometryTestCase(unittest.TestCase):
         postgis_type = "geometry(GeometryCollection)"
         self.assertEquals(geom.postgis_type, postgis_type)
         self.assertEquals(geom.__repr__(), "<GeometryCollection: 'geometry(GeometryCollection)'>")
-        geom.srid = geom.srid # clear cached WKB
         self.assertEquals(geom.__str__().lower(), wkb.lower())
         self.assertEquals(geom.geometries[0].type, "Point")
         self.assertEquals(geom.geometries[1].type, "LineString")
@@ -239,16 +228,13 @@ class GeometryTestCase(unittest.TestCase):
         """
         change dimensionality of a MultiGeometry
         """
-        wkb = wkb_gc
-        geom = Geometry(wkb)
-        self.assertEquals(geom.dimz, False)
-        self.assertEquals(geom.dimm, False)
-        geom.dimz = True
-        geom.dimm = True
-        self.assertEquals(geom.dimz, True)
-        self.assertEquals(geom.dimm, True)
-        geom.srid = geom.srid # clear cached WKB
-        self.assertNotEquals(geom.__str__().lower(), wkb.lower())
+        for wkb in wkb_types:
+            geom1 = Geometry(wkb)
+            geom2 = Geometry(wkb)
+            print geom1.postgis_type
+            geom2.dimz = not geom1.dimz
+            geom2.dimm = not geom1.dimm
+            self.assertNotEquals(geom1.wkb.lower(), geom2.wkb.lower())
 
     def test_translate_geojson_pt(self):
         """
