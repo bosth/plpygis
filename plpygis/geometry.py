@@ -192,7 +192,7 @@ class Geometry(object):
             if not wkb:
                 raise WkbError("No EWKB provided")
             if wkb.startswith("00"):
-                reader = Reader(wkb, ">")  # big-endian reader
+                reader = HexReader(wkb, ">")  # big-endian reader
             elif wkb.startswith("01"):
                 reader = HexReader(wkb, "<")  # little-endian reader
             else:

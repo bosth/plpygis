@@ -61,8 +61,16 @@ class GeometryTestCase(unittest.TestCase):
         postgis_type = "geometry(Point)"
         self.assertEquals(geom.postgis_type, postgis_type)
         self.assertEquals(geom.__repr__(), "<Point: 'geometry(Point)'>")
-        geom.srid = geom.srid # clear cached WKB
+        geom.srid = geom.srid  # clear cached WKB
         self.assertEquals(geom.__str__().lower(), wkb.lower())
+
+    def test_read_wkb_point_big_endian(self):
+        """
+        read WKB Point
+        """
+        geom = Geometry("000000000140000000000000004010000000000000")
+        self.assertIsInstance(geom, Point)
+        self.assertEquals((2, 4, None), (geom.x, geom.y, geom.z))
 
     def test_read_ewkb_point_srid(self):
         """
