@@ -1,5 +1,5 @@
 from .exceptions import DependencyError, WkbError, SridError, DimensionalityError
-from .hex import HexReader, HexWriter
+from .hex import HexReader, HexWriter, HexBytes
 
 try:
     import shapely.wkb
@@ -60,6 +60,13 @@ class Geometry(object):
 
     def __new__(cls, wkb, srid=None, dimz=False, dimm=False):
         if cls == Geometry:
+            if not wkb:
+                raise WkbError("No EWKB provided")
+            if not isinstance(wkb, (bytes, bytearray)):
+                wkb = bytearray.fromhex(str(wkb))
+            elif wkb[:2] in (b'00', b'01'):  # hex-encoded string as bytes
+                wkb = bytearray.fromhex(wkb.decode('ascii'))
+            wkb = HexBytes(wkb)
             newcls, dimz, dimm, srid, reader = Geometry._from_wkb(wkb)
             geom = super(Geometry, cls).__new__(newcls)
             geom._wkb = wkb
@@ -189,10 +196,6 @@ class Geometry(object):
     @staticmethod
     def _from_wkb(wkb):
         try:
-            if not wkb:
-                raise WkbError("No EWKB provided")
-            if not isinstance(wkb, bytes):
-                wkb = bytes.fromhex(str(wkb))
             if wkb.startswith(b"\x00"):
                 reader = HexReader(wkb, ">")  # big-endian reader
             elif wkb.startswith(b"\x01"):
@@ -219,7 +222,7 @@ class Geometry(object):
 
     def _to_shapely(self):
         if SHAPELY:
-            sgeom = shapely.wkb.loads(self.wkb, hex=False)
+            sgeom = shapely.wkb.loads(bytes(self.wkb))
             srid = lgeos.GEOSGetSRID(sgeom._geom)
             if srid == 0:
                 srid = None

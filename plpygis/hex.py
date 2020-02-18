@@ -79,11 +79,11 @@ class HexWriter:
         return HexBytes(data)
 
 
-class HexBytes(bytes):
+class HexBytes(bytearray):
     def __str__(self):
         return self.hex()
 
     def __eq__(self, other):
-        if isinstance(other, str):
-            other = bytes.fromhex(other)
+        if isinstance(other, str) and other[:2] in ('00', '01'):
+            other = bytearray.fromhex(other)
         return super(HexBytes, self).__eq__(other)
