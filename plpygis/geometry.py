@@ -62,10 +62,6 @@ class Geometry(object):
         if cls == Geometry:
             if not wkb:
                 raise WkbError("No EWKB provided")
-            if not isinstance(wkb, (bytes, bytearray)):
-                wkb = bytearray.fromhex(str(wkb))
-            elif wkb[:2] in (b'00', b'01'):  # hex-encoded string as bytes
-                wkb = bytearray.fromhex(wkb.decode('ascii'))
             wkb = HexBytes(wkb)
             newcls, dimz, dimm, srid, reader = Geometry._from_wkb(wkb)
             geom = super(Geometry, cls).__new__(newcls)
@@ -222,7 +218,7 @@ class Geometry(object):
 
     def _to_shapely(self):
         if SHAPELY:
-            sgeom = shapely.wkb.loads(bytes(self.wkb))
+            sgeom = shapely.wkb.loads(self.wkb)
             srid = lgeos.GEOSGetSRID(sgeom._geom)
             if srid == 0:
                 srid = None

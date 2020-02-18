@@ -83,6 +83,14 @@ class HexBytes(bytes):
     """A subclass of bytearray that represents binary WKB data.
     It can be converted to a hexadecimal representation of the data using str()
     and compared to a hexadecimal representation with the normal equality operator."""
+
+    def __new__(cls, data):
+        if not isinstance(data, (bytes, bytearray)):
+            data = unhexlify(str(data))
+        elif data[:2] in (b'00', b'01'):  # hex-encoded string as bytes
+            data = unhexlify(data.decode('ascii'))
+        return bytes.__new__(cls, data)
+
     def __str__(self):
         return hexlify(self).decode('ascii')
 
