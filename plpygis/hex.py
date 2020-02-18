@@ -2,7 +2,7 @@ from binascii import hexlify, unhexlify
 from struct import calcsize, unpack_from, pack
 
 
-class HexReader():
+class HexReader:
     """
     A reader for generic hex data. The current position in the stream of bytes
     will be retained as data is read.
@@ -80,8 +80,11 @@ class HexWriter:
 
 
 class HexBytes(bytearray):
+    """A subclass of bytearray that represents binary WKB data.
+    It can be converted to a hexadecimal representation of the data using str()
+    and compared to a hexadecimal representation with the normal equality operator."""
     def __str__(self):
-        return self.hex()
+        return hexlify(self).decode('ascii')
 
     def __eq__(self, other):
         if isinstance(other, str) and other[:2] in ('00', '01'):
