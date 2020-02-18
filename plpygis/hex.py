@@ -79,7 +79,7 @@ class HexWriter:
         return HexBytes(data)
 
 
-class HexBytes(bytearray):
+class HexBytes(bytes):
     """A subclass of bytearray that represents binary WKB data.
     It can be converted to a hexadecimal representation of the data using str()
     and compared to a hexadecimal representation with the normal equality operator."""
@@ -88,5 +88,5 @@ class HexBytes(bytearray):
 
     def __eq__(self, other):
         if isinstance(other, str) and other[:2] in ('00', '01'):
-            other = bytearray.fromhex(other)
+            other = unhexlify(other)
         return super(HexBytes, self).__eq__(other)
