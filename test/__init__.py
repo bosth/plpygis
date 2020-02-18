@@ -1,1 +1,1 @@
-from plpygis import *
+from .plpygis import *

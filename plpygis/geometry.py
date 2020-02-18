@@ -10,8 +10,7 @@ except ImportError:
 
 
 class Geometry(object):
-    """
-    A representation of a PostGIS geometry.
+    r"""A representation of a PostGIS geometry.
 
     PostGIS geometries are either an OpenGIS Consortium Simple Features for SQL
     specification type or a PostGIS extended type. The object's canonical form
@@ -24,7 +23,7 @@ class Geometry(object):
     From an (E)WKB::
 
         >>> Geometry(b'\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
-        <Point: 'geometry(PointZ)'>
+        <Point: 'geometry(Point)'>
 
     From the hexadecimal string representation of an (E)WKB::
 
@@ -48,9 +47,9 @@ class Geometry(object):
     From any object supporting ``__geo_interface__``::
 
         >>> from shapefile import Reader
-        >>> feature = Reader("lines.shp").shape(0)
+        >>> feature = Reader("test/lines.shp").shape(0)
         >>> Geometry.shape(feature)
-        <LineString: 'geometry(LineString)'>
+        <MultiPoint: 'geometry(MultiPoint)'>
 
     A ``Geometry`` can be read as long as it is one of the following
     types: ``Point``, ``LineString``, ``Polygon``, ``MultiPoint``, ``MultiLineString``,

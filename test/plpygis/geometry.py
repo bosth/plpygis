@@ -3,6 +3,7 @@ Test Geometry
 """
 
 import unittest
+
 from shapely import geometry
 from plpygis import Geometry, Point, LineString, Polygon
 from plpygis import MultiPoint, MultiLineString, MultiPolygon, GeometryCollection

@@ -20,7 +20,7 @@ jobs:
       run: |
         sudo apt-get -y install libgeos-dev
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r requirements-test.txt
     - name: Test with pytest
       run: |
-        python -m unittest test.plpygis
+        python -m test -v
