@@ -9,7 +9,7 @@ class HexReader():
     """
 
     def __init__(self, hexdata, order, offset=0):
-        self._data = unhexlify(hexdata)
+        self._data = hexdata
         self._order = order
         self._ini_offset = offset
         self._cur_offset = offset
@@ -47,7 +47,7 @@ class HexReader():
         return self._get_value("d")
 
 
-class HexWriter():
+class HexWriter:
     def __init__(self, order):
         self._fmts = []
         self._values = []
@@ -76,4 +76,14 @@ class HexWriter():
     def data(self):
         fmt = self._order + "".join(self._fmts)
         data = pack(fmt, *self._values)
-        return hexlify(data).decode("ascii")
+        return HexBytes(data)
+
+
+class HexBytes(bytes):
+    def __str__(self):
+        return self.hex()
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            other = bytes.fromhex(other)
+        return super(HexBytes, self).__eq__(other)

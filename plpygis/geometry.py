@@ -191,9 +191,11 @@ class Geometry(object):
         try:
             if not wkb:
                 raise WkbError("No EWKB provided")
-            if wkb.startswith("00"):
+            if not isinstance(wkb, bytes):
+                wkb = bytes.fromhex(str(wkb))
+            if wkb.startswith(b"\x00"):
                 reader = HexReader(wkb, ">")  # big-endian reader
-            elif wkb.startswith("01"):
+            elif wkb.startswith(b"\x01"):
                 reader = HexReader(wkb, "<")  # little-endian reader
             else:
                 raise WkbError("First byte in WKB must be 0 or 1.")
@@ -217,7 +219,7 @@ class Geometry(object):
 
     def _to_shapely(self):
         if SHAPELY:
-            sgeom = shapely.wkb.loads(self.wkb, hex=True)
+            sgeom = shapely.wkb.loads(self.wkb, hex=False)
             srid = lgeos.GEOSGetSRID(sgeom._geom)
             if srid == 0:
                 srid = None
@@ -239,7 +241,7 @@ class Geometry(object):
         return "<{}: '{}'>".format(self.type, self.postgis_type)
 
     def __str__(self):
-        return self.wkb
+        return self.wkb.__str__()
 
     @property
     def __geo_interface__(self):
