@@ -23,6 +23,11 @@ class Geometry(object):
 
     From an (E)WKB::
 
+        >>> Geometry(b'\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        <Point: 'geometry(PointZ)'>
+
+    From the hexadecimal string representation of an (E)WKB::
+
         >>> Geometry("0101000080000000000000000000000000000000000000000000000000")
         <Point: 'geometry(PointZ)'>
 
