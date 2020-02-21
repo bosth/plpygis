@@ -194,11 +194,14 @@ class Geometry(object):
     @staticmethod
     def wkb_type(wkb):
         """
-        Extract information from a WKB header, returned as a tuple of name,
-        SRID, z dimension and m dimension.
+        Extract information from a WKB header, returned as a dictionary of
+        name, SRID, z dimension and m dimension.
         """
         newcls, srid, dimz, dimm, _ = Geometry._from_wkb(wkb)
-        return (newcls.__name__, srid, dimz, dimm)
+        return {"type": newcls.__name__,
+                "srid": srid,
+                "dimz": dimz,
+                "dimm": dimm}
 
     @staticmethod
     def _from_wkb(wkb):

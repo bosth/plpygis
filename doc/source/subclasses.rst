@@ -119,6 +119,11 @@ Partial WKB parsing
 
 ``plpygis`` is able to parse full WKBs in pure Python; however, this can be expensive for large, complex geometries and is not always necessary when it might be enough to simply check the geometry type, the SRID or the presence of a Z or M dimension. When creating a :class:`Geometry <plpygis.geometry.Geometry>` the WKB is fully parsed, but ``plpygis`` also offers a light-weight :class:`wkb_type <plpygis.geometry.wkb_type>` function that can return the data from a WKB header, without needing to read all component coordinates.
 
+.. code-block:: python
+
+    >>> Geometry.wkb_type('0101000080000000000000000000000000000000000000000000000000')
+    {'dimm': False, 'dimz': True, 'srid': None, 'type': 'Point'}
+
 Caching
 ^^^^^^^
 
