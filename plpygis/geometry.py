@@ -47,7 +47,7 @@ class Geometry(object):
     From any object supporting ``__geo_interface__``::
 
         >>> from shapefile import Reader
-        >>> feature = Reader("test/lines.shp").shape(0)
+        >>> feature = Reader("test/multipoint.shp").shape(0)
         >>> Geometry.shape(feature)
         <MultiPoint: 'geometry(MultiPoint)'>
 
