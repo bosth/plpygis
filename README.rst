@@ -35,3 +35,7 @@ Full ``plpygis`` documentation is available at http://plpygis.readthedocs.io/.
 .. image:: https://readthedocs.org/projects/plpygis/badge/?version=latest
     :target: http://plpygis.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
+    
+.. image:: https://github.com/bosth/plpygis/workflows/Python%20package/badge.svg
+    :target: https://github.com/bosth/plpygis/actions?query=workflow%3A%22Python+package%22
+    :alt: Documentation Status
