@@ -3,6 +3,7 @@ Test Geometry
 """
 
 import unittest
+
 from shapely import geometry
 from plpygis import Geometry, Point, LineString, Polygon
 from plpygis import MultiPoint, MultiLineString, MultiPolygon, GeometryCollection
@@ -349,7 +350,7 @@ class GeometryTestCase(unittest.TestCase):
         """
         point = Point((123,123))
         sgeom = point.shapely
-        self.assertEquals(sgeom.wkb_hex.upper(), point.wkb.upper())
+        self.assertEquals(sgeom.wkb, point.wkb)
 
     def test_shapely_load(self):
         """
@@ -357,7 +358,7 @@ class GeometryTestCase(unittest.TestCase):
         """
         sgeom = geometry.Point(99,-99)
         point = Geometry.from_shapely(sgeom)
-        self.assertEquals(sgeom.wkb_hex.upper(), point.wkb.upper())
+        self.assertEquals(sgeom.wkb_hex, point.wkb)
 
     def test_strip_srid(self):
         """
@@ -572,3 +573,11 @@ class GeometryTestCase(unittest.TestCase):
         p.dimz = None
         p.dimm = None
         self.assertEquals(p.__str__().lower(), wkb.lower())
+
+    def test_binary_wkb_roundtrip(self):
+        wkb = b'\x01\x01\x00\x00\x20\xe6\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+        self.assertEqual(Geometry(wkb).wkb, wkb)
+
+    def test_byte_array_wkb_string(self):
+        wkb = bytearray(b'010100000000000000000000000000000000000000')
+        self.assertEqual(str(Geometry(wkb)), wkb.decode('ascii'))

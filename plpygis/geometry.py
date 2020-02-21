@@ -1,5 +1,5 @@
 from .exceptions import DependencyError, WkbError, SridError, DimensionalityError
-from .hex import HexReader, HexWriter
+from .hex import HexReader, HexWriter, HexBytes
 
 try:
     import shapely.wkb
@@ -10,8 +10,7 @@ except ImportError:
 
 
 class Geometry(object):
-    """
-    A representation of a PostGIS geometry.
+    r"""A representation of a PostGIS geometry.
 
     PostGIS geometries are either an OpenGIS Consortium Simple Features for SQL
     specification type or a PostGIS extended type. The object's canonical form
@@ -22,6 +21,11 @@ class Geometry(object):
     subclass for the particular geometry type will be instantiated.
 
     From an (E)WKB::
+
+        >>> Geometry(b'\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00')
+        <Point: 'geometry(Point)'>
+
+    From the hexadecimal string representation of an (E)WKB::
 
         >>> Geometry("0101000080000000000000000000000000000000000000000000000000")
         <Point: 'geometry(PointZ)'>
@@ -43,9 +47,9 @@ class Geometry(object):
     From any object supporting ``__geo_interface__``::
 
         >>> from shapefile import Reader
-        >>> feature = Reader("lines.shp").shape(0)
+        >>> feature = Reader("test/lines.shp").shape(0)
         >>> Geometry.shape(feature)
-        <LineString: 'geometry(LineString)'>
+        <MultiPoint: 'geometry(MultiPoint)'>
 
     A ``Geometry`` can be read as long as it is one of the following
     types: ``Point``, ``LineString``, ``Polygon``, ``MultiPoint``, ``MultiLineString``,
@@ -60,6 +64,9 @@ class Geometry(object):
 
     def __new__(cls, wkb, srid=None, dimz=False, dimm=False):
         if cls == Geometry:
+            if not wkb:
+                raise WkbError("No EWKB provided")
+            wkb = HexBytes(wkb)
             newcls, dimz, dimm, srid, reader = Geometry._from_wkb(wkb)
             geom = super(Geometry, cls).__new__(newcls)
             geom._wkb = wkb
@@ -189,11 +196,9 @@ class Geometry(object):
     @staticmethod
     def _from_wkb(wkb):
         try:
-            if not wkb:
-                raise WkbError("No EWKB provided")
-            if wkb.startswith("00"):
+            if wkb.startswith(b"\x00"):
                 reader = HexReader(wkb, ">")  # big-endian reader
-            elif wkb.startswith("01"):
+            elif wkb.startswith(b"\x01"):
                 reader = HexReader(wkb, "<")  # little-endian reader
             else:
                 raise WkbError("First byte in WKB must be 0 or 1.")
@@ -217,7 +222,7 @@ class Geometry(object):
 
     def _to_shapely(self):
         if SHAPELY:
-            sgeom = shapely.wkb.loads(self.wkb, hex=True)
+            sgeom = shapely.wkb.loads(self.wkb)
             srid = lgeos.GEOSGetSRID(sgeom._geom)
             if srid == 0:
                 srid = None
@@ -239,7 +244,7 @@ class Geometry(object):
         return "<{}: '{}'>".format(self.type, self.postgis_type)
 
     def __str__(self):
-        return self.wkb
+        return self.wkb.__str__()
 
     @property
     def __geo_interface__(self):

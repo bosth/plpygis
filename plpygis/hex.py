@@ -2,14 +2,14 @@ from binascii import hexlify, unhexlify
 from struct import calcsize, unpack_from, pack
 
 
-class HexReader():
+class HexReader:
     """
     A reader for generic hex data. The current position in the stream of bytes
     will be retained as data is read.
     """
 
     def __init__(self, hexdata, order, offset=0):
-        self._data = unhexlify(hexdata)
+        self._data = hexdata
         self._order = order
         self._ini_offset = offset
         self._cur_offset = offset
@@ -47,7 +47,7 @@ class HexReader():
         return self._get_value("d")
 
 
-class HexWriter():
+class HexWriter:
     def __init__(self, order):
         self._fmts = []
         self._values = []
@@ -76,4 +76,25 @@ class HexWriter():
     def data(self):
         fmt = self._order + "".join(self._fmts)
         data = pack(fmt, *self._values)
-        return hexlify(data).decode("ascii")
+        return HexBytes(data)
+
+
+class HexBytes(bytes):
+    """A subclass of bytearray that represents binary WKB data.
+    It can be converted to a hexadecimal representation of the data using str()
+    and compared to a hexadecimal representation with the normal equality operator."""
+
+    def __new__(cls, data):
+        if not isinstance(data, (bytes, bytearray)):
+            data = unhexlify(str(data))
+        elif data[:2] in (b'00', b'01'):  # hex-encoded string as bytes
+            data = unhexlify(data.decode('ascii'))
+        return bytes.__new__(cls, data)
+
+    def __str__(self):
+        return hexlify(self).decode('ascii')
+
+    def __eq__(self, other):
+        if isinstance(other, str) and other[:2] in ('00', '01'):
+            other = unhexlify(other)
+        return super(HexBytes, self).__eq__(other)
