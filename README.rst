@@ -2,14 +2,14 @@
 plpygis
 =======
 
-``plpygis`` is a Python conveter to and from the PostGIS ``geometry`` type, WKB, EWKB, GeoJSON and Shapely geometries and additionally supports ``__geo_interface__``. ``plpygis`` is intended for use in PL/Python functions.
+``plpygis`` is a Python tool that can convert a `PostGIS <https://postgis.net/>`_ ``geometry`` into an equivalent WKB, EWKB, GeoJSON or Shapely geometry. ``plpygis`` is intended for use in `PL/Python <https://www.postgresql.org/docs/current/plpython.html>`_ functions.
 
 Basic usage
 ===========
 
 The ``Geometry`` class and its subclasses can be used to convert to and from PostGIS geometries. The following example will take a PostGIS multipolygon geometry named ``geom`` and find its largest component polygon.
 
-``Geometry()`` can convert a Postigs ``geometry`` that has been passed as a parameter to a PL/Python function. A ``Geometry`` that is returned from the PL/Python function will automatically be converted back to a PostGIS ``geometry``.
+``Geometry()`` can convert a PostGIS ``geometry`` that has been passed as a parameter to a PL/Python function. A ``Geometry`` that is returned from the PL/Python function will automatically be converted back to a PostGIS ``geometry``.
 
 .. code-block:: postgres
  
