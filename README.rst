@@ -2,7 +2,7 @@
 plpygis
 =======
 
-``plpygis`` is a Python tool that can convert a `PostGIS <https://postgis.net/>`_ ``geometry`` into an equivalent WKB, EWKB, GeoJSON or Shapely geometry. ``plpygis`` is intended for use in `PL/Python <https://www.postgresql.org/docs/current/plpython.html>`_ functions.
+``plpygis`` is a Python tool that can convert a `PostGIS <https://postgis.net/>`_ ``geometry`` into an equivalent WKB, EWKB, GeoJSON or Shapely geometry. ``plpygis`` is intended for use in PostgreSQL `PL/Python <https://www.postgresql.org/docs/current/plpython.html>`_ functions.
 
 Basic usage
 ===========
@@ -26,6 +26,12 @@ The ``Geometry`` class and its subclasses can be used to convert to and from Pos
       else:
           return None
     $$ LANGUAGE plpythonu;
+
+This can then be called as part of an SQL query:
+
+.. code-block:: postgres
+
+    SELECT largest_poly(geom) FROM countries;
 
 Documentation
 =============
