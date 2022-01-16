@@ -70,7 +70,7 @@ Conversion
 
     >>> from plpygis import Geometry
     >>> geom = Geometry("01010000000000000000004AC00000000000000000")
-    >>> print geom.shapely
+    >>> print(geom.shapely)
     POINT (-52 0)
 
 :class:`Geometry <plpygis.geometry.Geometry>` also implements :attr:`__geo_interface__ <plpygis.geometry.Geometry.__geo_interface__>`.

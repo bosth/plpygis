@@ -30,10 +30,10 @@ Coordinates may be accessed and modified after creation.
 .. code-block:: python
 
     >>> point = Point((0, 0))
-    >>> print point.x
+    >>> print(point.x)
     0
     >>> point.x = 10
-    >>> print point.x
+    >>> print(point.x)
     10
 
 Composition
@@ -78,13 +78,13 @@ The ``dimz`` and ``dimm`` boolean parameters will indicate whether the geometry 
 .. code-block:: python
 
     >>> p1 = Point((0, 0, 1), dimz=True, dimm=True)
-    >>> print "p1", p1.x, p1.y, p1.z, p1.m
+    >>> print("p1", p1.x, p1.y, p1.z, p1.m)
     p1 0 0 1 0
     >>> p2 = Point((0, 0, 1), dimm=True)
-    >>> print "p2", p2.x, p2.y, p2.z, p2.m
+    >>> print("p2", p2.x, p2.y, p2.z, p2.m)
     p2 0 0 None 1
     >>> p3 = Point((0, 0, 1, 2))
-    >>> print "p3", p3.x, p3.y, p3.z, p3.m
+    >>> print("p3", p3.x, p3.y, p3.z, p3.m)
     p3 0 0 1 2
 
 The dimensionality of an existing instance may be altered after creation, by setting ``dimz`` or ``dimm``. Adding a dimension will add a Z or M coordinate with an initial value of ``0`` to the geometry and all geometries encompassed within it (*e.g.*, each vertex in a :class:`LineString <plpygis.geometry.LineString>` or each :class:`Point <plpygis.geometry.Point>` in a :class:`MultiPoint <plpygis.geometry.MultiPoint>` will gain the new dimension).
@@ -98,17 +98,17 @@ Adding a new dimension to a :class:`Point <plpygis.geometry.Point>` that is a ve
     >>> p1 = Point((0, 0))
     >>> p2 = Point((1, 1))
     >>> mp = MultiPoint([p1, p2])
-    >>> print mp.dimz
+    >>> print(mp.dimz)
     False
     >>> p1.z = 2
-    >>> print p1.miz
+    >>> print(p1.miz)
     True
-    >>> print mp.dimz
+    >>> print(mp.dimz)
     False
     >>> mp.dimz = True
-    >>> print mp.dimz
+    >>> print(mp.dimz)
     True
-    >>> print "p1.z", p1.z, "p2.z", p2.z
+    >>> print("p1.z", p1.z, "p2.z", p2.z)
     p1.z 2 p2.z 0
 
 Performance considerations
