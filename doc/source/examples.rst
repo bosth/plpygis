@@ -20,7 +20,7 @@ Some functions that analyze or manipulate geometries are possible in SQL but are
           return Geometry.from_shapely(largest)
       else:
           return None
-    $$ LANGUAGE plpythonu;
+    $$ LANGUAGE plpython3u;
 
 A pure PL/pgSQL function will have significantly better performance:
 
@@ -57,7 +57,7 @@ Another application of ``plpygis`` is accessing external services or commands di
       nominatim = Nominatim()
       location = nominatim.reverse((lat, lon))
       return location.address
-    $$ LANGUAGE plpythonu;
+    $$ LANGUAGE plpython3u;
 
 .. code-block:: psql
 
@@ -85,7 +85,7 @@ The `gj2ascii <https://pypi.python.org/pypi/gj2ascii/0.4.1>`_ project allows geo
       from plpygis import Geometry
       g = Geometry(geom)
       return render(g)
-    $$ LANGUAGE plpythonu
+    $$ LANGUAGE plpython3u
 
 .. code-block:: psql
 
@@ -191,6 +191,6 @@ The function ``_final_geom_show`` will take the ``STYPE`` as the single paramete
       geojsons = [Geometry(g) for g in geoms]
       layers = zip(geojsons, chars)
       return render_multiple(layers, width)
-    $$ LANGUAGE plpythonu
+    $$ LANGUAGE plpython3u
 
 PL/Python automatically maps lists to Python arrays, so ``plpygis`` is only responsible for converting each elment of the list (in the example, above this is done using list comprehension: ``[Geometry(g) for g in geoms]``).

@@ -12,7 +12,7 @@ Prior to using PL/Python, it must be loaded in the current database:
 
 .. code-block:: psql
 
-    # CREATE LANGUAGE plpythonu;
+    # CREATE LANGUAGE plpython3u;
 
 .. warning::
 
@@ -21,7 +21,7 @@ Prior to using PL/Python, it must be loaded in the current database:
 Python 2 and Python 3
 ~~~~~~~~~~~~~~~~~~~~~
 
-``plpygis`` is compatible with both Python 2 and Python 3. ``plpythonu``, however, always refers to Python 2 in PostgreSQL. For Python 3, the language is ``plpython3u`` (Python 2 can also explicitly be used with ``plpython2u``).
+``plpygis`` is compatible with both Python 2 and Python 3. For Python 3, the language is ``plpython3u`` and for Python 2 it is ``plpython2u`` (the generic ``plpythonu`` currently refers to Python 2 in PostgreSQL but this may change in the future).
 
 Function declarations
 ---------------------
@@ -34,7 +34,7 @@ PL/Python function declarations follow the following template:
       RETURNS return-type
     AS $$
       # PL/Python function body
-    $$ LANGUAGE plpythonu;
+    $$ LANGUAGE plpython3u;
 
 Named arguments are provided as a comma-separated list, with the argument name preceding the argument type:
 
@@ -44,7 +44,7 @@ Named arguments are provided as a comma-separated list, with the argument name p
       RETURNS geometry 
     AS $$
       # PL/Python function body
-    $$ LANGUAGE plpythonu;
+    $$ LANGUAGE plpython3u;
 
 .. warning::
 
@@ -68,7 +68,7 @@ When authoring a Postgres function that takes a PostGIS geometry as an input par
       from plpygis import Point
       p = Point(x, y)
       return p
-    $$ LANGUAGE plpythonu;
+    $$ LANGUAGE plpython3u;
 
 Input parameter
 ^^^^^^^^^^^^^^^
@@ -94,7 +94,7 @@ A PostGIS geometry passed as the argument to :meth:`Geometry() <plpygis.geometry
           return "East"
       else:
           return "Meridian"
-    $$ LANGUAGE plpythonu;
+    $$ LANGUAGE plpython3u;
 
 .. code-block:: psql
 
@@ -125,7 +125,7 @@ A :class:`Geometry <plpygis.geometry.Geometry>` can be returned directly from a 
     AS $$
       from plpygis import Point 
       return Point((x, y))
-    $$ LANGUAGE plpythonu;
+    $$ LANGUAGE plpython3u;
 
 .. code-block:: psql
 
@@ -185,7 +185,7 @@ In addition to returning single values, ``plpygis`` functions may return a list 
       p1 = Point(x, y)
       p2 = Point(y, x)
       return [Geometry.shape(p1), Geometry.shape(p2)]
-    $$ LANGUAGE plpythonu;
+    $$ LANGUAGE plpython3u;
 
     db=# SELECT ST_AsText(make_points(10,20));
       st_astext   
@@ -245,7 +245,7 @@ The function indicated by ``SFUNC`` must accept the ``STYPE`` as the first param
       RETURNS geometry[]
     AS $$
       # incremental clustering algorithm here
-    $$ LANGUAGE plpythonu;
+    $$ LANGUAGE plpython3u;
 
 Alternatively, the ``SFUNC`` can simply collect all the individual geometries into a list and then rely on a single ``FINALFUNC`` to create a new list of geometries that represents the clustered points.
 
@@ -267,4 +267,4 @@ The parameter of the ``FINALFUNC`` will be a single ``geometry[]``, representing
       RETURNS geometry[]
     AS $$
       # clustering algorithm here
-    $$ LANGUAGE plpythonu;
+    $$ LANGUAGE plpython3u;

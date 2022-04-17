@@ -25,7 +25,7 @@ The ``Geometry`` class and its subclasses can be used to convert to and from Pos
           return Geometry.from_shapely(largest)
       else:
           return None
-    $$ LANGUAGE plpythonu;
+    $$ LANGUAGE plpython3u;
 
 This can then be called as part of an SQL query:
 
