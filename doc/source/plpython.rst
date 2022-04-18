@@ -66,7 +66,7 @@ When authoring a Postgres function that takes a PostGIS geometry as an input par
       RETURNS geometry 
     AS $$
       from plpygis import Point
-      p = Point(x, y)
+      p = Point((x, y))
       return p
     $$ LANGUAGE plpython3u;
 
