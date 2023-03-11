@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.1] - 2023-03-11
+
+- fixed: exclude .pyc files from package [vincentsarago]
+- changed: updated documentation
+
 ## [0.2.0] - 2020-02-21
 
 - added: support for binary WKBs [lovasoa]
