@@ -1,2 +1,2 @@
 pyshp==2.1.0
-Shapely==1.7.0
+Shapely==2.0.2
