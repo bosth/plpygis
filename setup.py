@@ -12,7 +12,7 @@ setup(
     url="https://github.com/bosth/plpygis",
     license="GPL-3.0-only",
     author="Benjamin Trigona-Harany",
-    author_email="bosth@alumni.sfu.ca",
+    author_email="plpygis@jaxartes.net",
     description="PostGIS Python tools",
     long_description=readme(),
     packages=["plpygis"],
@@ -23,7 +23,7 @@ setup(
         "Topic :: Scientific/Engineering :: GIS"
     ],
     extras_require = {
-        "shapely_support":  ["Shapely>=1.5.0"]
+        "shapely_support":  ["Shapely>=2.0.2"]
     },
     keywords=["gis geospatial postgis postgresql plpython"]
 )

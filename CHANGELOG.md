@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.2] - 2024-03-08
+
+- changed: support Shapely 2.x
+- fixed: conform to SPDX licence standard
+
 ## [0.2.1] - 2023-03-11
 
 - fixed: exclude .pyc files from package [vincentsarago]

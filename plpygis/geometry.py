@@ -2,8 +2,7 @@ from .exceptions import DependencyError, WkbError, SridError, DimensionalityErro
 from .hex import HexReader, HexWriter, HexBytes
 
 try:
-    import shapely.wkb
-    from shapely.geos import lgeos, WKBWriter
+    import shapely, shapely.wkb
     SHAPELY = True
 except ImportError:
     SHAPELY = False
@@ -40,8 +39,9 @@ class Geometry(object):
 
     From a Shapely object::
 
-        >>> from shapely.geometry import Point
-        >>> Geometry.from_shapely(Point((0, 0)), 3857)
+        >>> from shapely import Point
+        >>> point = Point(0, 0)
+        >>> Geometry.from_shapely(point, 3857)
         <Point: 'geometry(Point,3857)'>
 
     From any object supporting ``__geo_interface__``::
@@ -116,10 +116,10 @@ class Geometry(object):
         The Shapely geometry will not be modified.
         """
         if SHAPELY:
-            WKBWriter.defaults["include_srid"] = True
             if srid:
-                lgeos.GEOSSetSRID(sgeom._geom, srid)
-            return Geometry(sgeom.wkb_hex)
+                sgeom = shapely.set_srid(sgeom, srid)
+            wkb_hex = shapely.to_wkb(sgeom, include_srid=True, hex=True)
+            return Geometry(wkb_hex)
         else:
             raise DependencyError("Shapely")
 
@@ -223,7 +223,7 @@ class Geometry(object):
     def _to_shapely(self):
         if SHAPELY:
             sgeom = shapely.wkb.loads(self.wkb)
-            srid = lgeos.GEOSGetSRID(sgeom._geom)
+            srid = shapely.get_srid(sgeom)
             if srid == 0:
                 srid = None
             if (srid or self.srid) and srid != self.srid:
