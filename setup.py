@@ -10,7 +10,7 @@ setup(
     name="plpygis",
     version=__version__,
     url="https://github.com/bosth/plpygis",
-    license="GNU GPLv3",
+    license="GPL-3.0-only",
     author="Benjamin Trigona-Harany",
     author_email="bosth@alumni.sfu.ca",
     description="PostGIS Python tools",
