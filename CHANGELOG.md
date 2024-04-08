@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.0] - 2024-04-08
+
+- fixed: prevent invalid EWKB creation for multigeometries with SRIDs
+
 ## [0.2.2] - 2024-03-08
 
 - changed: support Shapely 2.x
@@ -21,6 +25,7 @@
 ## [0.0.2] - 2017-08-06
 ## [0.0.1] - 2017-07-30
 
+[0.3.0]: https://github.com/bosth/plpygis/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/bosth/plpygis/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/bosth/plpygis/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/bosth/plpygis/compare/v0.1.0...v0.2.0
