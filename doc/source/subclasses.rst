@@ -64,7 +64,19 @@ An SRID may be added at creation time with an optional ``SRID`` parameter:
 
     >>> point = Point((0, 0), srid=4326)
 
-``plpygis`` will detect conflicts when multigeometries or collections are created with mixed SRIDs.
+When creating a multigeometry with an SRID, each geometry must have the same SRID or no SRID.
+
+.. code-block:: python
+
+    >>> p1 = Point((0, 0), srid=4326)
+    >>> p2 = Point((1, 1), srid=4326)
+    >>> mp = MultiPoint([p1, p2], srid=4326)
+
+    >>> p3 = Point((0, 0))
+    >>> p4 = Point((1, 1))
+    >>> mp = MultiPoint([p3, p4], srid=4326)
+
+``plpygis`` will not allow the creation of a multigeometry with no SRID if any of the geometries have one.
 
 .. warning::
 

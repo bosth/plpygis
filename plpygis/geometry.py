@@ -382,11 +382,11 @@ class _MultiGeometry(Geometry):
                 self._dimm = geometry.dimm
             elif self._dimm != geometry.dimm:
                 raise DimensionalityError("Mixed dimensionality in MultiGeometry")
-            if self.srid is None:
-                if geometry._srid is not None:
-                    self._srid = geometry.srid
-            elif self.srid != geometry.srid and geometry.srid is not None:
-                raise SridError("Mixed SRIDs in MultiGeometry")
+            if geometry._srid is not None:
+                if self._srid != geometry._srid:
+                    raise SridError("Geometry can not be different from SRID in MultiGeometry")
+                else:
+                    geometry._srid = None
 
     def _to_geojson_coordinates(self, dimz):
         coordinates = [g._to_geojson_coordinates(dimz=dimz) for g in self.geometries]
@@ -867,7 +867,8 @@ class MultiPoint(_MultiGeometry):
         >>> MultiPoint([p1, p2])
         <MultiPoint: 'geometry(MultiPointZ)'>
 
-    The dimensionality of all geometries in the collection must be identical.
+    The SRID and dimensionality of all geometries in the collection must be
+    identical.
     """
 
     _LWGEOMTYPE = 4
@@ -912,7 +913,8 @@ class MultiLineString(_MultiGeometry):
         >>> MultiLineString([l1, l2])
         <MultiLineString: 'geometry(MultiLineStringM)'>
 
-    The dimensionality of all geometries in the collection must be identical.
+    The SRID and dimensionality of all geometries in the collection must be
+    identical.
     """
 
     _LWGEOMTYPE = 5
@@ -952,24 +954,23 @@ class MultiPolygon(_MultiGeometry):
     ``MultiPolygon`` objects can be created directly from a list of ``Polygon``
     objects.
 
-        >>> p1 = Polygon([[(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]], srid=4326)
-        >>> p2 = Polygon([[(2, 2), (3, 2), (3, 3), (2, 3), (2, 2)]], srid=4326)
-        >>> MultiPolygon([p1, p2])
+        >>> p1 = Polygon([[(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]])
+        >>> p2 = Polygon([[(2, 2), (3, 2), (3, 3), (2, 3), (2, 2)]])
+        >>> MultiPolygon([p1, p2], srid=4326)
         <MultiPolygon: 'geometry(MultiPolygon,4326)'>
 
-    The dimensionality of all geometries in the collection must be identical.
+    The SRID and dimensionality of all geometries in the collection must be
+    identical.
     """
 
     _LWGEOMTYPE = 6
     __slots__ = ["__polygons__"]
 
-    def __init__(self, polygons=None, srid=None, dimz=False, dimm=False):
+    def __init__(self, polygons=None, srid=None):
         if self._wkb:
             self._polygons = None
         else:
             self._srid = srid
-            self._dimz = dimz
-            self._dimm = dimm
             self._polygons = polygons
             self._set_multi_metadata()
 
@@ -1004,7 +1005,8 @@ class GeometryCollection(_MultiGeometry):
         >>> GeometryCollection([p, l])
         <GeometryCollection: 'geometry(GeometryCollectionZ)'>
 
-    The dimensionality of all geometries in the collection must be identical.
+    The SRID and dimensionality of all geometries in the collection must be
+    identical.
     """
 
     _LWGEOMTYPE = 7
