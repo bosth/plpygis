@@ -1,4 +1,6 @@
-from .exceptions import DependencyError, WkbError, SridError, DimensionalityError
+import numbers
+from copy import copy
+from .exceptions import DependencyError, WkbError, SridError, DimensionalityError, CoordinateError
 from .hex import HexReader, HexWriter, HexBytes
 
 try:
@@ -80,6 +82,10 @@ class Geometry(object):
             geom._reader = None
         return geom
 
+    def __copy__(self):
+        cls = self.__class__
+        return cls(self.coordinates, self.srid, self.dimz, self.dimm)
+
     @staticmethod
     def from_geojson(geojson, srid=4326):
         """
@@ -150,12 +156,16 @@ class Geometry(object):
         self._srid = value
 
     @property
+    def coordinates(self):
+        return self._coordinates()
+
+    @property
     def geojson(self):
         """
         Get the geometry as a GeoJSON dict. There is no check that the
         GeoJSON is using an SRID of 4326.
         """
-        return self._to_geojson(dimz=self.dimz)
+        return self._to_geojson()
 
     @property
     def wkb(self):
@@ -232,8 +242,8 @@ class Geometry(object):
         else:
             raise DependencyError("Shapely")
 
-    def _to_geojson(self, dimz):
-        coordinates = self._to_geojson_coordinates(dimz)
+    def _to_geojson(self):
+        coordinates = self._to_geojson_coordinates()
         geojson = {
                 "type": self.type,
                 "coordinates": coordinates
@@ -313,6 +323,11 @@ class Geometry(object):
 
 
 class _MultiGeometry(Geometry):
+    def __copy__(self):
+        cls = self.__class__
+        geometries = [copy(geometry) for geometry in self.geometries]
+        return cls(geometries, self.srid)
+
     @property
     def dimz(self):
         """
@@ -388,9 +403,11 @@ class _MultiGeometry(Geometry):
                 else:
                     geometry._srid = None
 
-    def _to_geojson_coordinates(self, dimz):
-        coordinates = [g._to_geojson_coordinates(dimz=dimz) for g in self.geometries]
-        return coordinates
+    def _coordinates(self, dimz=True, dimm=True, tpl=True):
+        return [g._coordinates(dimz, dimm, tpl) for g in self.geometries]
+
+    def _to_geojson_coordinates(self):
+        return self._coordinates(dimm=False, tpl=False)
 
     @staticmethod
     def _read_wkb(reader, dimz, dimm):
@@ -436,8 +453,12 @@ class Point(Geometry):
             self._z = None
             self._m = None
         else:
+            for c in coordinates:
+                if c is None:
+                    continue
+                if not isinstance(c, numbers.Number):
+                    raise CoordinateError("Coordinates must be numeric: {}".format(coordinates), coordinates)
             self._srid = srid
-            coordinates = list(coordinates)
             self._x = coordinates[0]
             self._y = coordinates[1]
             num = len(coordinates)
@@ -581,11 +602,26 @@ class Point(Geometry):
             self._m = None
         self._dimm = value
 
-    def _to_geojson_coordinates(self, dimz):
-        coordinates = [self.x, self.y]
-        if dimz:
-            coordinates.append(self.z)
-        return coordinates
+    def _coordinates(self, dimz=True, dimm=True, tpl=True):
+        dimz = dimz & self.dimz
+        dimm = dimm & self.dimm
+
+        if dimz and dimm:
+            coordinates = (self.x, self.y, self.z, self.m)
+        elif dimz:
+            coordinates = (self.x, self.y, self.z)
+        elif dimm:
+            coordinates = (self.x, self.y, self.m)
+        else:
+            coordinates = (self.x, self.y)
+
+        if tpl:
+            return coordinates
+        else:
+            return list(coordinates)
+
+    def _to_geojson_coordinates(self):
+        return self._coordinates(dimm=False, tpl=False)
 
     def _bounds(self):
         return (self.x, self.y, self.x, self.y)
@@ -699,9 +735,11 @@ class LineString(Geometry):
             vertex.dimm = value
         self._dimm = value
 
-    def _to_geojson_coordinates(self, dimz):
-        coordinates = [v._to_geojson_coordinates(dimz=dimz) for v in self.vertices]
-        return coordinates
+    def _coordinates(self, dimz=True, dimm=True, tpl=True):
+        return [v._coordinates(dimz, dimm, tpl) for v in self.vertices]
+
+    def _to_geojson_coordinates(self):
+        return self._coordinates(dimz=False, tpl=False)
 
     def _bounds(self):
         x = [v.x for v in self.vertices]
@@ -823,9 +861,11 @@ class Polygon(Geometry):
             ring.dimm = value
         self._dimm = value
 
-    def _to_geojson_coordinates(self, dimz):
-        coordinates = [r._to_geojson_coordinates(dimz=dimz) for r in self.rings]
-        return coordinates
+    def _coordinates(self, dimz=True, dimm=True, tpl=True):
+        return [r._coordinates(dimz, dimm, tpl) for r in self.rings]
+
+    def _to_geojson_coordinates(self):
+        return self._coordinates(dimz=False, tpl=False)
 
     def _bounds(self):
         return self.exterior.bounds
@@ -970,8 +1010,8 @@ class MultiPolygon(_MultiGeometry):
         if self._wkb:
             self._polygons = None
         else:
-            self._srid = srid
             self._polygons = polygons
+            self._srid = srid
             self._set_multi_metadata()
 
     @property
@@ -1028,8 +1068,8 @@ class GeometryCollection(_MultiGeometry):
         self._check_cache()
         return self._geometries
 
-    def _to_geojson(self, dimz):
-        geometries = [g._to_geojson(dimz=dimz) for g in self.geometries]
+    def _to_geojson(self):
+        geometries = [g._to_geojson() for g in self.geometries]
         geojson = {
                 "type": self.__class__.__name__,
                 "geometries": geometries
