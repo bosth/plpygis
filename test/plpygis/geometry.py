@@ -7,7 +7,7 @@ import unittest
 from shapely import geometry
 from plpygis import Geometry, Point, LineString, Polygon
 from plpygis import MultiPoint, MultiLineString, MultiPolygon, GeometryCollection
-from plpygis.exceptions import DependencyError, WkbError, SridError, DimensionalityError
+from plpygis.exceptions import DependencyError, WkbError, SridError, DimensionalityError, CoordinateError
 
 geojson_pt = {"type":"Point","coordinates":[0.0,0.0]}
 geojson_ln = {"type":"LineString","coordinates":[[107,60],[102,59]]}
@@ -260,13 +260,29 @@ class GeometryTestCase(unittest.TestCase):
         geom.srid = geom.srid # clear cached WKB
         self.assertNotEqual(geom.__str__().lower(), wkb.lower())
 
+    def test_malformed_coordinates(self):
+        """
+        malformed coordinates (wrong type)
+        """
+        coordinates = (1, "test")
+        self.assertRaises(CoordinateError, Point, coordinates)
+
+        coordinates = [(1, 2), [(1, 2), (3, 4)]]
+        self.assertRaises(CoordinateError, LineString, coordinates)
+
     def test_multigeometry_srid(self):
+        """
+        create geometry with SRID
+        """
         p1 = Point((0, 0), srid=1000)
         p2 = Point((1, 1), srid=1000)
         mp = MultiPoint([p1, p2], srid=1000)
         self.assertEqual(mp.wkb, wkb_mpt_srid)
 
     def test_multigeometry_srid_exception(self):
+        """
+        mixed SRIDs on multigeometry creation
+        """
         p1 = Point((0, 0), srid=1000)
         p2 = Point((1, 1), srid=1000)
         self.assertRaises(SridError, MultiPoint, [p1, p2])
@@ -597,3 +613,73 @@ class GeometryTestCase(unittest.TestCase):
     def test_byte_array_wkb_string(self):
         wkb = bytearray(b'010100000000000000000000000000000000000000')
         self.assertEqual(str(Geometry(wkb)), wkb.decode('ascii'))
+
+    def test_point_coordinates(self):
+        """
+        get coordinates of a Point
+        """
+        coordinates = (1, 2, 3, 4)
+        p = Point(coordinates)
+        self.assertEqual(p.coordinates, coordinates)
+        self.assertEqual(p._coordinates(dimm=True, dimz=True), coordinates)
+        self.assertEqual(p._coordinates(dimm=False), (1, 2, 3))
+        self.assertEqual(p._coordinates(dimz=False), (1, 2, 4))
+        self.assertEqual(p._coordinates(dimm=False, dimz=False), (1, 2))
+        
+        self.assertEqual(p._coordinates(dimm=True, dimz=True, tpl=False), list(coordinates))
+        self.assertEqual(p._coordinates(dimm=False, tpl=False), [1, 2, 3])
+        self.assertEqual(p._coordinates(dimz=False, tpl=False), [1, 2, 4])
+        self.assertEqual(p._coordinates(dimm=False, dimz=False, tpl=False), [1, 2])
+
+    def test_linestring_coordinates(self):
+        """
+        get coordinates of a LineString
+        """
+        coordinates = [(1, 2, 3, 4), (6, 7, 8, 9)]
+        l = LineString(coordinates)
+        self.assertEqual(l.coordinates, coordinates)
+        self.assertEqual(l._coordinates(dimm=True, dimz=True), coordinates)
+        self.assertEqual(l._coordinates(dimm=False), [(1, 2, 3), (6, 7, 8)])
+        self.assertEqual(l._coordinates(dimz=False), [(1, 2, 4), (6, 7, 9)])
+        self.assertEqual(l._coordinates(dimz=False, dimm=False), [(1, 2), (6, 7)])
+        
+        self.assertEqual(l._coordinates(dimm=True, dimz=True, tpl=False), [[1, 2, 3, 4], [6, 7, 8, 9]])
+        self.assertEqual(l._coordinates(dimm=False, tpl=False), [[1, 2, 3], [6, 7, 8]])
+        self.assertEqual(l._coordinates(dimz=False, tpl=False), [[1, 2, 4], [6, 7, 9]])
+        self.assertEqual(l._coordinates(dimz=False, dimm=False, tpl=False), [[1, 2], [6, 7]])
+
+    def test_polygon_coordinates(self):
+        """
+        get coordinates of a Polygon
+        """
+        coordinates = [[(1, 2, 3, 4), (6, 7, 8, 9), (10, 11, 12, 13), (1, 2, 3, 4)]]
+        p = Polygon(coordinates)
+        self.assertEqual(p.coordinates, coordinates)
+        self.assertEqual(p._coordinates(dimm=True, dimz=True), coordinates)
+
+        coordinates = [list(map(list, sub)) for sub in coordinates]
+        self.assertEqual(p._coordinates(dimm=True, dimz=True, tpl=False), coordinates)
+
+    def test_multipoint_coordinates(self):
+        """
+        get coordinates of a MultiPoint
+        """
+        coordinates =  [ (170.0, 45.0), (180.0, 45.0), (-100.0, 45.0), (-170.0, 45.0) ] 
+        mp = MultiPoint([Point(p) for p in coordinates])
+        self.assertEqual(mp.coordinates, coordinates)
+
+    def test_multilinestring_coordinates(self):
+        """
+        get coordinates of a MultiLineString
+        """
+        coordinates = [ [ (170.0, 45.0), (180.0, 45.0) ], [ (-180.0, 45.0), (-170.0, 45.0) ] ]
+        ml = MultiLineString([LineString(c) for c in coordinates])
+        self.assertEqual(ml.coordinates, coordinates)
+
+    def test_multipolygon_coordinates(self):
+        """
+        get coordinates of a MultiPolygon
+        """
+        coordinates = [ [ [ (180.0, 40.0), (180.0, 50.0), (170.0, 50.0), (170.0, 40.0), (180.0, 40.0) ] ], [ [ (-170.0, 40.0), (-170.0, 50.0), (-180.0, 50.0), (-180.0, 40.0), (-170.0, 40.0) ] ] ]
+        mp = MultiPolygon([Polygon(c) for c in coordinates])
+        self.assertEqual(mp.coordinates, coordinates)
