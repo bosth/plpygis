@@ -4,6 +4,16 @@ class PlpygisError(Exception):
     """
     def __init__(self, msg):
         super(PlpygisError, self).__init__(msg)
+
+
+class CoordinateError(PlpygisError):
+    """
+    Exception for problems in the coordinates of geometries.
+    """
+    def __init__(self, geom, msg=None):
+        if msg is None:
+            msg = "Geometry has invalid coordinates: {}".format(geom)
+        super(CoordinateError, self).__init__(msg)
       
 
 class DependencyError(PlpygisError, ImportError):
