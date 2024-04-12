@@ -86,10 +86,6 @@ class Geometry(object):
         cls = self.__class__
         return cls(self.coordinates, self.srid, self.dimz, self.dimm)
 
-    def __deepcopy__(self, memo):
-        return copy(self)
-
-
     @staticmethod
     def from_geojson(geojson, srid=4326):
         """
@@ -331,9 +327,6 @@ class _MultiGeometry(Geometry):
         cls = self.__class__
         geometries = [copy(geometry) for geometry in self.geometries]
         return cls(geometries, self.srid)
-
-    def __deepcopy__(self, memo):
-        return copy(self)
 
     @property
     def dimz(self):

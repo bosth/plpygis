@@ -750,3 +750,25 @@ class GeometryTestCase(unittest.TestCase):
 
         gc1.geometries[0].x = 200
         self.assertNotEqual(gc1.coordinates, gc2.coordinates)
+
+    def test_geometrycollection_edit(self):
+        """
+        modify a GeometryCollection object
+        """
+        pt = Point((0, 1, 2))
+        ls = LineString([(3, 4, 5), (9, 10, 11)])
+        pl = Polygon([[(1, 2, 3), (6, 7, 8), (10, 11, 12), (1, 2, 3)]])
+        gc1 = GeometryCollection([pt, ls, pl])
+        gc1.wkb
+
+        from copy import copy
+        gc2 = copy(gc1)
+        self.assertEqual(gc1.wkb, gc2.wkb)
+        
+        pt = Point((-1, -5, -1))
+        gc2.geometries[1] = pt
+
+        self.assertNotEqual(gc1.coordinates, gc2.coordinates)
+        self.assertEqual(gc2.geometries[1].x, -1)
+        self.assertEqual(gc2.geometries[1].y, -5)
+        self.assertNotEqual(gc1.wkb, gc2.wkb)
