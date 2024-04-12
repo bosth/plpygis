@@ -683,3 +683,70 @@ class GeometryTestCase(unittest.TestCase):
         coordinates = [ [ [ (180.0, 40.0), (180.0, 50.0), (170.0, 50.0), (170.0, 40.0), (180.0, 40.0) ] ], [ [ (-170.0, 40.0), (-170.0, 50.0), (-180.0, 50.0), (-180.0, 40.0), (-170.0, 40.0) ] ] ]
         mp = MultiPolygon([Polygon(c) for c in coordinates])
         self.assertEqual(mp.coordinates, coordinates)
+
+    def test_point_copy(self):
+        """
+        copy a Point object
+        """
+        p1 = Point((0, 1, 2), srid=4326, dimm=True)
+
+        from copy import copy, deepcopy
+        p2 = copy(p1)
+        p3 = deepcopy(p1)
+
+        self.assertEqual(p1.coordinates, p2.coordinates)
+        self.assertEqual(p1.srid, p2.srid)
+        self.assertEqual(p1.wkb, p2.wkb)
+        self.assertNotEqual(p1, p2)
+        self.assertNotEqual(p1, p3)
+
+        p1.x = 10
+        self.assertNotEqual(p1.x, p2.x)
+        self.assertNotEqual(p1.x, p3.x)
+        self.assertEqual(p2.coordinates, p2.coordinates)
+
+    def test_multipoint_create(self):
+        """
+        create a MultiPoint object
+        """
+        p1 = Point((0, 1, 2))
+        p2 = Point((3, 4, 5))
+        p3 = Point((6, 7, 8))
+        mp = MultiPoint([p1, p2, p3], srid=4326)
+
+        p1.x = 100
+        self.assertEqual(mp.geometries[0].x, 0)
+        self.assertEqual(p1.x, 100)
+
+    def test_multipoint_copy(self):
+        """
+        copy a MultiPoint object
+        """
+        p1 = Point((0, 1, 2))
+        p2 = Point((3, 4, 5))
+        p3 = Point((6, 7, 8))
+        mp1 = MultiPoint([p1, p2, p3], srid=4326)
+
+        from copy import copy
+        mp2 = copy(mp1)
+
+        self.assertEqual(mp1.coordinates, mp2.coordinates)
+
+    def test_geometrycollection_create(self):
+        """
+        create a GeometryCollection object
+        """
+        pt = Point((0, 1, 2))
+        ls = LineString([(3, 4, 5), (9, 10, 11)])
+        pl = Polygon([[(1, 2, 3), (6, 7, 8), (10, 11, 12), (1, 2, 3)]])
+        gc1 = GeometryCollection([pt, ls, pl])
+
+        from copy import copy
+        gc2 = copy(gc1)
+        self.assertEqual(gc1.coordinates, gc2.coordinates)
+
+        pt.x = 100
+        self.assertEqual(gc1.coordinates, gc2.coordinates)
+
+        gc1.geometries[0].x = 200
+        self.assertNotEqual(gc1.coordinates, gc2.coordinates)
