@@ -1,4 +1,5 @@
 import numbers
+from copy import copy
 from .exceptions import DependencyError, WkbError, SridError, DimensionalityError, CoordinateError
 from .hex import HexReader, HexWriter, HexBytes
 
@@ -80,6 +81,14 @@ class Geometry(object):
             geom._wkb = None
             geom._reader = None
         return geom
+
+    def __copy__(self):
+        cls = self.__class__
+        return cls(self.coordinates, self.srid, self.dimz, self.dimm)
+
+    def __deepcopy__(self, memo):
+        return copy(self)
+
 
     @staticmethod
     def from_geojson(geojson, srid=4326):
@@ -318,6 +327,14 @@ class Geometry(object):
 
 
 class _MultiGeometry(Geometry):
+    def __copy__(self):
+        cls = self.__class__
+        geometries = [copy(geometry) for geometry in self.geometries]
+        return cls(geometries, self.srid)
+
+    def __deepcopy__(self, memo):
+        return copy(self)
+
     @property
     def dimz(self):
         """
@@ -483,12 +500,6 @@ class Point(Geometry):
 
             self._dimz = self._z is not None
             self._dimm = self._m is not None
-
-    def __copy__(self):
-        pass#point = Point(self.x, 
-
-    def __deepcopy__(self):
-        pass#point = Point(self.x, 
 
     @property
     def x(self):
@@ -914,7 +925,7 @@ class MultiPoint(_MultiGeometry):
         if self._wkb:
             self._points = None
         else:
-            self._points = points
+            self._points = [copy(point) for point in points]
             self._srid = srid
             self._set_multi_metadata()
 
@@ -960,7 +971,7 @@ class MultiLineString(_MultiGeometry):
         if self._wkb:
             self._linestrings = None
         else:
-            self._linestrings = linestrings
+            self._linestrings = [copy(linestring) for linestring in linestrings]
             self._srid = srid
             self._set_multi_metadata()
 
@@ -1006,8 +1017,8 @@ class MultiPolygon(_MultiGeometry):
         if self._wkb:
             self._polygons = None
         else:
+            self._polygons = [copy(polygon) for polygon in polygons]
             self._srid = srid
-            self._polygons = polygons
             self._set_multi_metadata()
 
     @property
@@ -1052,7 +1063,7 @@ class GeometryCollection(_MultiGeometry):
         if self._wkb:
             self._geometries = None
         else:
-            self._geometries = geometries
+            self._geometries = [copy(geometry) for geometry in geometries]
             self._srid = srid
             self._set_multi_metadata()
 
