@@ -32,14 +32,12 @@ def test_missing_ewkb():
     with pytest.raises(WkbError):
         Geometry(None)
 
-
 def test_malformed_ewkb_len():
     """
     malformed EWKB (insufficient bytes)
     """
     with pytest.raises(Exception):
         Geometry("0101")
-
 
 def test_malformed_ewkb_firstbyte():
     """
@@ -62,9 +60,9 @@ def test_read_wkb_point():
     wkb = "010100000000000000000000000000000000000000"
     geom = Geometry(wkb)
     assert geom.type == "Point"
-    assert geom.srid == None
-    assert geom.dimz == False
-    assert geom.dimm == False
+    assert geom.srid is None
+    assert not geom.dimz
+    assert not geom.dimm
     postgis_type = "geometry(Point)"
     assert geom.postgis_type == postgis_type
     assert geom.__repr__() == "<Point: 'geometry(Point)'>"
@@ -89,8 +87,8 @@ def test_read_ewkb_point_srid():
     geom = Geometry(wkb)
     assert geom.type == "Point"
     assert geom.srid == 4326
-    assert geom.dimz == False
-    assert geom.dimm == False
+    assert not geom.dimz
+    assert not geom.dimm
     postgis_type = "geometry(Point,4326)"
     assert geom.postgis_type == postgis_type
     assert geom.__repr__() == "<Point: 'geometry(Point,4326)'>"
@@ -105,8 +103,8 @@ def test_read_ewkb_pointz():
     geom = Geometry(wkb)
     assert geom.type == "Point"
     assert geom.srid == 4326
-    assert geom.dimz == True
-    assert geom.dimm == False
+    assert geom.dimz
+    assert not geom.dimm
     postgis_type = "geometry(PointZ,4326)"
     assert geom.postgis_type == postgis_type
     assert geom.__repr__() == "<Point: 'geometry(PointZ,4326)'>"
@@ -121,8 +119,8 @@ def test_read_ewkb_pointm():
     geom = Geometry(wkb)
     assert geom.type == "Point"
     assert geom.srid == 4326
-    assert geom.dimz == False
-    assert geom.dimm == True
+    assert not geom.dimz
+    assert geom.dimm
     postgis_type = "geometry(PointM,4326)"
     assert geom.postgis_type == postgis_type
     assert geom.__repr__() == "<Point: 'geometry(PointM,4326)'>"
@@ -137,8 +135,8 @@ def test_read_ewkb_pointzm():
     geom = Geometry(wkb)
     assert geom.type == "Point"
     assert geom.srid == 4326
-    assert geom.dimz == True
-    assert geom.dimm == True
+    assert geom.dimz
+    assert geom.dimm
     geom.srid = geom.srid # clear cached WKB
     postgis_type = "geometry(PointZM,4326)"
     assert geom.postgis_type == postgis_type
@@ -153,9 +151,9 @@ def test_read_wkb_linestring():
     wkb = wkb_ln
     geom = Geometry(wkb)
     assert geom.type == "LineString"
-    assert geom.srid == None
-    assert geom.dimz == False
-    assert geom.dimm == False
+    assert geom.srid is None
+    assert not geom.dimz
+    assert not geom.dimm
     postgis_type = "geometry(LineString)"
     geom.vertices
     assert geom.postgis_type == postgis_type
@@ -170,9 +168,9 @@ def test_read_wkb_polygon():
     wkb = wkb_pg
     geom = Geometry(wkb)
     assert geom.type == "Polygon"
-    assert geom.srid == None
-    assert geom.dimz == False
-    assert geom.dimm == False
+    assert geom.srid is None
+    assert not geom.dimz
+    assert not geom.dimm
     postgis_type = "geometry(Polygon)"
     assert geom.exterior.type == "LineString"
     assert geom.postgis_type == postgis_type
@@ -187,9 +185,9 @@ def test_read_wkb_multipoint():
     wkb = wkb_mpt
     geom = Geometry(wkb)
     assert geom.type == "MultiPoint"
-    assert geom.srid == None
-    assert geom.dimz == True
-    assert geom.dimm == False
+    assert geom.srid is None
+    assert geom.dimz
+    assert not geom.dimm
     postgis_type = "geometry(MultiPointZ)"
     assert geom.postgis_type == postgis_type
     assert geom.__repr__() == "<MultiPoint: 'geometry(MultiPointZ)'>"
@@ -205,9 +203,9 @@ def test_read_wkb_multilinestring():
     wkb = wkb_mln
     geom = Geometry(wkb)
     assert geom.type == "MultiLineString"
-    assert geom.srid == None
-    assert geom.dimz == False
-    assert geom.dimm == True
+    assert geom.srid is None
+    assert not geom.dimz
+    assert geom.dimm
     postgis_type = "geometry(MultiLineStringM)"
     assert geom.postgis_type == postgis_type
     assert geom.__repr__() == "<MultiLineString: 'geometry(MultiLineStringM)'>"
@@ -223,9 +221,9 @@ def test_read_wkb_multipolygon():
     wkb = wkb_mpg
     geom = Geometry(wkb)
     assert geom.type == "MultiPolygon"
-    assert geom.srid == None
-    assert geom.dimz == False
-    assert geom.dimm == False
+    assert geom.srid is None
+    assert not geom.dimz
+    assert not geom.dimm
     postgis_type = "geometry(MultiPolygon)"
     assert geom.postgis_type == postgis_type
     assert geom.__repr__() == "<MultiPolygon: 'geometry(MultiPolygon)'>"
@@ -241,9 +239,9 @@ def test_read_wkb_geometrycollection():
     wkb = wkb_gc
     geom = Geometry(wkb)
     assert geom.type == "GeometryCollection"
-    assert geom.srid == None
-    assert geom.dimz == False
-    assert geom.dimm == False
+    assert geom.srid is None
+    assert not geom.dimz
+    assert not geom.dimm
     postgis_type = "geometry(GeometryCollection)"
     assert geom.postgis_type == postgis_type
     assert geom.__repr__() == "<GeometryCollection: 'geometry(GeometryCollection)'>"
@@ -258,12 +256,12 @@ def test_multigeometry_changedimensionality():
     """
     wkb = wkb_gc
     geom = Geometry(wkb)
-    assert geom.dimz == False
-    assert geom.dimm == False
+    assert not geom.dimz
+    assert not geom.dimm
     geom.dimz = True
     geom.dimm = True
-    assert geom.dimz == True
-    assert geom.dimm == True
+    assert geom.dimz
+    assert geom.dimm
     geom.srid = geom.srid # clear cached WKB
     assert geom.__str__().lower() != wkb.lower()
 
@@ -523,35 +521,35 @@ def test_dimension_reading():
     check dimensions are set correctly
     """
     p = Point((0, 1))
-    assert p.dimz == False
-    assert p.dimm == False
+    assert not p.dimz
+    assert not p.dimm
     p = Point((0, 1, 2))
-    assert p.dimz == True
-    assert p.dimm == False
+    assert p.dimz
+    assert not p.dimm
     p = Point((0, 1, 2, 3))
-    assert p.dimz == True
-    assert p.dimm == True
+    assert p.dimz
+    assert p.dimm
     p = Point((0, 1, 2, 3), dimz=False, dimm=False)
-    assert p.dimz == True
-    assert p.dimm == True
+    assert p.dimz
+    assert p.dimm
     p = Point((0, 1), dimz=True, dimm=True)
-    assert p.dimz == True
-    assert p.dimm == True
+    assert p.dimz
+    assert p.dimm
     p = Point((0, 1), dimz=True)
-    assert p.dimz == True
-    assert p.dimm == False
+    assert p.dimz
+    assert not p.dimm
     p = Point((0, 1), dimm=True)
-    assert p.dimz == False
-    assert p.dimm == True
+    assert not p.dimz
+    assert p.dimm
     p = Point((0, 1, 2), dimz=True)
-    assert p.dimz == True
-    assert p.dimm == False
+    assert p.dimz
+    assert not p.dimm
     p = Point((0, 1, 2), dimm=True)
-    assert p.dimz == False
-    assert p.dimm == True
+    assert not p.dimz
+    assert p.dimm
     p = Point((0, 1, 2), dimz=True, dimm=True)
-    assert p.dimz == True
-    assert p.dimm == True
+    assert p.dimz
+    assert p.dimm
 
 def test_modify_point():
     """
@@ -562,8 +560,8 @@ def test_modify_point():
     oldx = p.x
     oldy = p.y
     oldsrid = p.srid
-    assert p.dimz == False
-    assert p.dimm == False
+    assert not p.dimz
+    assert not p.dimm
     newx = -99
     newy = -101
     newz = 88
