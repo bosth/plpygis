@@ -3,7 +3,7 @@ class PlpygisError(Exception):
     Basic exception for ``plpygis``.
     """
     def __init__(self, msg):
-        super(PlpygisError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class CoordinateError(PlpygisError):
@@ -12,9 +12,9 @@ class CoordinateError(PlpygisError):
     """
     def __init__(self, geom, msg=None):
         if msg is None:
-            msg = "Geometry has invalid coordinates: {}".format(geom)
-        super(CoordinateError, self).__init__(msg)
-      
+            msg = f"Geometry has invalid coordinates: {geom}"
+        super().__init__(msg)
+
 
 class DependencyError(PlpygisError, ImportError):
     """
@@ -22,8 +22,8 @@ class DependencyError(PlpygisError, ImportError):
     """
     def __init__(self, dep, msg=None):
         if msg is None:
-            msg = "Dependency '{}' is not available.".format(dep)
-        super(DependencyError, self).__init__(msg)
+            msg = f"Dependency '{dep}' is not available."
+        super().__init__(msg)
 
 
 class WkbError(PlpygisError):
@@ -33,7 +33,7 @@ class WkbError(PlpygisError):
     def __init__(self, msg=None):
         if msg is None:
             msg = "Unreadable WKB."
-        super(WkbError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class DimensionalityError(PlpygisError):
@@ -43,7 +43,7 @@ class DimensionalityError(PlpygisError):
     def __init__(self, msg=None):
         if msg is None:
             msg = "Geometry has invalid dimensionality."
-        super(DimensionalityError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class SridError(PlpygisError):
@@ -53,4 +53,14 @@ class SridError(PlpygisError):
     def __init__(self, msg=None):
         if msg is None:
             msg = "Geometry has invalid SRID."
-        super(SridError, self).__init__(msg)
+        super().__init__(msg)
+
+
+class GeojsonError(PlpygisError):
+    """
+    Exception for problems in GeoJSONs.
+    """
+    def __init__(self, msg=None):
+        if msg is None:
+            msg = "Invalid GeoJSON."
+        super().__init__(msg)

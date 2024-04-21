@@ -1,1 +1,0 @@
-from .plpygis import *

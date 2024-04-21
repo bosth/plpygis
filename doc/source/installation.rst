@@ -24,29 +24,23 @@ The package sources are available at https://github.com/bosth/plpygis. Building 
 
 .. code-block:: console
 
-    $ python setup.py install
+    $ python -m build
 
 Tests
 ~~~~~
 
-Tests require `nose <http://nose.readthedocs.io/en/latest/>`_: 
+Tests require `pytest <https://docs.pytest.org/>`.
 
 .. code-block:: console
 
-    $ python setup.py test
+    $ pytest
 
 Documentation
 ~~~~~~~~~~~~~
 
-Building the documentation from source requires `Sphinx <http://www.sphinx-doc.org/>`_. By default, the documentation will be rendered in HTML:
+Building the documentation from source requires `Sphinx <http://www.sphinx-doc.org/>`_. For a list of supported documentation formats, see the options in the ``doc`` subdirectory:
 
 .. code-block:: console
 
-    $ python setup.py build_sphinx
-
-For other documentation output formats, see the options in the ``docs`` subdirectory:
-
-.. code-block:: console
-
-    $ cd docs
+    $ cd doc
     $ make

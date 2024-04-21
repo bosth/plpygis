@@ -85,5 +85,6 @@ All ``plpygis`` exceptions inherit from the :class:`PlpygisError <plpygis.except
 * :class:`DependencyError <plpygis.exceptions.DependencyError>`: missing dependency required for an optional feature, such as :meth:`shapely <plpygis.geometry.Geometry.shapely>`
 * :class:`CoordinateError <plpygis.exceptions.CoordinateError>`: error in the coordinates used to create a :class:`Geometry <plpygis.geometry.Geometry>`
 * :class:`DimensionalityError <plpygis.exceptions.DimensionalityError>`: error pertaining to the Z or M coordinates of a :class:`Geometry <plpygis.geometry.Geometry>`
+* :class:`GeojsonError <plpygis.exceptions.GeojsonError>`: error reading a GeoJSON
 * :class:`SridError <plpygis.exceptions.SridError>`: error pertaining to a :class:`Geometry <plpygis.geometry.Geometry>`'s SRIDs
 * :class:`WkbError <plpygis.exceptions.WkbError>`: error reading or writing a WKB

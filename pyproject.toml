@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plpygis"
+dynamic = ["version"]
+description = "Python tools for PostGIS"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [{name = "Benjamin Trigona-Harany", email = "plpygis@jaxartes.net"}]
+license = {text = "GPL-3.0-only"}
+classifiers = [
+    "Topic :: Database",
+    "Topic :: Scientific/Engineering :: GIS"
+]
+keywords = ["gis", "geospatial", "postgis", "postgresql", "pl/python"]
+
+[tool.setuptools.dynamic]
+version = {attr = "plpygis.__version__"}
+
+[project.urls]
+Homepage = "https://github.com/bosth/plpygis"
+Issues = "https://github.com/bosth/plpygis/issues"
+Documentation = "https://plpygis.readthedocs.io/"
+
+[project.optional-dependencies]
+test = ["pytest", "pyshp", "Shapely>=2.0.2"]
+shapely_support = ["Shapely>=2.0.2"]
