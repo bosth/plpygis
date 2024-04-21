@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "plpygis"
 dynamic = ["version"]
 description = "Python tools for PostGIS"
-readme = "README.rst"
+readme = "README.md"
 requires-python = ">=3.8"
 authors = [{name = "Benjamin Trigona-Harany", email = "plpygis@jaxartes.net"}]
 license = {text = "GPL-3.0-only"}
