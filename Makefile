@@ -1,6 +1,7 @@
 .PHONY: test
 
-VPATH = src/plpygis:
+build: plpygis/*.py
+	python -m build
 
 test:
 	pytest
@@ -10,6 +11,3 @@ clean:
 	find . -name "__pycache__" -print0 | xargs -0 rm -rf
 	rm -rf dist plpygis.egg-info
 	rm -rf build doc/build
-
-build: src/plpygis/*.py
-	python -m build

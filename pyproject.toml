@@ -17,15 +17,13 @@ classifiers = [
 keywords = ["gis", "geospatial", "postgis", "postgresql", "pl/python"]
 
 [tool.setuptools.dynamic]
-version = {attr = "plpygis.VERSION"}
+version = {attr = "plpygis.__version__"}
 
 [project.urls]
 Homepage = "https://github.com/bosth/plpygis"
 Issues = "https://github.com/bosth/plpygis/issues"
+Documentation = "https://plpygis.readthedocs.io/"
 
 [project.optional-dependencies]
-test = ["pytest"]
+test = ["pytest", "pyshp", "Shapely>=2.0.2"]
 shapely_support = ["Shapely>=2.0.2"]
-
-[tool.pytest.ini_options]
-testpaths = ["test"]

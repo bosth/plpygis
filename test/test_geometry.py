@@ -7,7 +7,7 @@ import unittest
 from shapely import geometry
 from plpygis import Geometry, Point, LineString, Polygon
 from plpygis import MultiPoint, MultiLineString, MultiPolygon, GeometryCollection
-from plpygis.exceptions import DependencyError, WkbError, SridError, DimensionalityError, CoordinateError
+from plpygis.exceptions import DependencyError, WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError
 
 geojson_pt = {"type":"Point","coordinates":[0.0,0.0]}
 geojson_ln = {"type":"LineString","coordinates":[[107,60],[102,59]]}
@@ -16,6 +16,7 @@ geojson_mpt = {"type":"MultiPoint","coordinates":[[0,0],[1,1]]}
 geojson_mln = {"type":"MultiLineString","coordinates":[[[0,0],[1,1]],[[2,2],[3,3]]]}
 geojson_mpg = {"type":"MultiPolygon","coordinates":[[[[1,0],[111,0.0],[101.0,1.0],[100.0,1.0],[1,0]]],[[[100,0],[101.0,0.0],[101.0,1.0],[100.0,1.0],[100.0,0.0]]]]}
 geojson_gc = {"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[10,0]},{"type":"LineString","coordinates":[[11,0],[12,1]]}]}
+geojson_err = {"type":"Hello","coordinates":[0.0,0.0]}
 wkb_ln = "0102000000050000000000000040BE40409D640199EB373F400000000080AC3E40BF244710FD1939400000000000503940D2A6484BEB41374000000000801D3740248729C89C832A400000000000833340940338EFAFBB2C40"
 wkb_pg = "010300000002000000060000000000000000003440000000000080414000000000000024400000000000003E40000000000000244000000000000024400000000000003E4000000000000014400000000000804640000000000000344000000000000034400000000000804140040000000000000000003E40000000000000344000000000000034400000000000002E40000000000000344000000000000039400000000000003E400000000000003440"
 wkb_mpt = "010400008002000000010100008000000000000059400000000000006940000000000000000001010000800000000000000000000000000000F03F0000000000000000"
@@ -360,6 +361,12 @@ class GeometryTestCase(unittest.TestCase):
         self.assertEqual(GeometryCollection, type(geom))
         geojson = geom.geojson
         self.assertEqual(geojson, geojson_gc)
+
+    def test_translate_geojson_error(self):
+        """
+        catch invalid GeoJSON
+        """
+        self.assertRaises(GeojsonError, Geometry.from_geojson, geojson_err)
 
     def test_geo_interface(self):
         """

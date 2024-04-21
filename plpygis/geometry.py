@@ -1,16 +1,17 @@
 import numbers
 from copy import copy
-from .exceptions import DependencyError, WkbError, SridError, DimensionalityError, CoordinateError
+from .exceptions import DependencyError, WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError
 from .hex import HexReader, HexWriter, HexBytes
 
 try:
-    import shapely, shapely.wkb
+    import shapely
+    import shapely.wkb
     SHAPELY = True
 except ImportError:
     SHAPELY = False
 
 
-class Geometry(object):
+class Geometry():
     r"""A representation of a PostGIS geometry.
 
     PostGIS geometries are either an OpenGIS Consortium Simple Features for SQL
@@ -98,21 +99,22 @@ class Geometry(object):
             for geometry in geojson["geometries"]:
                 geometries.append(Geometry.from_geojson(geometry, srid=None))
             return GeometryCollection(geometries, srid)
-        elif type_ == "point":
+        if type_ == "point":
             return Point(geojson["coordinates"], srid=srid)
-        elif type_ == "linestring":
+        if type_ == "linestring":
             return LineString(geojson["coordinates"], srid=srid)
-        elif type_ == "polygon":
+        if type_ == "polygon":
             return Polygon(geojson["coordinates"], srid=srid)
-        elif type_ == "multipoint":
+        if type_ == "multipoint":
             geometries = _MultiGeometry._multi_from_geojson(geojson, Point)
             return MultiPoint(geometries, srid=srid)
-        elif type_ == "multilinestring":
+        if type_ == "multilinestring":
             geometries = _MultiGeometry._multi_from_geojson(geojson, LineString)
             return MultiLineString(geometries, srid=srid)
-        elif type_ == "multipolygon":
+        if type_ == "multipolygon":
             geometries = _MultiGeometry._multi_from_geojson(geojson, Polygon)
             return MultiPolygon(geometries, srid=srid)
+        raise GeojsonError(f"Invalid GeoJSON type: {type_}")
 
     @staticmethod
     def from_shapely(sgeom, srid=None):
@@ -126,8 +128,7 @@ class Geometry(object):
                 sgeom = shapely.set_srid(sgeom, srid)
             wkb_hex = shapely.to_wkb(sgeom, include_srid=True, hex=True)
             return Geometry(wkb_hex)
-        else:
-            raise DependencyError("Shapely")
+        raise DependencyError("Shapely")
 
     @staticmethod
     def shape(shape, srid=None):
@@ -199,9 +200,8 @@ class Geometry(object):
         dimz = "Z" if self.dimz else ""
         dimm = "M" if self.dimm else ""
         if self.srid:
-            return "geometry({}{}{},{})".format(self.type, dimz, dimm, self.srid)
-        else:
-            return "geometry({}{}{})".format(self.type, dimz, dimm)
+            return f"geometry({self.type}{dimz}{dimm},{self.srid})"
+        return f"geometry({self.type}{dimz}{dimm})"
 
     @staticmethod
     def _from_wkb(wkb):
@@ -212,8 +212,8 @@ class Geometry(object):
                 reader = HexReader(wkb, "<")  # little-endian reader
             else:
                 raise WkbError("First byte in WKB must be 0 or 1.")
-        except TypeError:
-            raise WkbError()
+        except TypeError as e:
+            raise WkbError() from e
         return Geometry._get_wkb_type(reader) + (reader,)
 
     def _check_cache(self):
@@ -237,10 +237,9 @@ class Geometry(object):
             if srid == 0:
                 srid = None
             if (srid or self.srid) and srid != self.srid:
-                raise SridError("SRID mismatch: {} {}".format(srid, self.srid))
+                raise SridError(f"SRID mismatch: {srid} {self.srid}")
             return sgeom
-        else:
-            raise DependencyError("Shapely")
+        raise DependencyError("Shapely")
 
     def _to_geojson(self):
         coordinates = self._to_geojson_coordinates()
@@ -251,7 +250,7 @@ class Geometry(object):
         return geojson
 
     def __repr__(self):
-        return "<{}: '{}'>".format(self.type, self.postgis_type)
+        return f"<{self.type}: '{self.postgis_type}'>"
 
     def __str__(self):
         return self.wkb.__str__()
@@ -291,7 +290,7 @@ class Geometry(object):
         elif lwgeomtype == 7:
             cls = GeometryCollection
         else:
-            raise WkbError("Unsupported WKB type: {}".format(lwgeomtype))
+            raise WkbError(f"Unsupported WKB type: {lwgeomtype}")
         return cls, dimz, dimm, srid
 
     @staticmethod
@@ -306,8 +305,8 @@ class Geometry(object):
                 srid = reader.get_int()
             else:
                 srid = None
-        except TypeError:
-            raise WkbError()
+        except TypeError as e:
+            raise WkbError() from e
         return lwgeomtype, dimz, dimm, srid
 
     def _write_wkb_header(self, writer, use_srid, dimz, dimm):
@@ -368,10 +367,10 @@ class _MultiGeometry(Geometry):
 
     def _bounds(self):
         bounds = [g.bounds for g in self.geometries]
-        minx = min([b[0] for b in bounds])
-        miny = min([b[1] for b in bounds])
-        maxx = max([b[2] for b in bounds])
-        maxy = max([b[3] for b in bounds])
+        minx = min(b[0] for b in bounds)
+        miny = min(b[1] for b in bounds)
+        maxx = max(b[2] for b in bounds)
+        maxy = max(b[3] for b in bounds)
         return (minx, miny, maxx, maxy)
 
     @staticmethod
@@ -400,8 +399,7 @@ class _MultiGeometry(Geometry):
             if geometry._srid is not None:
                 if self._srid != geometry._srid:
                     raise SridError("Geometry can not be different from SRID in MultiGeometry")
-                else:
-                    geometry._srid = None
+                geometry._srid = None
 
     def _coordinates(self, dimz=True, dimm=True, tpl=True):
         return [g._coordinates(dimz, dimm, tpl) for g in self.geometries]
@@ -418,8 +416,8 @@ class _MultiGeometry(Geometry):
                 coordinates = cls._read_wkb(reader, dimz, dimm)
                 geometry = cls(coordinates, srid=srid, dimz=dimz, dimm=dimm)
                 geometries.append(geometry)
-        except TypeError:
-            raise WkbError()
+        except TypeError as e:
+            raise WkbError() from e
         return geometries
 
     def _write_wkb(self, writer, dimz, dimm):
@@ -457,14 +455,14 @@ class Point(Geometry):
                 if c is None:
                     continue
                 if not isinstance(c, numbers.Number):
-                    raise CoordinateError("Coordinates must be numeric: {}".format(coordinates), coordinates)
+                    raise CoordinateError(f"Coordinates must be numeric: {coordinates}", coordinates)
             self._srid = srid
             self._x = coordinates[0]
             self._y = coordinates[1]
             num = len(coordinates)
             if num > 4:
-                raise DimensionalityError("Maximum dimensionality supported for coordinates is 4: {}".format(coordinates))
-            elif num == 2:  # fill in Z and M if we are supposed to have them, else None
+                raise DimensionalityError(f"Maximum dimensionality supported for coordinates is 4: {coordinates}")
+            if num == 2:  # fill in Z and M if we are supposed to have them, else None
                 if dimz and dimm:
                     self._z = 0
                     self._m = 0
@@ -488,8 +486,8 @@ class Point(Geometry):
                     self._z = coordinates[2]
                     self._m = None
             else:  # use both the 3rd and 4th coordinates, ensure not None
-                    self._z = coordinates[2]
-                    self._m = coordinates[3]
+                self._z = coordinates[2]
+                self._m = coordinates[3]
 
             self._dimz = self._z is not None
             self._dimm = self._m is not None
@@ -572,7 +570,7 @@ class Point(Geometry):
     @dimz.setter
     def dimz(self, value):
         if self._dimz == value:
-            return None
+            return
         self._check_cache()
         if value and self._z is None:
             self._z = 0
@@ -594,7 +592,7 @@ class Point(Geometry):
     @dimm.setter
     def dimm(self, value):
         if self._dimm == value:
-            return None
+            return
         self._check_cache()
         if value and self._m is None:
             self._m = 0
@@ -617,8 +615,7 @@ class Point(Geometry):
 
         if tpl:
             return coordinates
-        else:
-            return list(coordinates)
+        return list(coordinates)
 
     def _to_geojson_coordinates(self):
         return self._coordinates(dimm=False, tpl=False)
@@ -646,8 +643,8 @@ class Point(Geometry):
             else:
                 z = None
                 m = None
-        except TypeError:
-            raise WkbError()
+        except TypeError as e:
+            raise WkbError() from e
         return x, y, z, m
 
     def _write_wkb(self, writer, dimz, dimm):
@@ -761,8 +758,8 @@ class LineString(Geometry):
             for _ in range(reader.get_int()):
                 coordinates = Point._read_wkb(reader, dimz, dimm)
                 vertices.append(coordinates)
-        except TypeError:
-            raise WkbError()
+        except TypeError as e:
+            raise WkbError() from e
         return vertices
 
     def _write_wkb(self, writer, dimz, dimm):
@@ -885,8 +882,8 @@ class Polygon(Geometry):
             for _ in range(reader.get_int()):
                 vertices = LineString._read_wkb(reader, dimz, dimm)
                 rings.append(vertices)
-        except TypeError:
-            raise WkbError()
+        except TypeError as e:
+            raise WkbError() from e
         return rings
 
     def _write_wkb(self, writer, dimz, dimm):
@@ -1052,7 +1049,7 @@ class GeometryCollection(_MultiGeometry):
     _LWGEOMTYPE = 7
     __slots__ = ["_geometries"]
 
-    def __init__(self, geometries=None, srid=None, dimz=False, dimm=False):
+    def __init__(self, geometries=None, srid=None):
         if self._wkb:
             self._geometries = None
         else:
