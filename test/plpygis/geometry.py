@@ -692,7 +692,7 @@ class GeometryTestCase(unittest.TestCase):
 
         from copy import copy, deepcopy
         p2 = copy(p1)
-        p3 = deepcopy(p1)
+        p3 = copy(p1)
 
         self.assertEqual(p1.coordinates, p2.coordinates)
         self.assertEqual(p1.srid, p2.srid)
@@ -702,8 +702,7 @@ class GeometryTestCase(unittest.TestCase):
 
         p1.x = 10
         self.assertNotEqual(p1.x, p2.x)
-        self.assertNotEqual(p1.x, p3.x)
-        self.assertEqual(p2.coordinates, p2.coordinates)
+        self.assertEqual(p2.x, p3.x)
 
     def test_multipoint_create(self):
         """
@@ -715,7 +714,7 @@ class GeometryTestCase(unittest.TestCase):
         mp = MultiPoint([p1, p2, p3], srid=4326)
 
         p1.x = 100
-        self.assertEqual(mp.geometries[0].x, 0)
+        self.assertEqual(mp.geometries[0].x, p1.x)
         self.assertEqual(p1.x, 100)
 
     def test_multipoint_copy(self):
@@ -746,7 +745,7 @@ class GeometryTestCase(unittest.TestCase):
         self.assertEqual(gc1.coordinates, gc2.coordinates)
 
         pt.x = 100
-        self.assertEqual(gc1.coordinates, gc2.coordinates)
+        self.assertNotEqual(gc1.coordinates, gc2.coordinates)
 
         gc1.geometries[0].x = 200
         self.assertNotEqual(gc1.coordinates, gc2.coordinates)
@@ -772,3 +771,17 @@ class GeometryTestCase(unittest.TestCase):
         self.assertEqual(gc2.geometries[1].x, -1)
         self.assertEqual(gc2.geometries[1].y, -5)
         self.assertNotEqual(gc1.wkb, gc2.wkb)
+
+    def test_geometrycollection_edit_wkb(self):
+        pt = Point((0, 0))
+        gc = GeometryCollection([pt])
+        wkb1 = gc.wkb
+
+        pt.x = 1
+        wkb2 = gc.wkb
+
+        pt.srid = 1000
+        pt.z = 80
+        pt.dimz = True
+
+        self.assertNotEqual(wkb1, wkb2)

@@ -55,7 +55,7 @@ The four collection types, :class:`MultiPoint <plpygis.geometry.MultiPoint>`, :c
     >>> p2 = Point((1, 1))
     >>> mp = MultiPoint([p1, p2])
 
-`plpygis` will create copies of any `Geometry <plpygis.geometry.Geometry` objects used to create a collection.
+`plpygis` will not create copies of any `Geometry <plpygis.geometry.Geometry` objects used to create a collection. However, changes to the SRID or dimensionality of any component geometries will not be reflected unless the collection's SRID or dimensionality also changes.
 
 .. code-block:: python
 
@@ -65,11 +65,7 @@ The four collection types, :class:`MultiPoint <plpygis.geometry.MultiPoint>`, :c
     0
     >>> p.x = 100
     >>> mp.points[0].x
-    0
-
-.. warning::
-
-   In versions of `plpygis` 0.3 and earlier, `plpygis` used a reference to the original object when creating a collection.
+    100
 
 SRIDs
 -----

@@ -918,7 +918,7 @@ class MultiPoint(_MultiGeometry):
         if self._wkb:
             self._points = None
         else:
-            self._points = [copy(point) for point in points]
+            self._points = points
             self._srid = srid
             self._set_multi_metadata()
 
@@ -964,7 +964,7 @@ class MultiLineString(_MultiGeometry):
         if self._wkb:
             self._linestrings = None
         else:
-            self._linestrings = [copy(linestring) for linestring in linestrings]
+            self._linestrings = linestrings
             self._srid = srid
             self._set_multi_metadata()
 
@@ -1010,7 +1010,7 @@ class MultiPolygon(_MultiGeometry):
         if self._wkb:
             self._polygons = None
         else:
-            self._polygons = [copy(polygon) for polygon in polygons]
+            self._polygons = polygons
             self._srid = srid
             self._set_multi_metadata()
 
@@ -1056,7 +1056,7 @@ class GeometryCollection(_MultiGeometry):
         if self._wkb:
             self._geometries = None
         else:
-            self._geometries = [copy(geometry) for geometry in geometries]
+            self._geometries = geometries
             self._srid = srid
             self._set_multi_metadata()
 
