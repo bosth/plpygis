@@ -3,10 +3,10 @@
 ## [0.4.0] - 2024-04-21
 
 - changed: migrate to pyproject.toml
-- added: new coordinates() method for Geometries
-- added: new __copy__() method for Geometries
-- added: new CoordinateError and GeojsonError exceptions
-- fixed: removed unused parameters from GeometryCollection
+- added: new `coordinates()` method for `Geometry` classes
+- added: new `__copy__()` method for `Geometry` classes
+- added: new `CoordinateError` and `GeojsonError` exceptions
+- fixed: removed unused parameters when creating a `GeometryCollection`
 
 ## [0.3.0] - 2024-04-08
 
