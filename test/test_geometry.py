@@ -7,7 +7,7 @@ import unittest
 from shapely import geometry
 from plpygis import Geometry, Point, LineString, Polygon
 from plpygis import MultiPoint, MultiLineString, MultiPolygon, GeometryCollection
-from plpygis.exceptions import DependencyError, WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError
+from plpygis.exceptions import WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError
 
 geojson_pt = {"type":"Point","coordinates":[0.0,0.0]}
 geojson_ln = {"type":"LineString","coordinates":[[107,60],[102,59]]}
@@ -429,39 +429,6 @@ class GeometryTestCase(unittest.TestCase):
         """
         check bounds of LineString
         """
-        geom = Geometry.from_geojson(geojson_pt)
-        bounds = geom.bounds
-        self.assertEqual(bounds[0], 0.0)
-        self.assertEqual(bounds[1], 0.0)
-        self.assertEqual(bounds[2], 0.0)
-        self.assertEqual(bounds[3], 0.0)
-
-    def test_bounds_point(self):
-        """
-        check bounds of Point
-        """
-        geom = Geometry.from_geojson(geojson_pt)
-        bounds = geom.bounds
-        self.assertEqual(bounds[0], 0.0)
-        self.assertEqual(bounds[1], 0.0)
-        self.assertEqual(bounds[2], 0.0)
-        self.assertEqual(bounds[3], 0.0)
-
-    def test_bounds_point(self):
-        """
-        check bounds of Point
-        """
-        geom = Geometry.from_geojson(geojson_pt)
-        bounds = geom.bounds
-        self.assertEqual(bounds[0], 0.0)
-        self.assertEqual(bounds[1], 0.0)
-        self.assertEqual(bounds[2], 0.0)
-        self.assertEqual(bounds[3], 0.0)
-
-    def test_bounds_linestring(self):
-        """
-        check bounds of LineString
-        """
         geom = Geometry.from_geojson(geojson_ln)
         bounds = geom.bounds
         self.assertEqual(bounds[0], 102)
@@ -536,7 +503,6 @@ class GeometryTestCase(unittest.TestCase):
         """
         detect extra dimensions in Point creation
         """
-        p1 = Point((0, 1, 2, 3))
         self.assertRaises(DimensionalityError, Point, ((0, 1, 2, 3, 4)), None)
 
     def test_dimension_reading(self):
@@ -643,17 +609,17 @@ class GeometryTestCase(unittest.TestCase):
         get coordinates of a LineString
         """
         coordinates = [(1, 2, 3, 4), (6, 7, 8, 9)]
-        l = LineString(coordinates)
-        self.assertEqual(l.coordinates, coordinates)
-        self.assertEqual(l._coordinates(dimm=True, dimz=True), coordinates)
-        self.assertEqual(l._coordinates(dimm=False), [(1, 2, 3), (6, 7, 8)])
-        self.assertEqual(l._coordinates(dimz=False), [(1, 2, 4), (6, 7, 9)])
-        self.assertEqual(l._coordinates(dimz=False, dimm=False), [(1, 2), (6, 7)])
+        ls = LineString(coordinates)
+        self.assertEqual(ls.coordinates, coordinates)
+        self.assertEqual(ls._coordinates(dimm=True, dimz=True), coordinates)
+        self.assertEqual(ls._coordinates(dimm=False), [(1, 2, 3), (6, 7, 8)])
+        self.assertEqual(ls._coordinates(dimz=False), [(1, 2, 4), (6, 7, 9)])
+        self.assertEqual(ls._coordinates(dimz=False, dimm=False), [(1, 2), (6, 7)])
         
-        self.assertEqual(l._coordinates(dimm=True, dimz=True, tpl=False), [[1, 2, 3, 4], [6, 7, 8, 9]])
-        self.assertEqual(l._coordinates(dimm=False, tpl=False), [[1, 2, 3], [6, 7, 8]])
-        self.assertEqual(l._coordinates(dimz=False, tpl=False), [[1, 2, 4], [6, 7, 9]])
-        self.assertEqual(l._coordinates(dimz=False, dimm=False, tpl=False), [[1, 2], [6, 7]])
+        self.assertEqual(ls._coordinates(dimm=True, dimz=True, tpl=False), [[1, 2, 3, 4], [6, 7, 8, 9]])
+        self.assertEqual(ls._coordinates(dimm=False, tpl=False), [[1, 2, 3], [6, 7, 8]])
+        self.assertEqual(ls._coordinates(dimz=False, tpl=False), [[1, 2, 4], [6, 7, 9]])
+        self.assertEqual(ls._coordinates(dimz=False, dimm=False, tpl=False), [[1, 2], [6, 7]])
 
     def test_polygon_coordinates(self):
         """
@@ -697,7 +663,7 @@ class GeometryTestCase(unittest.TestCase):
         """
         p1 = Point((0, 1, 2), srid=4326, dimm=True)
 
-        from copy import copy, deepcopy
+        from copy import copy
         p2 = copy(p1)
         p3 = copy(p1)
 
