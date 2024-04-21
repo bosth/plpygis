@@ -71,14 +71,14 @@ class Geometry():
                 raise WkbError("No EWKB provided")
             wkb = HexBytes(wkb)
             newcls, dimz, dimm, srid, reader = Geometry._from_wkb(wkb)
-            geom = super(Geometry, cls).__new__(newcls)
+            geom = super().__new__(newcls)
             geom._wkb = wkb
             geom._reader = reader
             geom._srid = srid
             geom._dimz = dimz
             geom._dimm = dimm
         else:
-            geom = super(Geometry, cls).__new__(cls)
+            geom = super().__new__(cls)
             geom._wkb = None
             geom._reader = None
         return geom

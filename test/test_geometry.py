@@ -2,8 +2,7 @@
 Test Geometry
 """
 
-import unittest
-
+import pytest
 from shapely import geometry
 from plpygis import Geometry, Point, LineString, Polygon
 from plpygis import MultiPoint, MultiLineString, MultiPolygon, GeometryCollection
@@ -25,736 +24,750 @@ wkb_mpg = "010600000002000000010300000001000000040000000000000000004440000000000
 wkb_gc = "0107000000020000000101000000000000000000000000000000000000000102000000020000000000000000000000000000000000F03F000000000000F03F000000000000F03F"
 wkb_mpt_srid = "0104000020e8030000020000000101000000000000000000000000000000000000000101000000000000000000f03f000000000000f03f"
 
-class GeometryTestCase(unittest.TestCase):
-    def test_missing_ewkb(self):
-        """
-        missing EWKB
-        """
-        self.assertRaises(WkbError, Geometry, None, None)
-
-    def test_malformed_ewkb_len(self):
-        """
-        malformed EWKB (insufficient bytes)
-        """
-        self.assertRaises(Exception, Geometry, "0101", None)
-
-    def test_malformed_ewkb_firstbyte(self):
-        """
-        malformed EWKB (bad first byte)
-        """
-        self.assertRaises(WkbError, Geometry, "5101", None)
-
-    def test_unsupported_ewkb_type(self):
-        """
-        unsupported EWKB type
-        """
-        "010100000000000000000000000000000000000000"
-        self.assertRaises(WkbError, Geometry, "010800000000000000000000000000000000000000", None)
-
-    def test_read_wkb_point(self):
-        """
-        read WKB Point
-        """
-        wkb = "010100000000000000000000000000000000000000"
-        geom = Geometry(wkb)
-        self.assertEqual(geom.type, "Point")
-        self.assertIsNone(geom.srid)
-        self.assertEqual(geom.dimz, False)
-        self.assertEqual(geom.dimm, False)
-        postgis_type = "geometry(Point)"
-        self.assertEqual(geom.postgis_type, postgis_type)
-        self.assertEqual(geom.__repr__(), "<Point: 'geometry(Point)'>")
-        geom.srid = geom.srid  # clear cached WKB
-        self.assertEqual(geom.__str__().lower(), wkb.lower())
-
-    def test_read_wkb_point_big_endian(self):
-        """
-        read WKB Point
-        """
-        geom = Geometry("000000000140000000000000004010000000000000")
-        self.assertIsInstance(geom, Point)
-        self.assertEqual((2, 4, None), (geom.x, geom.y, geom.z))
-
-    def test_read_ewkb_point_srid(self):
-        """
-        read EWKB Point,4326
-        """
-        wkb = "0101000020E610000000000000000000000000000000000000"
-        geom = Geometry(wkb)
-        self.assertEqual(geom.type, "Point")
-        self.assertEqual(geom.srid, 4326)
-        self.assertEqual(geom.dimz, False)
-        self.assertEqual(geom.dimm, False)
-        postgis_type = "geometry(Point,4326)"
-        self.assertEqual(geom.postgis_type, postgis_type)
-        self.assertEqual(geom.__repr__(), "<Point: 'geometry(Point,4326)'>")
-        geom.srid = geom.srid # clear cached WKB
-        self.assertEqual(geom.__str__().lower(), wkb.lower())
-
-    def test_read_ewkb_pointz(self):
-        """
-        read EWKB PointZ,4326
-        """
-        wkb = "01010000A0E6100000000000000000000000000000000000000000000000000000"
-        geom = Geometry(wkb)
-        self.assertEqual(geom.type, "Point")
-        self.assertEqual(geom.srid, 4326)
-        self.assertEqual(geom.dimz, True)
-        self.assertEqual(geom.dimm, False)
-        postgis_type = "geometry(PointZ,4326)"
-        self.assertEqual(geom.postgis_type, postgis_type)
-        self.assertEqual(geom.__repr__(), "<Point: 'geometry(PointZ,4326)'>")
-        geom.srid = geom.srid # clear cached WKB
-        self.assertEqual(geom.__str__().lower(), wkb.lower())
-
-    def test_read_ewkb_pointm(self):
-        """
-        read EWKB PointM,4326
-        """
-        wkb = "0101000060E6100000000000000000000000000000000000000000000000000000"
-        geom = Geometry(wkb)
-        self.assertEqual(geom.type, "Point")
-        self.assertEqual(geom.srid, 4326)
-        self.assertEqual(geom.dimz, False)
-        self.assertEqual(geom.dimm, True)
-        postgis_type = "geometry(PointM,4326)"
-        self.assertEqual(geom.postgis_type, postgis_type)
-        self.assertEqual(geom.__repr__(), "<Point: 'geometry(PointM,4326)'>")
-        geom.srid = geom.srid # clear cached WKB
-        self.assertEqual(geom.__str__().lower(), wkb.lower())
-
-    def test_read_ewkb_pointzm(self):
-        """
-        read EWKB PointZM,4326
-        """
-        wkb = "01010000E0E61000000000000000000000000000000000000000000000000000000000000000000000"
-        geom = Geometry(wkb)
-        self.assertEqual(geom.type, "Point")
-        self.assertEqual(geom.srid, 4326)
-        self.assertEqual(geom.dimz, True)
-        self.assertEqual(geom.dimm, True)
-        geom.srid = geom.srid # clear cached WKB
-        postgis_type = "geometry(PointZM,4326)"
-        self.assertEqual(geom.postgis_type, postgis_type)
-        self.assertEqual(geom.__repr__(), "<Point: 'geometry(PointZM,4326)'>")
-        geom.srid = geom.srid # clear cached WKB
-        self.assertEqual(geom.__str__().lower(), wkb.lower())
-
-    def test_read_wkb_linestring(self):
-        """
-        read WKB LineString
-        """
-        wkb = wkb_ln
-        geom = Geometry(wkb)
-        self.assertEqual(geom.type, "LineString")
-        self.assertEqual(geom.srid, None)
-        self.assertEqual(geom.dimz, False)
-        self.assertEqual(geom.dimm, False)
-        postgis_type = "geometry(LineString)"
-        geom.vertices
-        self.assertEqual(geom.postgis_type, postgis_type)
-        self.assertEqual(geom.__repr__(), "<LineString: 'geometry(LineString)'>")
-        geom.srid = geom.srid # clear cached WKB
-        self.assertEqual(geom.__str__().lower(), wkb.lower())
-
-    def test_read_wkb_polygon(self):
-        """
-        read WKB Polygon
-        """
-        wkb = wkb_pg
-        geom = Geometry(wkb)
-        self.assertEqual(geom.type, "Polygon")
-        self.assertEqual(geom.srid, None)
-        self.assertEqual(geom.dimz, False)
-        self.assertEqual(geom.dimm, False)
-        postgis_type = "geometry(Polygon)"
-        self.assertEqual(geom.exterior.type, "LineString")
-        self.assertEqual(geom.postgis_type, postgis_type)
-        self.assertEqual(geom.__repr__(), "<Polygon: 'geometry(Polygon)'>")
-        geom.srid = geom.srid # clear cached WKB
-        self.assertEqual(geom.__str__().lower(), wkb.lower())
-
-    def test_read_wkb_multipoint(self):
-        """
-        read WKB MultiPoint
-        """
-        wkb = wkb_mpt
-        geom = Geometry(wkb)
-        self.assertEqual(geom.type, "MultiPoint")
-        self.assertEqual(geom.srid, None)
-        self.assertEqual(geom.dimz, True)
-        self.assertEqual(geom.dimm, False)
-        postgis_type = "geometry(MultiPointZ)"
-        self.assertEqual(geom.postgis_type, postgis_type)
-        self.assertEqual(geom.__repr__(), "<MultiPoint: 'geometry(MultiPointZ)'>")
-        geom.srid = geom.srid # clear cached WKB
-        self.assertEqual(geom.__str__().lower(), wkb.lower())
-        for g in geom.geometries:
-            self.assertEqual(g.type, "Point")
-
-    def test_read_wkb_multilinestring(self):
-        """
-        read WKB MultiLineString
-        """
-        wkb = wkb_mln
-        geom = Geometry(wkb)
-        self.assertEqual(geom.type, "MultiLineString")
-        self.assertEqual(geom.srid, None)
-        self.assertEqual(geom.dimz, False)
-        self.assertEqual(geom.dimm, True)
-        postgis_type = "geometry(MultiLineStringM)"
-        self.assertEqual(geom.postgis_type, postgis_type)
-        self.assertEqual(geom.__repr__(), "<MultiLineString: 'geometry(MultiLineStringM)'>")
-        geom.srid = geom.srid # clear cached WKB
-        self.assertEqual(geom.__str__().lower(), wkb.lower())
-        for g in geom.geometries:
-            self.assertEqual(g.type, "LineString")
-
-    def test_read_wkb_multipolygon(self):
-        """
-        read WKB MultiPolygon
-        """
-        wkb = wkb_mpg
-        geom = Geometry(wkb)
-        self.assertEqual(geom.type, "MultiPolygon")
-        self.assertEqual(geom.srid, None)
-        self.assertEqual(geom.dimz, False)
-        self.assertEqual(geom.dimm, False)
-        postgis_type = "geometry(MultiPolygon)"
-        self.assertEqual(geom.postgis_type, postgis_type)
-        self.assertEqual(geom.__repr__(), "<MultiPolygon: 'geometry(MultiPolygon)'>")
-        geom.srid = geom.srid # clear cached WKB
-        self.assertEqual(geom.__str__().lower(), wkb.lower())
-        for g in geom.geometries:
-            self.assertEqual(g.type, "Polygon")
-
-    def test_read_wkb_geometrycollection(self):
-        """
-        read WKB GeometryCollection
-        """
-        wkb = wkb_gc
-        geom = Geometry(wkb)
-        self.assertEqual(geom.type, "GeometryCollection")
-        self.assertEqual(geom.srid, None)
-        self.assertEqual(geom.dimz, False)
-        self.assertEqual(geom.dimm, False)
-        postgis_type = "geometry(GeometryCollection)"
-        self.assertEqual(geom.postgis_type, postgis_type)
-        self.assertEqual(geom.__repr__(), "<GeometryCollection: 'geometry(GeometryCollection)'>")
-        geom.srid = geom.srid # clear cached WKB
-        self.assertEqual(geom.__str__().lower(), wkb.lower())
-        self.assertEqual(geom.geometries[0].type, "Point")
-        self.assertEqual(geom.geometries[1].type, "LineString")
-
-    def test_multigeometry_changedimensionality(self):
-        """
-        change dimensionality of a MultiGeometry
-        """
-        wkb = wkb_gc
-        geom = Geometry(wkb)
-        self.assertEqual(geom.dimz, False)
-        self.assertEqual(geom.dimm, False)
-        geom.dimz = True
-        geom.dimm = True
-        self.assertEqual(geom.dimz, True)
-        self.assertEqual(geom.dimm, True)
-        geom.srid = geom.srid # clear cached WKB
-        self.assertNotEqual(geom.__str__().lower(), wkb.lower())
-
-    def test_malformed_coordinates(self):
-        """
-        malformed coordinates (wrong type)
-        """
-        coordinates = (1, "test")
-        self.assertRaises(CoordinateError, Point, coordinates)
-
-        coordinates = [(1, 2), [(1, 2), (3, 4)]]
-        self.assertRaises(CoordinateError, LineString, coordinates)
-
-    def test_multigeometry_srid(self):
-        """
-        create geometry with SRID
-        """
-        p1 = Point((0, 0), srid=1000)
-        p2 = Point((1, 1), srid=1000)
-        mp = MultiPoint([p1, p2], srid=1000)
-        self.assertEqual(mp.wkb, wkb_mpt_srid)
-
-    def test_multigeometry_srid_exception(self):
-        """
-        mixed SRIDs on multigeometry creation
-        """
-        p1 = Point((0, 0), srid=1000)
-        p2 = Point((1, 1), srid=1000)
-        self.assertRaises(SridError, MultiPoint, [p1, p2])
-
-        p1 = Point((0, 0), srid=1000)
-        p2 = Point((1, 1), srid=1000)
-        self.assertRaises(SridError, MultiPoint, [p1, p2], 4326)
-
-    def test_translate_geojson_pt(self):
-        """
-        load and dump GeoJSON point
-        """
-        geom = Geometry.from_geojson(geojson_pt)
-        self.assertEqual(geom.srid, 4326)
-        self.assertEqual(Point, type(geom))
-        geojson = geom.geojson
-        self.assertEqual(geojson, geojson_pt)
-
-    def test_translate_geojson_ln(self):
-        """
-        load and dump GeoJSON line
-        """
-        geom = Geometry.from_geojson(geojson_ln)
-        self.assertEqual(geom.srid, 4326)
-        self.assertEqual(LineString, type(geom))
-        geojson = geom.geojson
-        self.assertEqual(geojson, geojson_ln)
-
-    def test_translate_geojson_pg(self):
-        """
-        load and dump GeoJSON polygon
-        """
-        geom = Geometry.from_geojson(geojson_pg)
-        self.assertEqual(geom.srid, 4326)
-        self.assertEqual(Polygon, type(geom))
-        geojson = geom.geojson
-        self.assertEqual(geojson, geojson_pg)
-
-    def test_translate_geojson_mpt(self):
-        """
-        load and dump GeoJSON multipoint
-        """
-        geom = Geometry.from_geojson(geojson_mpt)
-        self.assertEqual(geom.srid, 4326)
-        self.assertEqual(MultiPoint, type(geom))
-        geojson = geom.geojson
-        self.assertEqual(geojson, geojson_mpt)
-
-    def test_translate_geojson_mln(self):
-        """
-        load and dump GeoJSON multiline
-        """
-        geom = Geometry.from_geojson(geojson_mln)
-        self.assertEqual(geom.srid, 4326)
-        self.assertEqual(MultiLineString, type(geom))
-        geojson = geom.geojson
-        self.assertEqual(geojson, geojson_mln)
-
-    def test_translate_geojson_mpg(self):
-        """
-        load and dump GeoJSON multipolygon
-        """
-        geom = Geometry.from_geojson(geojson_mpg)
-        self.assertEqual(geom.srid, 4326)
-        self.assertEqual(MultiPolygon, type(geom))
-        geojson = geom.geojson
-        self.assertEqual(geojson, geojson_mpg)
-
-    def test_translate_geojson_gc(self):
-        """
-        load and dump GeoJSON GeometryCollection
-        """
-        geom = Geometry.from_geojson(geojson_gc)
-        self.assertEqual(geom.srid, 4326)
-        self.assertEqual(GeometryCollection, type(geom))
-        geojson = geom.geojson
-        self.assertEqual(geojson, geojson_gc)
-
-    def test_translate_geojson_error(self):
-        """
-        catch invalid GeoJSON
-        """
-        self.assertRaises(GeojsonError, Geometry.from_geojson, geojson_err)
-
-    def test_geo_interface(self):
-        """
-        access using __geo_interface__
-        """
-        geom = Geometry.from_geojson(geojson_pt)
-        self.assertEqual(geojson_pt, geom.__geo_interface__)
-
-    def test_shape(self):
-        """
-        access using __geo_interface__ and shape
-        """
-        point = Point.from_geojson(geojson_pt)
-        geom = Geometry.shape(point)
-        self.assertEqual(point.__geo_interface__, geom.__geo_interface__)
-
-    def test_shapely_dump(self):
-        """
-        convert to Shapely
-        """
-        point = Point((123,123))
-        sgeom = point.shapely
-        self.assertEqual(sgeom.wkb, point.wkb)
-
-    def test_shapely_load(self):
-        """
-        convert from Shapely
-        """
-        sgeom = geometry.Point(99,-99)
-        point = Geometry.from_shapely(sgeom)
-        self.assertEqual(sgeom.wkb_hex, point.wkb)
-
-    def test_strip_srid(self):
-        """
-        strip SRID
-        """
-        geom1 = Geometry("010100000000000000000000000000000000000000")
-        geom2 = Geometry("0101000020E610000000000000000000000000000000000000")
-        self.assertIsNone(geom1.srid)
-        self.assertEqual(geom2.srid, 4326)
-        geom2.srid = None
-        self.assertIsNone(geom2.srid)
-        self.assertEqual(geom1.wkb, geom2.wkb)
-        geom2.srid = None
-        self.assertIsNone(geom2.srid)
-        self.assertEqual(geom1.wkb, geom2.wkb)
-
-    def test_bounds_point(self):
-        """
-        check bounds of Point
-        """
-        geom = Geometry.from_geojson(geojson_pt)
-        bounds = geom.bounds
-        self.assertEqual(bounds[0], 0.0)
-        self.assertEqual(bounds[1], 0.0)
-        self.assertEqual(bounds[2], 0.0)
-        self.assertEqual(bounds[3], 0.0)
-
-    def test_bounds_linestring(self):
-        """
-        check bounds of LineString
-        """
-        geom = Geometry.from_geojson(geojson_ln)
-        bounds = geom.bounds
-        self.assertEqual(bounds[0], 102)
-        self.assertEqual(bounds[1], 59)
-        self.assertEqual(bounds[2], 107)
-        self.assertEqual(bounds[3], 60)
-
-    def test_bounds_polygon(self):
-        """
-        check bounds of Polygon
-        """
-        geom = Geometry.from_geojson(geojson_pg)
-        bounds = geom.bounds
-        self.assertEqual(bounds[0], 100)
-        self.assertEqual(bounds[1], 0)
-        self.assertEqual(bounds[2], 101)
-        self.assertEqual(bounds[3], 1)
-
-    def test_bounds_multipoint(self):
-        """
-        check bounds of MultiPoint
-        """
-        geom = Geometry.from_geojson(geojson_mpt)
-        bounds = geom.bounds
-        self.assertEqual(bounds[0], 0)
-        self.assertEqual(bounds[1], 0)
-        self.assertEqual(bounds[2], 1)
-        self.assertEqual(bounds[3], 1)
-
-    def test_bounds_multilinestring(self):
-        """
-        check bounds of MultiLineString
-        """
-        geom = Geometry.from_geojson(geojson_mln)
-        bounds = geom.bounds
-        self.assertEqual(bounds[0], 0)
-        self.assertEqual(bounds[1], 0)
-        self.assertEqual(bounds[2], 3)
-        self.assertEqual(bounds[3], 3)
-
-    def test_bounds_multipolygon(self):
-        """
-        check bounds of MultiPolygon
-        """
-        geom = Geometry.from_geojson(geojson_mpg)
-        bounds = geom.bounds
-        self.assertEqual(bounds[0], 1)
-        self.assertEqual(bounds[1], 0)
-        self.assertEqual(bounds[2], 111)
-        self.assertEqual(bounds[3], 1)
-
-    def test_bounds_geomcollection(self):
-        """
-        check bounds of GeometryCollection
-        """
-        geom = Geometry.from_geojson(geojson_gc)
-        bounds = geom.bounds
-        self.assertEqual(bounds[0], 10)
-        self.assertEqual(bounds[1], 0)
-        self.assertEqual(bounds[2], 12)
-        self.assertEqual(bounds[3], 1)
-
-    def test_mixed_dimensionality(self):
-        """
-        detect mixed dimensionality in MultiGeometries
-        """
-        p1 = Point((0, 1, 2))
-        p2 = Point((0, 1))
-        self.assertRaises(DimensionalityError, MultiPoint, [p1, p2], None)
-
-    def test_invalid_point_dimension(self):
-        """
-        detect extra dimensions in Point creation
-        """
-        self.assertRaises(DimensionalityError, Point, ((0, 1, 2, 3, 4)), None)
-
-    def test_dimension_reading(self):
-        """
-        check dimensions are set correctly
-        """
-        p = Point((0, 1))
-        self.assertFalse(p.dimz)
-        self.assertFalse(p.dimm)
-        p = Point((0, 1, 2))
-        self.assertTrue(p.dimz)
-        self.assertFalse(p.dimm)
-        p = Point((0, 1, 2, 3))
-        self.assertTrue(p.dimz)
-        self.assertTrue(p.dimm)
-        p = Point((0, 1, 2, 3), dimz=False, dimm=False)
-        self.assertTrue(p.dimz)
-        self.assertTrue(p.dimm)
-        p = Point((0, 1), dimz=True, dimm=True)
-        self.assertTrue(p.dimz)
-        self.assertTrue(p.dimm)
-        p = Point((0, 1), dimz=True)
-        self.assertTrue(p.dimz)
-        self.assertFalse(p.dimm)
-        p = Point((0, 1), dimm=True)
-        self.assertFalse(p.dimz)
-        self.assertTrue(p.dimm)
-        p = Point((0, 1, 2), dimz=True)
-        self.assertTrue(p.dimz)
-        self.assertFalse(p.dimm)
-        p = Point((0, 1, 2), dimm=True)
-        self.assertFalse(p.dimz)
-        self.assertTrue(p.dimm)
-        p = Point((0, 1, 2), dimz=True, dimm=True)
-        self.assertTrue(p.dimz)
-        self.assertTrue(p.dimm)
-
-    def test_modify_point(self):
-        """
-        modify Point
-        """
-        wkb = "010100000000000000000000000000000000000000"
-        p = Geometry(wkb)
-        oldx = p.x
-        oldy = p.y
-        oldsrid = p.srid
-        self.assertFalse(p.dimz)
-        self.assertFalse(p.dimm)
-        newx = -99
-        newy = -101
-        newz = 88
-        newm = 8
-        newsrid = 900913
-        self.assertNotEqual(p.x, newx)
-        self.assertNotEqual(p.y, newy)
-        self.assertNotEqual(p.z, newz)
-        self.assertNotEqual(p.m, newm)
-        self.assertNotEqual(p.srid, newsrid)
-        p.x = newx
-        p.y = newy
-        p.z = newz
-        p.m = newm
-        p.srid = newsrid
-        self.assertEqual(p.x, newx)
-        self.assertEqual(p.y, newy)
-        self.assertEqual(p.z, newz)
-        self.assertEqual(p.m, newm)
-        self.assertEqual(p.srid, newsrid)
-        self.assertNotEqual(p.__str__().lower(), wkb.lower())
-        p.x = oldx
-        p.y = oldy
-        p.srid = oldsrid
-        p.dimz = None
-        p.dimm = None
-        self.assertEqual(p.__str__().lower(), wkb.lower())
-
-    def test_binary_wkb_roundtrip(self):
-        wkb = b'\x01\x01\x00\x00\x20\xe6\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-        self.assertEqual(Geometry(wkb).wkb, wkb)
-
-    def test_byte_array_wkb_string(self):
-        wkb = bytearray(b'010100000000000000000000000000000000000000')
-        self.assertEqual(str(Geometry(wkb)), wkb.decode('ascii'))
-
-    def test_point_coordinates(self):
-        """
-        get coordinates of a Point
-        """
-        coordinates = (1, 2, 3, 4)
-        p = Point(coordinates)
-        self.assertEqual(p.coordinates, coordinates)
-        self.assertEqual(p._coordinates(dimm=True, dimz=True), coordinates)
-        self.assertEqual(p._coordinates(dimm=False), (1, 2, 3))
-        self.assertEqual(p._coordinates(dimz=False), (1, 2, 4))
-        self.assertEqual(p._coordinates(dimm=False, dimz=False), (1, 2))
-        
-        self.assertEqual(p._coordinates(dimm=True, dimz=True, tpl=False), list(coordinates))
-        self.assertEqual(p._coordinates(dimm=False, tpl=False), [1, 2, 3])
-        self.assertEqual(p._coordinates(dimz=False, tpl=False), [1, 2, 4])
-        self.assertEqual(p._coordinates(dimm=False, dimz=False, tpl=False), [1, 2])
-
-    def test_linestring_coordinates(self):
-        """
-        get coordinates of a LineString
-        """
-        coordinates = [(1, 2, 3, 4), (6, 7, 8, 9)]
-        ls = LineString(coordinates)
-        self.assertEqual(ls.coordinates, coordinates)
-        self.assertEqual(ls._coordinates(dimm=True, dimz=True), coordinates)
-        self.assertEqual(ls._coordinates(dimm=False), [(1, 2, 3), (6, 7, 8)])
-        self.assertEqual(ls._coordinates(dimz=False), [(1, 2, 4), (6, 7, 9)])
-        self.assertEqual(ls._coordinates(dimz=False, dimm=False), [(1, 2), (6, 7)])
-        
-        self.assertEqual(ls._coordinates(dimm=True, dimz=True, tpl=False), [[1, 2, 3, 4], [6, 7, 8, 9]])
-        self.assertEqual(ls._coordinates(dimm=False, tpl=False), [[1, 2, 3], [6, 7, 8]])
-        self.assertEqual(ls._coordinates(dimz=False, tpl=False), [[1, 2, 4], [6, 7, 9]])
-        self.assertEqual(ls._coordinates(dimz=False, dimm=False, tpl=False), [[1, 2], [6, 7]])
-
-    def test_polygon_coordinates(self):
-        """
-        get coordinates of a Polygon
-        """
-        coordinates = [[(1, 2, 3, 4), (6, 7, 8, 9), (10, 11, 12, 13), (1, 2, 3, 4)]]
-        p = Polygon(coordinates)
-        self.assertEqual(p.coordinates, coordinates)
-        self.assertEqual(p._coordinates(dimm=True, dimz=True), coordinates)
-
-        coordinates = [list(map(list, sub)) for sub in coordinates]
-        self.assertEqual(p._coordinates(dimm=True, dimz=True, tpl=False), coordinates)
-
-    def test_multipoint_coordinates(self):
-        """
-        get coordinates of a MultiPoint
-        """
-        coordinates =  [ (170.0, 45.0), (180.0, 45.0), (-100.0, 45.0), (-170.0, 45.0) ] 
-        mp = MultiPoint([Point(p) for p in coordinates])
-        self.assertEqual(mp.coordinates, coordinates)
-
-    def test_multilinestring_coordinates(self):
-        """
-        get coordinates of a MultiLineString
-        """
-        coordinates = [ [ (170.0, 45.0), (180.0, 45.0) ], [ (-180.0, 45.0), (-170.0, 45.0) ] ]
-        ml = MultiLineString([LineString(c) for c in coordinates])
-        self.assertEqual(ml.coordinates, coordinates)
-
-    def test_multipolygon_coordinates(self):
-        """
-        get coordinates of a MultiPolygon
-        """
-        coordinates = [ [ [ (180.0, 40.0), (180.0, 50.0), (170.0, 50.0), (170.0, 40.0), (180.0, 40.0) ] ], [ [ (-170.0, 40.0), (-170.0, 50.0), (-180.0, 50.0), (-180.0, 40.0), (-170.0, 40.0) ] ] ]
-        mp = MultiPolygon([Polygon(c) for c in coordinates])
-        self.assertEqual(mp.coordinates, coordinates)
-
-    def test_point_copy(self):
-        """
-        copy a Point object
-        """
-        p1 = Point((0, 1, 2), srid=4326, dimm=True)
-
-        from copy import copy
-        p2 = copy(p1)
-        p3 = copy(p1)
-
-        self.assertEqual(p1.coordinates, p2.coordinates)
-        self.assertEqual(p1.srid, p2.srid)
-        self.assertEqual(p1.wkb, p2.wkb)
-        self.assertNotEqual(p1, p2)
-        self.assertNotEqual(p1, p3)
-
-        p1.x = 10
-        self.assertNotEqual(p1.x, p2.x)
-        self.assertEqual(p2.x, p3.x)
-
-    def test_multipoint_create(self):
-        """
-        create a MultiPoint object
-        """
-        p1 = Point((0, 1, 2))
-        p2 = Point((3, 4, 5))
-        p3 = Point((6, 7, 8))
-        mp = MultiPoint([p1, p2, p3], srid=4326)
-
-        p1.x = 100
-        self.assertEqual(mp.geometries[0].x, p1.x)
-        self.assertEqual(p1.x, 100)
-
-    def test_multipoint_copy(self):
-        """
-        copy a MultiPoint object
-        """
-        p1 = Point((0, 1, 2))
-        p2 = Point((3, 4, 5))
-        p3 = Point((6, 7, 8))
-        mp1 = MultiPoint([p1, p2, p3], srid=4326)
-
-        from copy import copy
-        mp2 = copy(mp1)
-
-        self.assertEqual(mp1.coordinates, mp2.coordinates)
-
-    def test_geometrycollection_create(self):
-        """
-        create a GeometryCollection object
-        """
-        pt = Point((0, 1, 2))
-        ls = LineString([(3, 4, 5), (9, 10, 11)])
-        pl = Polygon([[(1, 2, 3), (6, 7, 8), (10, 11, 12), (1, 2, 3)]])
-        gc1 = GeometryCollection([pt, ls, pl])
-
-        from copy import copy
-        gc2 = copy(gc1)
-        self.assertEqual(gc1.coordinates, gc2.coordinates)
-
-        pt.x = 100
-        self.assertNotEqual(gc1.coordinates, gc2.coordinates)
-
-        gc1.geometries[0].x = 200
-        self.assertNotEqual(gc1.coordinates, gc2.coordinates)
-
-    def test_geometrycollection_edit(self):
-        """
-        modify a GeometryCollection object
-        """
-        pt = Point((0, 1, 2))
-        ls = LineString([(3, 4, 5), (9, 10, 11)])
-        pl = Polygon([[(1, 2, 3), (6, 7, 8), (10, 11, 12), (1, 2, 3)]])
-        gc1 = GeometryCollection([pt, ls, pl])
-        gc1.wkb
-
-        from copy import copy
-        gc2 = copy(gc1)
-        self.assertEqual(gc1.wkb, gc2.wkb)
-        
-        pt = Point((-1, -5, -1))
-        gc2.geometries[1] = pt
-
-        self.assertNotEqual(gc1.coordinates, gc2.coordinates)
-        self.assertEqual(gc2.geometries[1].x, -1)
-        self.assertEqual(gc2.geometries[1].y, -5)
-        self.assertNotEqual(gc1.wkb, gc2.wkb)
-
-    def test_geometrycollection_edit_wkb(self):
-        pt = Point((0, 0))
-        gc = GeometryCollection([pt])
-        wkb1 = gc.wkb
-
-        pt.x = 1
-        wkb2 = gc.wkb
-
-        pt.srid = 1000
-        pt.z = 80
-        pt.dimz = True
-
-        self.assertNotEqual(wkb1, wkb2)
+
+def test_missing_ewkb():
+    """
+    Error on missing EWKB
+    """
+    with pytest.raises(WkbError):
+        Geometry(None)
+
+
+def test_malformed_ewkb_len():
+    """
+    malformed EWKB (insufficient bytes)
+    """
+    with pytest.raises(Exception):
+        Geometry("0101")
+
+
+def test_malformed_ewkb_firstbyte():
+    """
+    malformed EWKB (bad first byte)
+    """
+    with pytest.raises(WkbError):
+        Geometry("5101")
+
+def test_unsupported_ewkb_type():
+    """
+    unsupported EWKB type
+    """
+    with pytest.raises(WkbError):
+        Geometry("010800000000000000000000000000000000000000")
+
+def test_read_wkb_point():
+    """
+    read WKB Point
+    """
+    wkb = "010100000000000000000000000000000000000000"
+    geom = Geometry(wkb)
+    assert geom.type == "Point"
+    assert geom.srid == None
+    assert geom.dimz == False
+    assert geom.dimm == False
+    postgis_type = "geometry(Point)"
+    assert geom.postgis_type == postgis_type
+    assert geom.__repr__() == "<Point: 'geometry(Point)'>"
+    geom.srid = geom.srid  # clear cached WKB
+    assert geom.__str__().lower() == wkb.lower()
+
+def test_read_wkb_point_big_endian():
+    """
+    read WKB Point
+    """
+    geom = Geometry("000000000140000000000000004010000000000000")
+    assert isinstance(geom, Point)
+    assert geom.x == 2
+    assert geom.y == 4
+    assert geom.z is None
+
+def test_read_ewkb_point_srid():
+    """
+    read EWKB Point,4326
+    """
+    wkb = "0101000020E610000000000000000000000000000000000000"
+    geom = Geometry(wkb)
+    assert geom.type == "Point"
+    assert geom.srid == 4326
+    assert geom.dimz == False
+    assert geom.dimm == False
+    postgis_type = "geometry(Point,4326)"
+    assert geom.postgis_type == postgis_type
+    assert geom.__repr__() == "<Point: 'geometry(Point,4326)'>"
+    geom.srid = geom.srid # clear cached WKB
+    assert geom.__str__().lower() == wkb.lower()
+
+def test_read_ewkb_pointz():
+    """
+    read EWKB PointZ,4326
+    """
+    wkb = "01010000A0E6100000000000000000000000000000000000000000000000000000"
+    geom = Geometry(wkb)
+    assert geom.type == "Point"
+    assert geom.srid == 4326
+    assert geom.dimz == True
+    assert geom.dimm == False
+    postgis_type = "geometry(PointZ,4326)"
+    assert geom.postgis_type == postgis_type
+    assert geom.__repr__() == "<Point: 'geometry(PointZ,4326)'>"
+    geom.srid = geom.srid # clear cached WKB
+    assert geom.__str__().lower() == wkb.lower()
+
+def test_read_ewkb_pointm():
+    """
+    read EWKB PointM,4326
+    """
+    wkb = "0101000060E6100000000000000000000000000000000000000000000000000000"
+    geom = Geometry(wkb)
+    assert geom.type == "Point"
+    assert geom.srid == 4326
+    assert geom.dimz == False
+    assert geom.dimm == True
+    postgis_type = "geometry(PointM,4326)"
+    assert geom.postgis_type == postgis_type
+    assert geom.__repr__() == "<Point: 'geometry(PointM,4326)'>"
+    geom.srid = geom.srid # clear cached WKB
+    assert geom.__str__().lower() == wkb.lower()
+
+def test_read_ewkb_pointzm():
+    """
+    read EWKB PointZM,4326
+    """
+    wkb = "01010000E0E61000000000000000000000000000000000000000000000000000000000000000000000"
+    geom = Geometry(wkb)
+    assert geom.type == "Point"
+    assert geom.srid == 4326
+    assert geom.dimz == True
+    assert geom.dimm == True
+    geom.srid = geom.srid # clear cached WKB
+    postgis_type = "geometry(PointZM,4326)"
+    assert geom.postgis_type == postgis_type
+    assert geom.__repr__() == "<Point: 'geometry(PointZM,4326)'>"
+    geom.srid = geom.srid # clear cached WKB
+    assert geom.__str__().lower() == wkb.lower()
+
+def test_read_wkb_linestring():
+    """
+    read WKB LineString
+    """
+    wkb = wkb_ln
+    geom = Geometry(wkb)
+    assert geom.type == "LineString"
+    assert geom.srid == None
+    assert geom.dimz == False
+    assert geom.dimm == False
+    postgis_type = "geometry(LineString)"
+    geom.vertices
+    assert geom.postgis_type == postgis_type
+    assert geom.__repr__() == "<LineString: 'geometry(LineString)'>"
+    geom.srid = geom.srid # clear cached WKB
+    assert geom.__str__().lower() == wkb.lower()
+
+def test_read_wkb_polygon():
+    """
+    read WKB Polygon
+    """
+    wkb = wkb_pg
+    geom = Geometry(wkb)
+    assert geom.type == "Polygon"
+    assert geom.srid == None
+    assert geom.dimz == False
+    assert geom.dimm == False
+    postgis_type = "geometry(Polygon)"
+    assert geom.exterior.type == "LineString"
+    assert geom.postgis_type == postgis_type
+    assert geom.__repr__() == "<Polygon: 'geometry(Polygon)'>"
+    geom.srid = geom.srid # clear cached WKB
+    assert geom.__str__().lower() == wkb.lower()
+
+def test_read_wkb_multipoint():
+    """
+    read WKB MultiPoint
+    """
+    wkb = wkb_mpt
+    geom = Geometry(wkb)
+    assert geom.type == "MultiPoint"
+    assert geom.srid == None
+    assert geom.dimz == True
+    assert geom.dimm == False
+    postgis_type = "geometry(MultiPointZ)"
+    assert geom.postgis_type == postgis_type
+    assert geom.__repr__() == "<MultiPoint: 'geometry(MultiPointZ)'>"
+    geom.srid = geom.srid # clear cached WKB
+    assert geom.__str__().lower() == wkb.lower()
+    for g in geom.geometries:
+        assert g.type == "Point"
+
+def test_read_wkb_multilinestring():
+    """
+    read WKB MultiLineString
+    """
+    wkb = wkb_mln
+    geom = Geometry(wkb)
+    assert geom.type == "MultiLineString"
+    assert geom.srid == None
+    assert geom.dimz == False
+    assert geom.dimm == True
+    postgis_type = "geometry(MultiLineStringM)"
+    assert geom.postgis_type == postgis_type
+    assert geom.__repr__() == "<MultiLineString: 'geometry(MultiLineStringM)'>"
+    geom.srid = geom.srid # clear cached WKB
+    assert geom.__str__().lower() == wkb.lower()
+    for g in geom.geometries:
+        assert g.type == "LineString"
+
+def test_read_wkb_multipolygon():
+    """
+    read WKB MultiPolygon
+    """
+    wkb = wkb_mpg
+    geom = Geometry(wkb)
+    assert geom.type == "MultiPolygon"
+    assert geom.srid == None
+    assert geom.dimz == False
+    assert geom.dimm == False
+    postgis_type = "geometry(MultiPolygon)"
+    assert geom.postgis_type == postgis_type
+    assert geom.__repr__() == "<MultiPolygon: 'geometry(MultiPolygon)'>"
+    geom.srid = geom.srid # clear cached WKB
+    assert geom.__str__().lower() == wkb.lower()
+    for g in geom.geometries:
+        assert g.type == "Polygon"
+
+def test_read_wkb_geometrycollection():
+    """
+    read WKB GeometryCollection
+    """
+    wkb = wkb_gc
+    geom = Geometry(wkb)
+    assert geom.type == "GeometryCollection"
+    assert geom.srid == None
+    assert geom.dimz == False
+    assert geom.dimm == False
+    postgis_type = "geometry(GeometryCollection)"
+    assert geom.postgis_type == postgis_type
+    assert geom.__repr__() == "<GeometryCollection: 'geometry(GeometryCollection)'>"
+    geom.srid = geom.srid # clear cached WKB
+    assert geom.__str__().lower() == wkb.lower()
+    assert geom.geometries[0].type == "Point"
+    assert geom.geometries[1].type == "LineString"
+
+def test_multigeometry_changedimensionality():
+    """
+    change dimensionality of a MultiGeometry
+    """
+    wkb = wkb_gc
+    geom = Geometry(wkb)
+    assert geom.dimz == False
+    assert geom.dimm == False
+    geom.dimz = True
+    geom.dimm = True
+    assert geom.dimz == True
+    assert geom.dimm == True
+    geom.srid = geom.srid # clear cached WKB
+    assert geom.__str__().lower() != wkb.lower()
+
+def test_malformed_coordinates():
+    """
+    malformed coordinates (wrong type)
+    """
+    coordinates = (1, "test")
+    with pytest.raises(CoordinateError):
+        Point(coordinates)
+
+    coordinates = [(1, 2), [(1, 2), (3, 4)]]
+    with pytest.raises(CoordinateError):
+        LineString(coordinates)
+
+def test_multigeometry_srid():
+    """
+    create geometry with SRID
+    """
+    p1 = Point((0, 0), srid=1000)
+    p2 = Point((1, 1), srid=1000)
+    mp = MultiPoint([p1, p2], srid=1000)
+    assert mp.wkb == wkb_mpt_srid
+
+def test_multigeometry_srid_exception():
+    """
+    mixed SRIDs on multigeometry creation
+    """
+    p1 = Point((0, 0), srid=1000)
+    p2 = Point((1, 1), srid=1000)
+    with pytest.raises(SridError):
+        MultiPoint([p1, p2])
+
+    p1 = Point((0, 0), srid=1000)
+    p2 = Point((1, 1), srid=1000)
+    with pytest.raises(SridError):
+        MultiPoint([p1, p2], 4326)
+
+def test_translate_geojson_pt():
+    """
+    load and dump GeoJSON point
+    """
+    geom = Geometry.from_geojson(geojson_pt)
+    assert geom.srid == 4326
+    assert Point == type(geom)
+    geojson = geom.geojson
+    assert geojson == geojson_pt
+
+def test_translate_geojson_ln():
+    """
+    load and dump GeoJSON line
+    """
+    geom = Geometry.from_geojson(geojson_ln)
+    assert geom.srid == 4326
+    assert LineString == type(geom)
+    geojson = geom.geojson
+    assert geojson == geojson_ln
+
+def test_translate_geojson_pg():
+    """
+    load and dump GeoJSON polygon
+    """
+    geom = Geometry.from_geojson(geojson_pg)
+    assert geom.srid == 4326
+    assert Polygon == type(geom)
+    geojson = geom.geojson
+    assert geojson == geojson_pg
+
+def test_translate_geojson_mpt():
+    """
+    load and dump GeoJSON multipoint
+    """
+    geom = Geometry.from_geojson(geojson_mpt)
+    assert geom.srid == 4326
+    assert MultiPoint == type(geom)
+    geojson = geom.geojson
+    assert geojson == geojson_mpt
+
+def test_translate_geojson_mln():
+    """
+    load and dump GeoJSON multiline
+    """
+    geom = Geometry.from_geojson(geojson_mln)
+    assert geom.srid == 4326
+    assert MultiLineString == type(geom)
+    geojson = geom.geojson
+    assert geojson == geojson_mln
+
+def test_translate_geojson_mpg():
+    """
+    load and dump GeoJSON multipolygon
+    """
+    geom = Geometry.from_geojson(geojson_mpg)
+    assert geom.srid == 4326
+    assert MultiPolygon == type(geom)
+    geojson = geom.geojson
+    assert geojson == geojson_mpg
+
+def test_translate_geojson_gc():
+    """
+    load and dump GeoJSON GeometryCollection
+    """
+    geom = Geometry.from_geojson(geojson_gc)
+    assert geom.srid == 4326
+    assert GeometryCollection == type(geom)
+    geojson = geom.geojson
+    assert geojson == geojson_gc
+
+def test_translate_geojson_error():
+    """
+    catch invalid GeoJSON
+    """
+    with pytest.raises(GeojsonError):
+        Geometry.from_geojson(geojson_err)
+
+def test_geo_interface():
+    """
+    access using __geo_interface__
+    """
+    geom = Geometry.from_geojson(geojson_pt)
+    assert geojson_pt == geom.__geo_interface__
+
+def test_shape():
+    """
+    access using __geo_interface__ and shape
+    """
+    point = Point.from_geojson(geojson_pt)
+    geom = Geometry.shape(point)
+    assert point.__geo_interface__ == geom.__geo_interface__
+
+def test_shapely_dump():
+    """
+    convert to Shapely
+    """
+    point = Point((123,123))
+    sgeom = point.shapely
+    assert sgeom.wkb == point.wkb
+
+def test_shapely_load():
+    """
+    convert from Shapely
+    """
+    sgeom = geometry.Point(99,-99)
+    point = Geometry.from_shapely(sgeom)
+    assert sgeom.wkb_hex == point.wkb
+
+def test_strip_srid():
+    """
+    strip SRID
+    """
+    geom1 = Geometry("010100000000000000000000000000000000000000")
+    geom2 = Geometry("0101000020E610000000000000000000000000000000000000")
+    assert geom1.srid is None
+    assert geom2.srid == 4326
+    geom2.srid = None
+    assert geom2.srid is None
+    assert geom1.wkb == geom2.wkb
+    geom2.srid = None
+    assert geom2.srid is None
+    assert geom1.wkb == geom2.wkb
+
+def test_bounds_point():
+    """
+    check bounds of Point
+    """
+    geom = Geometry.from_geojson(geojson_pt)
+    bounds = geom.bounds
+    assert bounds[0] == 0.0
+    assert bounds[1] == 0.0
+    assert bounds[2] == 0.0
+    assert bounds[3] == 0.0
+
+def test_bounds_linestring():
+    """
+    check bounds of LineString
+    """
+    geom = Geometry.from_geojson(geojson_ln)
+    bounds = geom.bounds
+    assert bounds[0] == 102
+    assert bounds[1] == 59
+    assert bounds[2] == 107
+    assert bounds[3] == 60
+
+def test_bounds_polygon():
+    """
+    check bounds of Polygon
+    """
+    geom = Geometry.from_geojson(geojson_pg)
+    bounds = geom.bounds
+    assert bounds[0] == 100
+    assert bounds[1] == 0
+    assert bounds[2] == 101
+    assert bounds[3] == 1
+
+def test_bounds_multipoint():
+    """
+    check bounds of MultiPoint
+    """
+    geom = Geometry.from_geojson(geojson_mpt)
+    bounds = geom.bounds
+    assert bounds[0] == 0
+    assert bounds[1] == 0
+    assert bounds[2] == 1
+    assert bounds[3] == 1
+
+def test_bounds_multilinestring():
+    """
+    check bounds of MultiLineString
+    """
+    geom = Geometry.from_geojson(geojson_mln)
+    bounds = geom.bounds
+    assert bounds[0] == 0
+    assert bounds[1] == 0
+    assert bounds[2] == 3
+    assert bounds[3] == 3
+
+def test_bounds_multipolygon():
+    """
+    check bounds of MultiPolygon
+    """
+    geom = Geometry.from_geojson(geojson_mpg)
+    bounds = geom.bounds
+    assert bounds[0] == 1
+    assert bounds[1] == 0
+    assert bounds[2] == 111
+    assert bounds[3] == 1
+
+def test_bounds_geomcollection():
+    """
+    check bounds of GeometryCollection
+    """
+    geom = Geometry.from_geojson(geojson_gc)
+    bounds = geom.bounds
+    assert bounds[0] == 10
+    assert bounds[1] == 0
+    assert bounds[2] == 12
+    assert bounds[3] == 1
+
+def test_mixed_dimensionality():
+    """
+    detect mixed dimensionality in MultiGeometries
+    """
+    p1 = Point((0, 1, 2))
+    p2 = Point((0, 1))
+    with pytest.raises(DimensionalityError):
+        MultiPoint([p1, p2])
+
+def test_invalid_point_dimension():
+    """
+    detect extra dimensions in Point creation
+    """
+    with pytest.raises(DimensionalityError):
+        Point((0, 1, 2, 3, 4))
+
+def test_dimension_reading():
+    """
+    check dimensions are set correctly
+    """
+    p = Point((0, 1))
+    assert p.dimz == False
+    assert p.dimm == False
+    p = Point((0, 1, 2))
+    assert p.dimz == True
+    assert p.dimm == False
+    p = Point((0, 1, 2, 3))
+    assert p.dimz == True
+    assert p.dimm == True
+    p = Point((0, 1, 2, 3), dimz=False, dimm=False)
+    assert p.dimz == True
+    assert p.dimm == True
+    p = Point((0, 1), dimz=True, dimm=True)
+    assert p.dimz == True
+    assert p.dimm == True
+    p = Point((0, 1), dimz=True)
+    assert p.dimz == True
+    assert p.dimm == False
+    p = Point((0, 1), dimm=True)
+    assert p.dimz == False
+    assert p.dimm == True
+    p = Point((0, 1, 2), dimz=True)
+    assert p.dimz == True
+    assert p.dimm == False
+    p = Point((0, 1, 2), dimm=True)
+    assert p.dimz == False
+    assert p.dimm == True
+    p = Point((0, 1, 2), dimz=True, dimm=True)
+    assert p.dimz == True
+    assert p.dimm == True
+
+def test_modify_point():
+    """
+    modify Point
+    """
+    wkb = "010100000000000000000000000000000000000000"
+    p = Geometry(wkb)
+    oldx = p.x
+    oldy = p.y
+    oldsrid = p.srid
+    assert p.dimz == False
+    assert p.dimm == False
+    newx = -99
+    newy = -101
+    newz = 88
+    newm = 8
+    newsrid = 900913
+    assert p.x != newx
+    assert p.y != newy
+    assert p.z != newz
+    assert p.m != newm
+    assert p.srid != newsrid
+    p.x = newx
+    p.y = newy
+    p.z = newz
+    p.m = newm
+    p.srid = newsrid
+    assert p.x == newx
+    assert p.y == newy
+    assert p.z == newz
+    assert p.m == newm
+    assert p.srid == newsrid
+    assert p.__str__().lower() != wkb.lower()
+    p.x = oldx
+    p.y = oldy
+    p.srid = oldsrid
+    p.dimz = None
+    p.dimm = None
+    assert p.__str__().lower() == wkb.lower()
+
+def test_binary_wkb_roundtrip():
+    wkb = b'\x01\x01\x00\x00\x20\xe6\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    assert Geometry(wkb).wkb == wkb
+
+def test_byte_array_wkb_string():
+    wkb = bytearray(b'010100000000000000000000000000000000000000')
+    assert str(Geometry(wkb)) == wkb.decode('ascii')
+
+def test_point_coordinates():
+    """
+    get coordinates of a Point
+    """
+    coordinates = (1, 2, 3, 4)
+    p = Point(coordinates)
+    assert p.coordinates == coordinates
+    assert p._coordinates(dimm=True, dimz=True) == coordinates
+    assert p._coordinates(dimm=False) == (1, 2, 3)
+    assert p._coordinates(dimz=False) == (1, 2, 4)
+    assert p._coordinates(dimm=False, dimz=False) == (1, 2)
+
+    assert p._coordinates(dimm=True, dimz=True, tpl=False) == list(coordinates)
+    assert p._coordinates(dimm=False, tpl=False) == [1, 2, 3]
+    assert p._coordinates(dimz=False, tpl=False) == [1, 2, 4]
+    assert p._coordinates(dimm=False, dimz=False, tpl=False) == [1, 2]
+
+def test_linestring_coordinates():
+    """
+    get coordinates of a LineString
+    """
+    coordinates = [(1, 2, 3, 4), (6, 7, 8, 9)]
+    ls = LineString(coordinates)
+    assert ls.coordinates == coordinates
+    assert ls._coordinates(dimm=True, dimz=True) == coordinates
+    assert ls._coordinates(dimm=False) == [(1, 2, 3), (6, 7, 8)]
+    assert ls._coordinates(dimz=False) == [(1, 2, 4), (6, 7, 9)]
+    assert ls._coordinates(dimz=False, dimm=False) == [(1, 2), (6, 7)]
+
+    assert ls._coordinates(dimm=True, dimz=True, tpl=False) == [[1, 2, 3, 4], [6, 7, 8, 9]]
+    assert ls._coordinates(dimm=False, tpl=False) == [[1, 2, 3], [6, 7, 8]]
+    assert ls._coordinates(dimz=False, tpl=False) == [[1, 2, 4], [6, 7, 9]]
+    assert ls._coordinates(dimz=False, dimm=False, tpl=False) == [[1, 2], [6, 7]]
+
+def test_polygon_coordinates():
+    """
+    get coordinates of a Polygon
+    """
+    coordinates = [[(1, 2, 3, 4), (6, 7, 8, 9), (10, 11, 12, 13), (1, 2, 3, 4)]]
+    p = Polygon(coordinates)
+    assert p.coordinates == coordinates
+    assert p._coordinates(dimm=True, dimz=True) == coordinates
+
+    coordinates = [list(map(list, sub)) for sub in coordinates]
+    assert p._coordinates(dimm=True, dimz=True, tpl=False) == coordinates
+
+def test_multipoint_coordinates():
+    """
+    get coordinates of a MultiPoint
+    """
+    coordinates =  [ (170.0, 45.0), (180.0, 45.0), (-100.0, 45.0), (-170.0, 45.0) ]
+    mp = MultiPoint([Point(p) for p in coordinates])
+    assert mp.coordinates == coordinates
+
+def test_multilinestring_coordinates():
+    """
+    get coordinates of a MultiLineString
+    """
+    coordinates = [ [ (170.0, 45.0), (180.0, 45.0) ], [ (-180.0, 45.0), (-170.0, 45.0) ] ]
+    ml = MultiLineString([LineString(c) for c in coordinates])
+    assert ml.coordinates == coordinates
+
+def test_multipolygon_coordinates():
+    """
+    get coordinates of a MultiPolygon
+    """
+    coordinates = [ [ [ (180.0, 40.0), (180.0, 50.0), (170.0, 50.0), (170.0, 40.0), (180.0, 40.0) ] ], [ [ (-170.0, 40.0), (-170.0, 50.0), (-180.0, 50.0), (-180.0, 40.0), (-170.0, 40.0) ] ] ]
+    mp = MultiPolygon([Polygon(c) for c in coordinates])
+    assert mp.coordinates == coordinates
+
+def test_point_copy():
+    """
+    copy a Point object
+    """
+    p1 = Point((0, 1, 2), srid=4326, dimm=True)
+
+    from copy import copy
+    p2 = copy(p1)
+    p3 = copy(p1)
+
+    assert p1.coordinates == p2.coordinates
+    assert p1.srid == p2.srid
+    assert p1.wkb == p2.wkb
+    assert p1 != p2
+    assert p1 != p3
+
+    p1.x = 10
+    assert p1.x != p2.x
+    assert p2.x == p3.x
+
+def test_multipoint_create():
+    """
+    create a MultiPoint object
+    """
+    p1 = Point((0, 1, 2))
+    p2 = Point((3, 4, 5))
+    p3 = Point((6, 7, 8))
+    mp = MultiPoint([p1, p2, p3], srid=4326)
+
+    p1.x = 100
+    assert mp.geometries[0].x == p1.x
+    assert p1.x == 100
+
+def test_multipoint_copy():
+    """
+    copy a MultiPoint object
+    """
+    p1 = Point((0, 1, 2))
+    p2 = Point((3, 4, 5))
+    p3 = Point((6, 7, 8))
+    mp1 = MultiPoint([p1, p2, p3], srid=4326)
+
+    from copy import copy
+    mp2 = copy(mp1)
+
+    assert mp1.coordinates == mp2.coordinates
+
+def test_geometrycollection_create():
+    """
+    create a GeometryCollection object
+    """
+    pt = Point((0, 1, 2))
+    ls = LineString([(3, 4, 5), (9, 10, 11)])
+    pl = Polygon([[(1, 2, 3), (6, 7, 8), (10, 11, 12), (1, 2, 3)]])
+    gc1 = GeometryCollection([pt, ls, pl])
+
+    from copy import copy
+    gc2 = copy(gc1)
+    assert gc1.coordinates == gc2.coordinates
+
+    pt.x = 100
+    assert gc1.coordinates != gc2.coordinates
+
+    gc1.geometries[0].x = 200
+    assert gc1.coordinates != gc2.coordinates
+
+def test_geometrycollection_edit():
+    """
+    modify a GeometryCollection object
+    """
+    pt = Point((0, 1, 2))
+    ls = LineString([(3, 4, 5), (9, 10, 11)])
+    pl = Polygon([[(1, 2, 3), (6, 7, 8), (10, 11, 12), (1, 2, 3)]])
+    gc1 = GeometryCollection([pt, ls, pl])
+    gc1.wkb
+
+    from copy import copy
+    gc2 = copy(gc1)
+    assert gc1.wkb == gc2.wkb
+
+    pt = Point((-1, -5, -1))
+    gc2.geometries[1] = pt
+
+    assert gc1.coordinates != gc2.coordinates
+    assert gc2.geometries[1].x == -1
+    assert gc2.geometries[1].y == -5
+    assert gc1.wkb != gc2.wkb
+
+def test_geometrycollection_edit_wkb():
+    pt = Point((0, 0))
+    gc = GeometryCollection([pt])
+    wkb1 = gc.wkb
+
+    pt.x = 1
+    wkb2 = gc.wkb
+
+    pt.srid = 1000
+    pt.z = 80
+    pt.dimz = True
+
+    assert wkb1 != wkb2
