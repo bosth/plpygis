@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0] - 2024-04-21
+
+- changed: migrate to pyproject.toml
+- added: new coordinates() method for Geometries
+- added: new __copy__() method for Geometries
+- added: new CoordinateError exception
+- added: VERSION
+
 ## [0.3.0] - 2024-04-08
 
 - fixed: prevent invalid EWKB creation for multigeometries with SRIDs
@@ -25,6 +33,7 @@
 ## [0.0.2] - 2017-08-06
 ## [0.0.1] - 2017-07-30
 
+[0.4.0]: https://github.com/bosth/plpygis/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/bosth/plpygis/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/bosth/plpygis/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/bosth/plpygis/compare/v0.2.0...v0.2.1
