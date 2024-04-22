@@ -1,5 +1,6 @@
 from binascii import hexlify, unhexlify
-from struct import calcsize, unpack_from, pack
+from struct import calcsize, unpack_from, pack, error
+from .exceptions import WkbError
 
 
 class HexReader:
@@ -20,7 +21,10 @@ class HexReader:
         self._cur_offset = self._ini_offset
 
     def _get_value(self, fmt):
-        value = unpack_from(f"{self._order}{fmt}", self._data, self._cur_offset)[0]
+        try:
+            value = unpack_from(f"{self._order}{fmt}", self._data, self._cur_offset)[0]
+        except error as e:
+            raise WkbError(e) from e
         self._cur_offset += calcsize(fmt)
         return value
 

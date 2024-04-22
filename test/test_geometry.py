@@ -144,6 +144,16 @@ def test_read_ewkb_pointzm():
     geom.srid = geom.srid # clear cached WKB
     assert geom.__str__().lower() == wkb.lower()
 
+def test_read_wkb_data_error():
+    """
+    read WKB with good header but malformed data
+    """
+    wkb = "0000000001000000000000"
+    geom = Geometry(wkb)
+    assert geom.type == "Point"
+    with pytest.raises(WkbError):
+        geom.x
+
 def test_read_wkb_linestring():
     """
     read WKB LineString
