@@ -16,6 +16,16 @@ class CoordinateError(PlpygisError):
         super().__init__(msg)
 
 
+class CollectionError(PlpygisError):
+    """
+    Exception for problems with geometries in collection types.
+    """
+    def __init__(self, msg=None):
+        if msg is None:
+            msg = "Error in the geometries in a collection."
+        super().__init__(msg)
+
+
 class DependencyError(PlpygisError, ImportError):
     """
     Exception for a missing dependency.
