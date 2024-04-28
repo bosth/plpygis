@@ -7,4 +7,3 @@ from .geometry import MultiLineString as MultiLineString
 from .geometry import MultiPolygon as MultiPolygon
 from .geometry import GeometryCollection as GeometryCollection
 from ._version import __version__ as __version__
-

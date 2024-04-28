@@ -2,6 +2,7 @@ class PlpygisError(Exception):
     """
     Basic exception for ``plpygis``.
     """
+
     def __init__(self, msg):
         super().__init__(msg)
 
@@ -10,6 +11,7 @@ class CoordinateError(PlpygisError):
     """
     Exception for problems in the coordinates of geometries.
     """
+
     def __init__(self, geom, msg=None):
         if msg is None:
             msg = f"Geometry has invalid coordinates: {geom}"
@@ -20,6 +22,7 @@ class CollectionError(PlpygisError):
     """
     Exception for problems with geometries in collection types.
     """
+
     def __init__(self, msg=None):
         if msg is None:
             msg = "Error in the geometries in a collection."
@@ -30,6 +33,7 @@ class DependencyError(PlpygisError, ImportError):
     """
     Exception for a missing dependency.
     """
+
     def __init__(self, dep, msg=None):
         if msg is None:
             msg = f"Dependency '{dep}' is not available."
@@ -40,6 +44,7 @@ class WkbError(PlpygisError):
     """
     Exception for problems in parsing WKBs.
     """
+
     def __init__(self, msg=None):
         if msg is None:
             msg = "Unreadable WKB."
@@ -50,6 +55,7 @@ class DimensionalityError(PlpygisError):
     """
     Exception for problems in dimensionality of geometries.
     """
+
     def __init__(self, msg=None):
         if msg is None:
             msg = "Geometry has invalid dimensionality."
@@ -60,6 +66,7 @@ class SridError(PlpygisError):
     """
     Exception for problems in dimensionality of geometries.
     """
+
     def __init__(self, msg=None):
         if msg is None:
             msg = "Geometry has invalid SRID."
@@ -70,6 +77,7 @@ class GeojsonError(PlpygisError):
     """
     Exception for problems in GeoJSONs.
     """
+
     def __init__(self, msg=None):
         if msg is None:
             msg = "Invalid GeoJSON."
