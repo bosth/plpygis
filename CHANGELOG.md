@@ -4,7 +4,7 @@
 
 ### Added
 
-* All the `Geometry` classes now have a `coordinates()` method, and this is also used in the generation of GeoJSONs.
+* All the `Geometry` classes now have a `coordinates` property, and this is also used in the generation of GeoJSONs.
 * The `Geometry` classes also now have a `__copy__()` method.
 * Two new exceptions were added `CoordinateError` and `GeojsonError`.
 

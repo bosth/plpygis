@@ -1,17 +1,26 @@
 import numbers
 from copy import copy
-from .exceptions import DependencyError, WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError
+from .exceptions import (
+    DependencyError,
+    WkbError,
+    SridError,
+    DimensionalityError,
+    CoordinateError,
+    GeojsonError,
+    CollectionError,
+)
 from .hex import HexReader, HexWriter, HexBytes
 
 try:
     import shapely
     import shapely.wkb
+
     SHAPELY = True
 except ImportError:
     SHAPELY = False
 
 
-class Geometry():
+class Geometry:
     r"""A representation of a PostGIS geometry.
 
     PostGIS geometries are either an OpenGIS Consortium Simple Features for SQL
@@ -59,7 +68,7 @@ class Geometry():
     ``MultiPolygon`` or ``GeometryCollection``. The M dimension will be preserved.
     """
 
-    _WKBTYPE = 0x1fffffff
+    _WKBTYPE = 0x1FFFFFFF
     _WKBZFLAG = 0x80000000
     _WKBMFLAG = 0x40000000
     _WKBSRIDFLAG = 0x20000000
@@ -243,10 +252,7 @@ class Geometry():
 
     def _to_geojson(self):
         coordinates = self._to_geojson_coordinates()
-        geojson = {
-                "type": self.type,
-                "coordinates": coordinates
-        }
+        geojson = {"type": self.type, "coordinates": coordinates}
         return geojson
 
     def __repr__(self):
@@ -311,10 +317,12 @@ class Geometry():
 
     def _write_wkb_header(self, writer, use_srid, dimz, dimm):
         writer.add_order()
-        header = (self._LWGEOMTYPE |
-                  (Geometry._WKBZFLAG if dimz else 0) |
-                  (Geometry._WKBMFLAG if dimm else 0) |
-                  (Geometry._WKBSRIDFLAG if self.srid else 0))
+        header = (
+            self._LWGEOMTYPE
+            | (Geometry._WKBZFLAG if dimz else 0)
+            | (Geometry._WKBMFLAG if dimm else 0)
+            | (Geometry._WKBSRIDFLAG if self.srid else 0)
+        )
         writer.add_int(header)
         if use_srid and self.srid:
             writer.add_int(self.srid)
@@ -322,10 +330,32 @@ class Geometry():
 
 
 class _MultiGeometry(Geometry):
+    __slots__ = ["_geometries"]
+
+    def __init__(self, multitype, geometries=None, srid=None):
+        if self._wkb:
+            self._geometries = None
+        else:
+            if not all(isinstance(geometry, multitype) for geometry in geometries):
+                raise CollectionError(
+                    f"Found non-{multitype} when creating a Multi{multitype}"
+                )
+            self._geometries = geometries
+            self._srid = srid
+            self._set_multi_metadata()
+
     def __copy__(self):
         cls = self.__class__
-        geometries = [copy(geometry) for geometry in self.geometries]
+        geometries = [copy(geometry) for geometry in self._geometries]
         return cls(geometries, self.srid)
+
+    @property
+    def geometries(self):
+        """
+        List of all component geometries.
+        """
+        self._check_cache()
+        return self._geometries
 
     @property
     def dimz(self):
@@ -354,7 +384,7 @@ class _MultiGeometry(Geometry):
         :getter: ``True`` if the geometry has an M dimension.
         :setter: Add or remove the M dimension from this and all geometries in the collection.
         :rtype: bool
-       """
+        """
         return self._dimm
 
     @dimm.setter
@@ -382,7 +412,9 @@ class _MultiGeometry(Geometry):
         return geometries
 
     def _load_geometry(self):
-        self._geometries = self.__class__._read_wkb(self._reader, self._dimz, self._dimm)
+        self._geometries = self.__class__._read_wkb(
+            self._reader, self._dimz, self._dimm
+        )
 
     def _set_multi_metadata(self):
         self._dimz = None
@@ -398,7 +430,9 @@ class _MultiGeometry(Geometry):
                 raise DimensionalityError("Mixed dimensionality in MultiGeometry")
             if geometry._srid is not None:
                 if self._srid != geometry._srid:
-                    raise SridError("Geometry can not be different from SRID in MultiGeometry")
+                    raise SridError(
+                        "Geometry can not be different from SRID in MultiGeometry"
+                    )
                 geometry._srid = None
 
     def _coordinates(self, dimz=True, dimm=True, tpl=True):
@@ -406,6 +440,11 @@ class _MultiGeometry(Geometry):
 
     def _to_geojson_coordinates(self):
         return self._coordinates(dimm=False, tpl=False)
+
+    def _load_geometry(self):
+        self._geometries = _MultiGeometry._read_wkb(
+            self._reader, self._dimz, self._dimm
+        )
 
     @staticmethod
     def _read_wkb(reader, dimz, dimm):
@@ -422,7 +461,7 @@ class _MultiGeometry(Geometry):
 
     def _write_wkb(self, writer, dimz, dimm):
         writer.add_int(len(self.geometries))
-        for geometry in self.geometries:
+        for geometry in self._geometries:
             geometry._write_wkb_header(writer, False, dimz, dimm)
             geometry._write_wkb(writer, dimz, dimm)
 
@@ -455,13 +494,17 @@ class Point(Geometry):
                 if c is None:
                     continue
                 if not isinstance(c, numbers.Number):
-                    raise CoordinateError(f"Coordinates must be numeric: {coordinates}", coordinates)
+                    raise CoordinateError(
+                        f"Coordinates must be numeric: {coordinates}", coordinates
+                    )
             self._srid = srid
             self._x = coordinates[0]
             self._y = coordinates[1]
             num = len(coordinates)
             if num > 4:
-                raise DimensionalityError(f"Maximum dimensionality supported for coordinates is 4: {coordinates}")
+                raise DimensionalityError(
+                    f"Maximum dimensionality supported for coordinates is 4: {coordinates}"
+                )
             if num == 2:  # fill in Z and M if we are supposed to have them, else None
                 if dimz and dimm:
                     self._z = 0
@@ -624,7 +667,9 @@ class Point(Geometry):
         return (self.x, self.y, self.x, self.y)
 
     def _load_geometry(self):
-        self._x, self._y, self._z, self._m = Point._read_wkb(self._reader, self._dimz, self._dimm)
+        self._x, self._y, self._z, self._m = Point._read_wkb(
+            self._reader, self._dimz, self._dimm
+        )
 
     @staticmethod
     def _read_wkb(reader, dimz, dimm):
@@ -683,7 +728,9 @@ class LineString(Geometry):
             self._srid = srid
             self._dimz = dimz
             self._dimm = dimm
-            self._vertices = LineString._from_coordinates(vertices, dimz=dimz, dimm=dimm)
+            self._vertices = LineString._from_coordinates(
+                vertices, dimz=dimz, dimm=dimm
+            )
             self._set_dimensionality(self._vertices)
 
     @property
@@ -909,33 +956,16 @@ class MultiPoint(_MultiGeometry):
     """
 
     _LWGEOMTYPE = 4
-    __slots__ = ["_points"]
 
     def __init__(self, points=None, srid=None):
-        if self._wkb:
-            self._points = None
-        else:
-            self._points = points
-            self._srid = srid
-            self._set_multi_metadata()
+        super().__init__(Point, geometries=points, srid=srid)
 
     @property
     def points(self):
         """
         List of all component points.
         """
-        self._check_cache()
-        return self._points
-
-    @property
-    def geometries(self):
-        """
-        List of all component points.
-        """
-        return self.points
-
-    def _load_geometry(self):
-        self._points = MultiPoint._read_wkb(self._reader, self._dimz, self._dimm)
+        return self.geometries
 
 
 class MultiLineString(_MultiGeometry):
@@ -955,33 +985,16 @@ class MultiLineString(_MultiGeometry):
     """
 
     _LWGEOMTYPE = 5
-    __slots__ = ["_linestrings"]
 
     def __init__(self, linestrings=None, srid=None):
-        if self._wkb:
-            self._linestrings = None
-        else:
-            self._linestrings = linestrings
-            self._srid = srid
-            self._set_multi_metadata()
+        super().__init__(LineString, geometries=linestrings, srid=srid)
 
     @property
     def linestrings(self):
         """
         List of all component lines.
         """
-        self._check_cache()
-        return self._linestrings
-
-    @property
-    def geometries(self):
-        """
-        List of all component lines.
-        """
-        return self.linestrings
-
-    def _load_geometry(self):
-        self._linestrings = MultiLineString._read_wkb(self._reader, self._dimz, self._dimm)
+        return self.geometries
 
 
 class MultiPolygon(_MultiGeometry):
@@ -1001,33 +1014,16 @@ class MultiPolygon(_MultiGeometry):
     """
 
     _LWGEOMTYPE = 6
-    __slots__ = ["__polygons__"]
 
     def __init__(self, polygons=None, srid=None):
-        if self._wkb:
-            self._polygons = None
-        else:
-            self._polygons = polygons
-            self._srid = srid
-            self._set_multi_metadata()
+        super().__init__(Polygon, geometries=polygons, srid=srid)
 
     @property
     def polygons(self):
         """
         List of all component polygons.
         """
-        self._check_cache()
-        return self._polygons
-
-    @property
-    def geometries(self):
-        """
-        List of all component polygons.
-        """
-        return self.polygons
-
-    def _load_geometry(self):
-        self._polygons = MultiPolygon._read_wkb(self._reader, self._dimz, self._dimm)
+        return self.geometries
 
 
 class GeometryCollection(_MultiGeometry):
@@ -1047,28 +1043,11 @@ class GeometryCollection(_MultiGeometry):
     """
 
     _LWGEOMTYPE = 7
-    __slots__ = ["_geometries"]
 
     def __init__(self, geometries=None, srid=None):
-        if self._wkb:
-            self._geometries = None
-        else:
-            self._geometries = geometries
-            self._srid = srid
-            self._set_multi_metadata()
-
-    @property
-    def geometries(self):
-        """
-        List of all component geometries.
-        """
-        self._check_cache()
-        return self._geometries
+        super().__init__(Geometry, geometries=geometries, srid=srid)
 
     def _to_geojson(self):
-        geometries = [g._to_geojson() for g in self.geometries]
-        geojson = {
-                "type": self.__class__.__name__,
-                "geometries": geometries
-        }
+        geometries = [g._to_geojson() for g in self._geometries]
+        geojson = {"type": self.__class__.__name__, "geometries": geometries}
         return geojson

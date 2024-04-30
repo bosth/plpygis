@@ -6,7 +6,8 @@ import pytest
 from shapely import geometry
 from plpygis import Geometry, Point, LineString, Polygon
 from plpygis import MultiPoint, MultiLineString, MultiPolygon, GeometryCollection
-from plpygis.exceptions import WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError
+from plpygis.exceptions import WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError, CollectionError
+from copy import copy
 
 geojson_pt = {"type":"Point","coordinates":[0.0,0.0]}
 geojson_ln = {"type":"LineString","coordinates":[[107,60],[102,59]]}
@@ -144,6 +145,16 @@ def test_read_ewkb_pointzm():
     geom.srid = geom.srid # clear cached WKB
     assert geom.__str__().lower() == wkb.lower()
 
+def test_read_wkb_data_error():
+    """
+    read WKB with good header but malformed data
+    """
+    wkb = "0000000001000000000000"
+    geom = Geometry(wkb)
+    assert geom.type == "Point"
+    with pytest.raises(WkbError):
+        geom.x
+
 def test_read_wkb_linestring():
     """
     read WKB LineString
@@ -195,6 +206,9 @@ def test_read_wkb_multipoint():
     assert geom.__str__().lower() == wkb.lower()
     for g in geom.geometries:
         assert g.type == "Point"
+    for g in geom.points:
+        assert g.type == "Point"
+    assert wkb == geom.wkb
 
 def test_read_wkb_multilinestring():
     """
@@ -213,6 +227,9 @@ def test_read_wkb_multilinestring():
     assert geom.__str__().lower() == wkb.lower()
     for g in geom.geometries:
         assert g.type == "LineString"
+    for g in geom.linestrings:
+        assert g.type == "LineString"
+    assert wkb == geom.wkb
 
 def test_read_wkb_multipolygon():
     """
@@ -231,6 +248,9 @@ def test_read_wkb_multipolygon():
     assert geom.__str__().lower() == wkb.lower()
     for g in geom.geometries:
         assert g.type == "Polygon"
+    for g in geom.polygons:
+        assert g.type == "Polygon"
+    assert wkb == geom.wkb
 
 def test_read_wkb_geometrycollection():
     """
@@ -249,6 +269,28 @@ def test_read_wkb_geometrycollection():
     assert geom.__str__().lower() == wkb.lower()
     assert geom.geometries[0].type == "Point"
     assert geom.geometries[1].type == "LineString"
+    assert wkb == geom.wkb
+
+def test_multigeometry_raise_error():
+    """
+    raise error when adding wrong type to a multigeometry
+    """
+    pt = Point((0,1))
+    ls = LineString([(0,1), (2,3)])
+
+    MultiPoint([pt, copy(pt)])
+
+    with pytest.raises(CollectionError):
+        MultiPoint([pt, ls])
+
+    with pytest.raises(CollectionError):
+        MultiLineString([pt, ls])
+
+    with pytest.raises(CollectionError):
+        MultiPolygon([pt, ls])
+
+    with pytest.raises(CollectionError):
+        GeometryCollection([pt, ls, True])
 
 def test_multigeometry_changedimensionality():
     """
@@ -673,8 +715,6 @@ def test_point_copy():
     copy a Point object
     """
     p1 = Point((0, 1, 2), srid=4326, dimm=True)
-
-    from copy import copy
     p2 = copy(p1)
     p3 = copy(p1)
 
@@ -709,8 +749,6 @@ def test_multipoint_copy():
     p2 = Point((3, 4, 5))
     p3 = Point((6, 7, 8))
     mp1 = MultiPoint([p1, p2, p3], srid=4326)
-
-    from copy import copy
     mp2 = copy(mp1)
 
     assert mp1.coordinates == mp2.coordinates
@@ -723,8 +761,6 @@ def test_geometrycollection_create():
     ls = LineString([(3, 4, 5), (9, 10, 11)])
     pl = Polygon([[(1, 2, 3), (6, 7, 8), (10, 11, 12), (1, 2, 3)]])
     gc1 = GeometryCollection([pt, ls, pl])
-
-    from copy import copy
     gc2 = copy(gc1)
     assert gc1.coordinates == gc2.coordinates
 
@@ -743,8 +779,6 @@ def test_geometrycollection_edit():
     pl = Polygon([[(1, 2, 3), (6, 7, 8), (10, 11, 12), (1, 2, 3)]])
     gc1 = GeometryCollection([pt, ls, pl])
     gc1.wkb
-
-    from copy import copy
     gc2 = copy(gc1)
     assert gc1.wkb == gc2.wkb
 
