@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.1] - DATE
+
+### Changed
+
+* Raise `WkbError` on malformed WKBs.
+
 ## [0.4.0] - 2024-04-22
 
 ### Added
