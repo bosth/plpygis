@@ -23,7 +23,7 @@
 CREATE OR REPLACE FUNCTION add_elevation(geom geometry(POINT))
   RETURNS geometry(POINTZ)
 AS $$
-  from plpygis import Geometry, Point
+  from plpygis import Geometry
   from requests import get
   point = Geometry(geom)
 

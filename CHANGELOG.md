@@ -1,6 +1,10 @@
 # Changelog
 
-## [0.4.1] - DATE
+## [0.4.1] - 2024-04-30
+
+### Added
+
+* New exception: `CollectionError`.
 
 ### Changed
 
@@ -68,6 +72,7 @@
 ## [0.0.2] - 2017-08-06
 ## [0.0.1] - 2017-07-30
 
+[0.4.1]: https://github.com/bosth/plpygis/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/bosth/plpygis/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/bosth/plpygis/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/bosth/plpygis/compare/v0.2.1...v0.2.2
