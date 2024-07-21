@@ -1,1 +1,1 @@
-Shapely>=2.0.2[shapely_support]
+Shapely>=2.0.4[shapely_support]

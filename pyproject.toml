@@ -25,5 +25,5 @@ Issues = "https://github.com/bosth/plpygis/issues"
 Documentation = "https://plpygis.readthedocs.io/"
 
 [project.optional-dependencies]
-test = ["pytest", "pyshp", "Shapely>=2.0.2"]
-shapely_support = ["Shapely>=2.0.2"]
+test = ["pytest", "pyshp", "Shapely>=2.0.4"]
+shapely_support = ["Shapely>=2.0.4"]
