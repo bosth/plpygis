@@ -19,7 +19,7 @@
 
 `plpygis` is designed to provide an easy way to implement PL/Python functions that accept `geometry` arguments or return `geometry` results. The following example will take a PostGIS `geometry(Point)` and use an external service to create a `geometry(PointZ)`.
 
-``` postgres
+```pgsql
 CREATE OR REPLACE FUNCTION add_elevation(geom geometry(POINT))
   RETURNS geometry(POINTZ)
 AS $$
@@ -41,7 +41,7 @@ The `Geometry()` constructor will convert a PostGIS `geometry` that has been pas
 
 The function above can be called as part of an SQL query:
 
-``` postgres
+```pgsql
 SELECT name, ST_AsText(add_elevation(geom)) FROM city;
 ```
 
