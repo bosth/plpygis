@@ -888,3 +888,44 @@ def test_multigeometry_iadd():
     gc += mp2
     assert len(gc) == 5
     assert type(gc) == GeometryCollection
+
+def test_geometry_add():
+    p1 = Point((1, 1, 1))
+    p2 = Point((2, 2, 2))
+    p3 = Point((3, 3, 3))
+    p4 = Point((4, 4, 4))
+    p5 = Point((5, 5, 5))
+
+    mp1 = p1 + p2
+    assert type(mp1) == MultiPoint
+    assert len(mp1) == 2
+    assert mp1[0].x == 1
+    assert mp1[0].y == 1
+    assert mp1[0].z == 1
+    assert mp1[1].x == 2
+    assert mp1[1].y == 2
+    assert mp1[1].z == 2
+
+    mp2 = MultiPoint([p2, p3])
+
+    mp3 = p1 + mp2
+    assert type(mp3) == MultiPoint
+    assert len(mp3) == 3
+
+    mp4 = mp2 + p1
+    assert type(mp4) == MultiPoint
+    assert len(mp4) == 3
+
+    ls = LineString([(3, 4, 5), (9, 10, 11)])
+
+    mg1 = p1 + ls
+    assert len(mg1) == 2
+    assert type(mg1) == GeometryCollection
+
+    mg2 = mg1 + p2
+    assert len(mg2) == 3
+    assert type(mg2) == GeometryCollection
+
+    mg3 = p2 + mg1
+    assert len(mg3) == 3
+    assert type(mg3) == GeometryCollection

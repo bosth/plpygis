@@ -100,11 +100,24 @@ class Geometry:
         return self.__copy__()
 
     def __add__(self, other):
-        pass
-        #if type(other) == self.multitype or type(self) == GeometryCollection:
-        #    new_geom = copy(self)
-        #    new_geom.geometries.append(other)
-        #    return new_geom
+        if self.srid != other.srid:
+            raise CollectionError(
+                    f"Can not add mixed SRID types")
+
+        if issubclass(type(other), _MultiGeometry):
+            return other + self
+
+        if type(self) == type(other):
+            if type(self) == Point:
+                cls = MultiPoint
+            elif type(self) == LineString:
+                cls = MultiLineString
+            elif type(self) == Polygon:
+                cls = MultiPolygon
+        else:
+            cls = GeometryCollection
+
+        return cls([self, other], srid=self.srid)
 
     @staticmethod
     def from_geojson(geojson, srid=4326):
@@ -375,9 +388,9 @@ class _MultiGeometry(Geometry):
             raise CollectionError(
                     f"Can not add mixed SRID types")
 
-        if type(other) is type(self):
+        if type(other) == type(self):
             new_geom = self.geometries + other.geometries
-        elif type(other) is self.multitype:
+        elif type(other) == self.multitype:
             new_geom = copy(self)
             new_geom.geometries.append(other)
         else:
@@ -390,14 +403,14 @@ class _MultiGeometry(Geometry):
             raise CollectionError(
                     f"Can not add mixed SRID types")
 
-        if type(self) is GeometryCollection:
+        if type(self) == GeometryCollection:
             if issubclass(type(other), _MultiGeometry):
                 self.geometries.extend(other)
             else:
                 self.geometries.append(other)
-        elif type(self) is type(other):
+        elif type(self) == type(other):
             self.geometries.extend(other.geometries)
-        elif type(other) is self.multitype:
+        elif type(other) == self.multitype:
             self.geometries.append(other)
         else:
             raise CollectionError(
