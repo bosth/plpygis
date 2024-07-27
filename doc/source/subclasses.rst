@@ -60,7 +60,7 @@ The four collection types, :class:`MultiPoint <plpygis.geometry.MultiPoint>`, :c
 .. code-block:: python
 
     >>> p = Point((0, 0))
-    >>> mp = MultiPoint([p1])
+    >>> mp = MultiPoint([p])
     >>> mp.points[0].x
     0
     >>> p.x = 100
@@ -135,9 +135,25 @@ Adding a new dimension to a :class:`Point <plpygis.geometry.Point>` that is a ve
     >>> print("p1.z", p1.z, "p2.z", p2.z)
     p1.z 2 p2.z 0
 
+Multigeometries
+---------------
+
+``plpygis`` overloads several functions and operators for multigeometries.
+
+* ``len()``
+* ``[]``
+
+    >>> p1 = Point((0, 0))
+    >>> p2 = Point((1, 1))
+    >>> mp = MultiPoint([p1, p2])
+    >>> len(mp)
+    2
+    >>> mp[0]
+    {'type': 'Point', 'coordinates': [0, 0]}
+
+
 Performance considerations
 --------------------------
-
 Lazy evaluation
 ^^^^^^^^^^^^^^^
 

@@ -7,7 +7,7 @@ from shapely import geometry
 from plpygis import Geometry, Point, LineString, Polygon
 from plpygis import MultiPoint, MultiLineString, MultiPolygon, GeometryCollection
 from plpygis.exceptions import WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError, CollectionError
-from copy import copy
+from copy import copy, deepcopy
 
 geojson_pt = {"type":"Point","coordinates":[0.0,0.0]}
 geojson_ln = {"type":"LineString","coordinates":[[107,60],[102,59]]}
@@ -762,15 +762,15 @@ def test_geometrycollection_create():
     pl = Polygon([[(1, 2, 3), (6, 7, 8), (10, 11, 12), (1, 2, 3)]])
     gc1 = GeometryCollection([pt, ls, pl])
     gc2 = copy(gc1)
+    for i, _ in enumerate(gc1):
+        assert gc1[i] == gc2[i]
+    pt.x = 100
     assert gc1.coordinates == gc2.coordinates
 
-    pt.x = 100
-    assert gc1.coordinates != gc2.coordinates
-
     gc1.geometries[0].x = 200
-    assert gc1.coordinates != gc2.coordinates
+    assert gc1.coordinates == gc2.coordinates
 
-def test_geometrycollection_edit():
+def test_geometrycollection_copy():
     """
     modify a GeometryCollection object
     """
@@ -782,13 +782,38 @@ def test_geometrycollection_edit():
     gc2 = copy(gc1)
     assert gc1.wkb == gc2.wkb
 
+    gc2.geometries[0].x = 123
+    assert gc1.coordinates == gc2.coordinates
+    assert gc2.geometries[0].x == 123
+    assert gc1.wkb == gc2.wkb
+
     pt = Point((-1, -5, -1))
     gc2.geometries[1] = pt
-
     assert gc1.coordinates != gc2.coordinates
     assert gc2.geometries[1].x == -1
     assert gc2.geometries[1].y == -5
     assert gc1.wkb != gc2.wkb
+
+def test_geometrycollection_deepcopy():
+    """
+    modify a GeometryCollection object
+    """
+    pt = Point((0, 1, 2))
+    ls = LineString([(3, 4, 5), (9, 10, 11)])
+    pl = Polygon([[(1, 2, 3), (6, 7, 8), (10, 11, 12), (1, 2, 3)]])
+    gc1 = GeometryCollection([pt, ls, pl])
+    gc1.wkb
+    gc2 = deepcopy(gc1)
+    assert gc1.wkb == gc2.wkb
+
+    pt = Point((-1, -5, -1))
+    gc2.geometries[1] = pt
+    assert gc1.coordinates != gc2.coordinates
+
+    gc1.geometries[0].x = 0.5
+    assert gc1.geometries[0].x == 0.5
+    assert gc2.geometries[0].x == 0
+    assert gc1[0].wkb != gc2[0].wkb
 
 def test_geometrycollection_edit_wkb():
     pt = Point((0, 0))
@@ -803,3 +828,63 @@ def test_geometrycollection_edit_wkb():
     pt.dimz = True
 
     assert wkb1 != wkb2
+
+def test_geometrycollection_index():
+    pt = Point((0, 0))
+    gc = GeometryCollection([pt])
+
+    assert gc.geometries[0] == gc[0]
+
+def test_multigeometry_add():
+    p1 = Point((1, 1, 1))
+    p2 = Point((2, 2, 2))
+    p3 = Point((3, 3, 3))
+    p4 = Point((4, 4, 4))
+
+    mp1 = MultiPoint([p1, p2])
+    assert len(mp1) == 2
+
+    mpX = mp1 + p1
+    assert len(mp1) == 2
+    assert len(mpX) == 3
+    assert type(mpX) == MultiPoint
+    
+    ls = LineString([(3, 4, 5), (9, 10, 11)])
+
+    mg = mp1 + ls
+    assert len(mg) == 3
+    assert type(mg) == GeometryCollection
+
+    mp2 = MultiPoint([p3, p4])
+    mpX = mp1 + mp2
+    assert len(mpX) == 4
+
+def test_multigeometry_iadd():
+    p1 = Point((1, 1, 1))
+    p2 = Point((2, 2, 2))
+    p3 = Point((3, 3, 3))
+    p4 = Point((4, 4, 4))
+    p5 = Point((5, 5, 5))
+
+    mp1 = MultiPoint([p1, p2])
+    mp1 += p3
+    assert len(mp1) == 3
+    assert type(mp1) == MultiPoint
+
+    mp2 = MultiPoint([p4, p5])
+    mp1 += mp2
+    assert len(mp1) == 5
+    assert type(mp1) == MultiPoint
+
+    ls = LineString([(3, 4, 5), (9, 10, 11)])
+    with pytest.raises(CollectionError):
+        mp1 += ls
+
+    gc = GeometryCollection([p1, ls])
+    gc += p2
+    assert len(gc) == 3
+    assert type(gc) == GeometryCollection
+
+    gc += mp2
+    assert len(gc) == 5
+    assert type(gc) == GeometryCollection

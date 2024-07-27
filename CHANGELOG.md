@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0] - 
+
+### Added
+
+* Overloaded `len` and `[]` for multigeometries
+* Overloaded `+` and `+=` operators
+* `__deepcopy__()` for geometries
+
+### Changed
+
+* `__copy__()` is now performs a shallow copy for multigeometries
+
 ## [0.4.2] - 2024-07-21
 
 ### Fixed
