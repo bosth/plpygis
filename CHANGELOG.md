@@ -10,7 +10,7 @@
 
 ### Changed
 
-* `__copy__()` is now performs a shallow copy for multigeometries
+* `__copy__()` now performs a shallow copy for multigeometries
 
 ## [0.4.2] - 2024-07-21
 
@@ -91,6 +91,7 @@
 ## [0.0.2] - 2017-08-06
 ## [0.0.1] - 2017-07-30
 
+[0.5.0]: https://github.com/bosth/plpygis/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/bosth/plpygis/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/bosth/plpygis/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/bosth/plpygis/compare/v0.3.0...v0.4.0
