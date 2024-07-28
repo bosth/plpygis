@@ -838,6 +838,9 @@ def test_geometrycollection_index():
     assert gc.geometries[0] == gc[0]
 
 def test_multigeometry_add():
+    """
+    Add operator for multigeometries
+    """
     p1 = Point((1, 1, 1))
     p2 = Point((2, 2, 2))
     p3 = Point((3, 3, 3))
@@ -858,13 +861,13 @@ def test_multigeometry_add():
     assert type(mg) == GeometryCollection
 
     mp2 = MultiPoint([p3, p4])
-    mpX = mp1 + mp2
-    assert mpX[0].x == 1
-    assert mpX[1].x == 2
-    assert mpX[2].x == 3
-    assert mpX[3].x == 4
-    assert len(mpX) == 4
-    assert type(mpX) == MultiPoint
+    mp3 = mp1 + mp2
+    assert mp3[0].x == 1
+    assert mp3[1].x == 2
+    assert mp3[2].x == 3
+    assert mp3[3].x == 4
+    assert len(mp3) == 4
+    assert type(mp3) == MultiPoint
 
 def test_multigeometry_iadd():
     p1 = Point((1, 1, 1))
