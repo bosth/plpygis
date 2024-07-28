@@ -138,18 +138,19 @@ Adding a new dimension to a :class:`Point <plpygis.geometry.Point>` that is a ve
 Multigeometries
 ---------------
 
-``plpygis`` overloads several functions and operators for multigeometries.
+``plpygis`` overloads list operations for multigeometries: ``len()`` and ``[]``.
 
-* ``len()``
-* ``[]``
-
-    >>> p1 = Point((0, 0))
-    >>> p2 = Point((1, 1))
-    >>> mp = MultiPoint([p1, p2])
+    >>> p0 = Point((0, 0))
+    >>> p1 = Point((1, 1))
+    >>> p2 = Point((2, 2))
+    >>> mp = MultiPoint([p0, p1])
     >>> len(mp)
     2
     >>> mp[0]
     {'type': 'Point', 'coordinates': [0, 0]}
+    >>> mp[0] = p2
+    >>> mp[0]
+    {'type': 'Point', 'coordinates': [2, 2]}
 
 
 Performance considerations

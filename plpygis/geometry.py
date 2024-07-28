@@ -369,7 +369,7 @@ class _MultiGeometry(Geometry):
 
     def __copy__(self):
         cls = self.__class__
-        geometries = copy(self.geometries)
+        geometries = copy(self._geometries)
         return cls(geometries, self.srid)
 
     def __deepcopy__(self, _):
@@ -380,6 +380,12 @@ class _MultiGeometry(Geometry):
     def __getitem__(self, index):
         return self._geometries[index]
 
+    def __setitem__(self, index, value):
+        if not issubclass(type(value), self.multitype):
+            raise CollectionError(
+                    f"Can not add {type(value)} to a {type(self)}")
+        self._geometries[index] = value
+
     def __len__(self):
         return len(self._geometries)
 
@@ -389,12 +395,13 @@ class _MultiGeometry(Geometry):
                     f"Can not add mixed SRID types")
 
         if type(other) == type(self):
-            new_geom = self.geometries + other.geometries
+            new_geom = copy(self)
+            new_geom._geometries.extend(other._geometries)
         elif type(other) == self.multitype:
             new_geom = copy(self)
-            new_geom.geometries.append(other)
+            new_geom._geometries.append(other)
         else:
-            new_geom = GeometryCollection(self.geometries + [other],
+            new_geom = GeometryCollection(self._geometries + [other],
                                           srid=self.srid)
         return new_geom
 
@@ -405,13 +412,13 @@ class _MultiGeometry(Geometry):
 
         if type(self) == GeometryCollection:
             if issubclass(type(other), _MultiGeometry):
-                self.geometries.extend(other)
+                self._geometries.extend(other)
             else:
-                self.geometries.append(other)
+                self._geometries.append(other)
         elif type(self) == type(other):
-            self.geometries.extend(other.geometries)
+            self._geometries.extend(other.geometries)
         elif type(other) == self.multitype:
-            self.geometries.append(other)
+            self._geometries.append(other)
         else:
             raise CollectionError(
                     f"Can not add a {type(other)} to a {type(self)}")
@@ -423,7 +430,7 @@ class _MultiGeometry(Geometry):
         List of all component geometries.
         """
         self._check_cache()
-        return self._geometries
+        return tuple(self._geometries)
 
     @property
     def dimz(self):
@@ -1121,5 +1128,5 @@ class GeometryCollection(_MultiGeometry):
 
     def _to_geojson(self):
         geometries = [g._to_geojson() for g in self._geometries]
-        geojson = {"type": self.__class__.__name__, "geometries": geometries}
+        geojson = {"type": self.type, "geometries": geometries}
         return geojson

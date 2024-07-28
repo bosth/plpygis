@@ -11,6 +11,7 @@
 ### Changed
 
 * `__copy__()` now performs a shallow copy for multigeometries
+* `geometries` is immutable (make changes to members using overloaded operators to ensure type checking)
 
 ## [0.4.2] - 2024-07-21
 

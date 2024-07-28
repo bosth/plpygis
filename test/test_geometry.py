@@ -788,7 +788,7 @@ def test_geometrycollection_copy():
     assert gc1.wkb == gc2.wkb
 
     pt = Point((-1, -5, -1))
-    gc2.geometries[1] = pt
+    gc2[1] = pt
     assert gc1.coordinates != gc2.coordinates
     assert gc2.geometries[1].x == -1
     assert gc2.geometries[1].y == -5
@@ -807,7 +807,7 @@ def test_geometrycollection_deepcopy():
     assert gc1.wkb == gc2.wkb
 
     pt = Point((-1, -5, -1))
-    gc2.geometries[1] = pt
+    gc2[1] = pt
     assert gc1.coordinates != gc2.coordinates
 
     gc1.geometries[0].x = 0.5
@@ -816,6 +816,9 @@ def test_geometrycollection_deepcopy():
     assert gc1[0].wkb != gc2[0].wkb
 
 def test_geometrycollection_edit_wkb():
+    """
+    Editing object changes WKB
+    """
     pt = Point((0, 0))
     gc = GeometryCollection([pt])
     wkb1 = gc.wkb
@@ -823,13 +826,12 @@ def test_geometrycollection_edit_wkb():
     pt.x = 1
     wkb2 = gc.wkb
 
-    pt.srid = 1000
-    pt.z = 80
-    pt.dimz = True
-
     assert wkb1 != wkb2
 
 def test_geometrycollection_index():
+    """
+    Overloaded [] access correct item in multigeometry
+    """
     pt = Point((0, 0))
     gc = GeometryCollection([pt])
 
@@ -857,7 +859,12 @@ def test_multigeometry_add():
 
     mp2 = MultiPoint([p3, p4])
     mpX = mp1 + mp2
+    assert mpX[0].x == 1
+    assert mpX[1].x == 2
+    assert mpX[2].x == 3
+    assert mpX[3].x == 4
     assert len(mpX) == 4
+    assert type(mpX) == MultiPoint
 
 def test_multigeometry_iadd():
     p1 = Point((1, 1, 1))
@@ -929,3 +936,30 @@ def test_geometry_add():
     mg3 = p2 + mg1
     assert len(mg3) == 3
     assert type(mg3) == GeometryCollection
+
+def test_multigeometry_getset():
+    p0 = Point((0, 0))
+    p1 = Point((1, 1))
+    p2 = Point((2, 2))
+    mp = MultiPoint([p0, p1])
+    assert len(mp) == 2
+    assert mp[0].x == 0
+    assert mp[0].y == 0
+    assert mp[1].x == 1
+    assert mp[1].y == 1
+
+    mp[0] = p2
+    assert mp[0].x == 2
+    assert mp[0].y == 2
+    assert mp[1].x == 1
+    assert mp[1].y == 1
+
+    ls = LineString([(3, 4), (9, 10)])
+    with pytest.raises(CollectionError):
+        mp[0] = ls
+
+    gc = GeometryCollection([ls, p0])
+    with pytest.raises(CollectionError):
+        mp[0] = gc
+    gc[0] = mp
+    assert type(gc[0]) == MultiPoint
