@@ -17,6 +17,7 @@ geojson_mln = {"type":"MultiLineString","coordinates":[[[0,0],[1,1]],[[2,2],[3,3
 geojson_mpg = {"type":"MultiPolygon","coordinates":[[[[1,0],[111,0.0],[101.0,1.0],[100.0,1.0],[1,0]]],[[[100,0],[101.0,0.0],[101.0,1.0],[100.0,1.0],[100.0,0.0]]]]}
 geojson_gc = {"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[10,0]},{"type":"LineString","coordinates":[[11,0],[12,1]]}]}
 geojson_err = {"type":"Hello","coordinates":[0.0,0.0]}
+geojson_pg_ring = {"type":"Polygon","coordinates":[[[100,0], [101,0],[201,1],[100,1],[100,0]],[[100.2,0.2],[100.8,0.2],[100.8,0.8],[100.2,0.8],[100.2,0.2]]]}
 wkb_ln = "0102000000050000000000000040BE40409D640199EB373F400000000080AC3E40BF244710FD1939400000000000503940D2A6484BEB41374000000000801D3740248729C89C832A400000000000833340940338EFAFBB2C40"
 wkb_pg = "010300000002000000060000000000000000003440000000000080414000000000000024400000000000003E40000000000000244000000000000024400000000000003E4000000000000014400000000000804640000000000000344000000000000034400000000000804140040000000000000000003E40000000000000344000000000000034400000000000002E40000000000000344000000000000039400000000000003E400000000000003440"
 wkb_mpt = "010400008002000000010100008000000000000059400000000000006940000000000000000001010000800000000000000000000000000000F03F0000000000000000"
@@ -39,6 +40,13 @@ def test_malformed_ewkb_len():
     """
     with pytest.raises(Exception):
         Geometry("0101")
+
+def test_wkb_type():
+    """
+    malformed EWKB (insufficient bytes)
+    """
+    with pytest.raises(WkbError):
+        Geometry(0)
 
 def test_malformed_ewkb_firstbyte():
     """
@@ -291,6 +299,27 @@ def test_multigeometry_raise_error():
 
     with pytest.raises(CollectionError):
         GeometryCollection([pt, ls, True])
+
+def test_multigeometry_nochangedimensionality():
+    mp = MultiPoint([Point((0, 1, 2)), Point((5, 6, 7))])
+    mp.dimz = True
+    assert mp.dimz == True
+    mp.dimm = False
+    assert mp.dimm == False
+
+def test_point_nullifyzm():
+    p = Point((0, 1, 2, 3))
+    assert p.dimz == True
+    p.z = None
+    assert p.dimz == False
+    p.dimz = False
+    assert p.dimz == False
+
+    assert p.dimm == True
+    p.m = None
+    assert p.dimm == False
+    p.dimm = False
+    assert p.dimm == False
 
 def test_multigeometry_changedimensionality():
     """
@@ -928,6 +957,28 @@ def test_geometry_add():
 
     ls = LineString([(3, 4, 5), (9, 10, 11)])
 
+def test_geometry_add_ls():
+    ls1 = LineString([(3, 4, 5), (9, 10, 11)])
+    ls2 = LineString([(9, 0, 0), (1, 1, 1)])
+
+    mls = ls1 + ls2
+    assert len(mls) == 2
+    assert type(mls) == MultiLineString
+
+def test_geometry_add_pg():
+    geojson_pg = {"type":"Polygon","coordinates":[[[100,0],[101.0,0.0],[101.0,1.0],[100.0,1.0],[100.0,0.0]]]}
+    pg1 = Geometry.from_geojson(geojson_pg, srid=4326)
+    pg2 = Geometry(wkb_pg)
+    pg2.srid = 4326
+
+    mpg = pg1 + pg2
+    assert len(mpg) == 2
+    assert type(mpg) == MultiPolygon
+    
+def test_geometry_add_gc():
+    p1 = Point((1, 1, 1))
+    p2 = Point((2, 2, 2))
+    ls = LineString([(3, 4, 5), (9, 10, 11)])
     mg1 = p1 + ls
     assert len(mg1) == 2
     assert type(mg1) == GeometryCollection
@@ -939,6 +990,57 @@ def test_geometry_add():
     mg3 = p2 + mg1
     assert len(mg3) == 3
     assert type(mg3) == GeometryCollection
+
+def test_geometry_add_srid():
+    p1 = Point((1, 1, 1), srid=4326)
+    p2 = Point((2, 2, 2), srid=1234)
+
+    with pytest.raises(CollectionError):
+        mp = p1 + p2
+
+    p2.srid = 4326
+    mp = p1 + p2
+    assert len(mp) == 2
+
+def test_geometry_add_srid():
+    p1 = Point((0, 0), 4326)
+    p2 = Point((1, 1), 4326)
+    p3 = Point((2, 2), 1234)
+    p4 = Point((3, 3), 1234)
+
+    mp1 = p1 + p2
+    assert mp1.srid == 4326
+    mp2 = p3 + p4
+    assert mp2.srid == 1234
+
+    with pytest.raises(CollectionError):
+        mp3 = mp1 + mp2
+
+    mp1.srid = 3857
+    mp2.srid = 3857
+    mp3 = mp1 + mp2
+    assert mp3.srid == 3857
+    assert len(mp3) == 4
+
+def test_geometry_add_srid():
+    p1 = Point((0, 0))
+    p2 = Point((1, 1), 4326)
+    p3 = Point((2, 2))
+    p4 = Point((3, 3), 1234)
+
+    mp1 = MultiPoint([p1], 4326)
+    mp1 += p2
+    assert mp1.srid == 4326
+
+    with pytest.raises(CollectionError):
+        mp1 += p4
+
+    mp2 = MultiPoint([p3], 1234)
+    mp2 += p4
+    assert mp2.srid == 1234
+
+    with pytest.raises(CollectionError):
+        mp3 = mp1 + mp2
 
 def test_multigeometry_getset():
     p0 = Point((0, 0))
@@ -966,3 +1068,11 @@ def test_multigeometry_getset():
         mp[0] = gc
     gc[0] = mp
     assert type(gc[0]) == MultiPoint
+
+def test_interior_ring():
+    p = Geometry.from_geojson(geojson_pg_ring)
+    exterior = p.exterior
+    interior = p.interior
+
+    assert type(exterior) == LineString
+    assert len(interior) == 1
