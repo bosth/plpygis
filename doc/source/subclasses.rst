@@ -146,11 +146,23 @@ Multigeometries
     >>> mp = MultiPoint([p0, p1])
     >>> len(mp)
     2
-    >>> mp[0]
+    >>> mp[0].geojson
     {'type': 'Point', 'coordinates': [0, 0]}
-    >>> mp[0] = p2
-    >>> mp[0]
-    {'type': 'Point', 'coordinates': [2, 2]}
+
+:meth:`type <plpygis.geometry._MultiGeometry.geometries>` returns an immutable tuple of the geometries in the multigeometry. The individual geometries may be modified, but none of the individual geometries may be replaced or remobed from the multigeomery, not can new geometries be added. The correct way to modify the geometries is using ``[]`` or ``+=``. There is strict checking of geometry types when added to a multigeometry.
+
+    >>> p0 = Point((0, 0))
+    >>> p1 = Point((1, 1))
+    >>> p2 = Point((2, 2))
+    >>> mp = MultiPoint([p0])
+    >>> mp[0].x
+    0
+    >>> mp[0] = p1
+    >>> mp[0].x
+    1
+    >>> mp += p2
+    >>> mp[1].x
+    2
 
 
 Performance considerations

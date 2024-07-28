@@ -834,6 +834,10 @@ def test_geometrycollection_deepcopy():
     gc1.wkb
     gc2 = deepcopy(gc1)
     assert gc1.wkb == gc2.wkb
+    geoms = zip(gc1.geometries, gc2.geometries)
+    for a, b in geoms:
+        assert a.wkb == b.wkb
+        assert a is not b
 
     pt = Point((-1, -5, -1))
     gc2[1] = pt
