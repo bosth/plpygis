@@ -2,5 +2,6 @@ include CHANGELOG.md
 include LICENSE
 include MANIFEST.in
 include README.md
+include test/*shp
 
 global-exclude *.py[cod]
