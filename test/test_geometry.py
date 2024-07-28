@@ -6,7 +6,7 @@ import pytest
 from shapely import geometry
 from plpygis import Geometry, Point, LineString, Polygon
 from plpygis import MultiPoint, MultiLineString, MultiPolygon, GeometryCollection
-from plpygis.exceptions import WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError, CollectionError
+from plpygis.exceptions import WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError, CollectionError, WktError
 from copy import copy, deepcopy
 
 geojson_pt = {"type":"Point","coordinates":[0.0,0.0]}
@@ -1080,3 +1080,128 @@ def test_interior_ring():
 
     assert type(exterior) == LineString
     assert len(interior) == 1
+
+def test_wkt_read_point():
+    p = Geometry.from_wkt("POINT Z (0 1 1)")
+    assert p.type == "Point"
+    assert p.x == 0
+    assert p.dimz == True
+    assert p.dimm == False
+
+def test_wkt_read_linestring():
+    l = Geometry.from_wkt("LINESTRING (30 10, 10 30.5, 40 40) ")
+    assert l.type == "LineString"
+    assert l.vertices[0].x == 30
+    assert l.vertices[0].y == 10
+    assert l.vertices[1].x == 10
+    assert l.vertices[1].y == 30.5
+    assert l.dimz == False
+    assert l.dimm == False
+
+def test_wkt_read_polygon():
+    p = Geometry.from_wkt("POLYGON ((99 0, 1 0, 1 1, 0 1, 0 0))")
+    assert p.type == "Polygon"
+    assert p.exterior.type == "LineString" 
+    assert len(p.exterior.vertices) == 5
+    assert p.exterior.vertices[0].x == 99
+    assert p.interior == []
+    assert p.dimz == False
+    assert p.dimm == False
+
+def test_wkt_read_polygon_interior():
+    p = Geometry.from_wkt("POLYGON M ((7.5 1 9, 4 0 -1, 4 4 44, 0 4 0.5, 0 0 1), (1 1 -9, 1 1 2, 2 2 2, 0 2 1, 0.5 1 1))")
+    assert p.type == "Polygon"
+    assert p.exterior.type == "LineString" 
+    assert len(p.exterior.vertices) == 5
+    assert p.exterior.vertices[0].x == 7.5
+    assert p.exterior.vertices[0].m == 9
+    assert len(p.interior) == 1
+    assert len(p.interior[0].vertices) == 5
+    assert p.dimz == False
+    assert p.dimm == True
+
+def test_wkt_read_multipoint():
+    mp = Geometry.from_wkt("MULTIPOINT ((0 1), (2 3))")
+    assert mp.type == "MultiPoint"
+    assert len(mp) == 2
+    assert mp[0].x == 0
+    assert mp[0].y == 1
+    assert mp[1].x == 2
+    assert mp[1].y == 3
+    assert mp.dimz == False
+    assert mp.dimm == False
+
+def test_wkt_read_multilinestring():
+    ml = Geometry.from_wkt("MULTILINESTRING ((0 0, 1 1), (2 2, 3 3))")
+    assert ml.type == "MultiLineString"
+    assert len(ml) == 2
+    assert str(ml[0].wkb) == "01020000000200000000000000000000000000000000000000000000000000f03f000000000000f03f"
+    assert ml.dimz == False
+    assert ml.dimm == False
+
+def test_wkt_read_multipolygon():
+    mp = Geometry.from_wkt("MULTIPOLYGON (((1 1, 1 3, 3 3, 3 1, 1 1)), ((4 3, 6 3, 6 1, 4 1, 4 3)))  ")
+    assert mp.type == "MultiPolygon"
+    assert len(mp) == 2
+    assert str(mp[0].wkb) == "01030000000100000005000000000000000000f03f000000000000f03f000000000000f03f0000000000000840000000000000084000000000000008400000000000000840000000000000f03f000000000000f03f000000000000f03f"
+    assert mp.dimz == False
+    assert mp.dimm == False
+
+def test_wkt_read_collection():
+    mp = Geometry.from_wkt("GEOMETRYCOLLECTION (MULTIPOINT((0 0), (1 1)), POINT(3 4), LINESTRING(2 3, 3 4))")
+    assert mp.type == "GeometryCollection"
+    assert len(mp) == 3
+    assert mp[0].type == "MultiPoint"
+    assert mp[1].type == "Point"
+    assert mp[2].type == "LineString"
+    assert mp[1].x == 3
+    assert mp[1].y == 4
+    assert str(mp[0].wkb) == "0104000000020000000101000000000000000000000000000000000000000101000000000000000000f03f000000000000f03f"
+    assert mp.dimz == False
+    assert mp.dimm == False
+
+def test_wkt_read_collection_dimensions():
+    with pytest.raises(DimensionalityError):
+        mp = Geometry.from_wkt("GEOMETRYCOLLECTION (MULTIPOINT((0 0), (1 1)), POINT M (3 4 1), LINESTRING(2 3, 3 4))")
+
+def test_ewkt_read_point():
+    p = Geometry.from_wkt("SRID=4326;POINT Z (0 1 1)")
+    assert p.type == "Point"
+    assert p.srid == 4326
+    assert p.x == 0
+    assert p.dimz == True
+    assert p.dimm == False
+
+def test_ewkt_read_collection():
+    mp = Geometry.from_wkt("SRID=4326;GEOMETRYCOLLECTION (MULTIPOINT((0 0), (1 1)), POINT(3 4), LINESTRING(2 3, 3 4))")
+    assert mp.type == "GeometryCollection"
+    assert mp.srid == 4326
+    assert len(mp) == 3
+    assert mp[0].type == "MultiPoint"
+    assert mp[1].type == "Point"
+    assert mp[2].type == "LineString"
+    assert mp[1].x == 3
+    assert mp[1].y == 4
+    assert str(mp[0].wkb) == "0104000000020000000101000000000000000000000000000000000000000101000000000000000000f03f000000000000f03f"
+    assert mp.dimz == False
+    assert mp.dimm == False
+
+def test_ewkt_read_point():
+    with pytest.raises(WktError):
+        p = Geometry.from_wkt("SRID=hello;POINT Z (0 1 1)")
+        
+def test_wkt_malformed():
+    with pytest.raises(WktError):
+        p = Geometry.from_wkt("POINT(0 1 1)")
+
+    with pytest.raises(WktError):
+        p = Geometry.from_wkt("POINT ZMX (0 1 1)")
+
+    with pytest.raises(WktError):
+        p = Geometry.from_wkt("POINT EMPTY")
+
+    with pytest.raises(WktError):
+        p = Geometry.from_wkt("HELLO")
+
+    with pytest.raises(WktError):
+        p = Geometry.from_wkt("POLYGON (0 1)")

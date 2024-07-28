@@ -51,6 +51,20 @@ class WkbError(PlpygisError):
         super().__init__(msg)
 
 
+class WktError(Exception):
+    """
+    Exception for problems in parsing WKTs.
+    """
+
+    def __init__(self, pos, msg=None, expected=None):
+        if not msg:
+            if expected is None:
+                msg = f"Unreadable WKT at position {pos+1}."
+            else:
+                msg = f"Expected {expected} at position {pos+1}."
+        super().__init__(msg)
+
+
 class DimensionalityError(PlpygisError):
     """
     Exception for problems in dimensionality of geometries.

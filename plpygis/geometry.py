@@ -8,8 +8,10 @@ from .exceptions import (
     CoordinateError,
     GeojsonError,
     CollectionError,
+    WktError
 )
 from .hex import HexReader, HexWriter, HexBytes
+from .wkt import WktReader, WktWriter
 
 try:
     import shapely
@@ -18,7 +20,6 @@ try:
     SHAPELY = True
 except ImportError:
     SHAPELY = False
-
 
 class Geometry:
     r"""A representation of a PostGIS geometry.
@@ -147,6 +148,34 @@ class Geometry:
             geometries = _MultiGeometry._multi_from_geojson(geojson, Polygon)
             return MultiPolygon(geometries, srid=srid)
         raise GeojsonError(f"Invalid GeoJSON type: {type_}")
+
+    def _read_wkt_geom(reader):
+        type_ = reader.get_type()
+        dimz, dimm = reader.get_dims()
+        reader.get_empty()
+
+        if type_ == "POINT":
+            cls = Point
+        elif type_ == "LINESTRING":
+            cls = LineString
+        elif type_ == "POLYGON":
+            cls = Polygon
+        elif type_ == "MULTIPOINT":
+            cls = MultiPoint
+        elif type_ == "MULTILINESTRING":
+            cls = MultiLineString
+        elif type_ == "MULTIPOLYGON":
+            cls = MultiPolygon
+        elif type_ == "GEOMETRYCOLLECTION":
+            cls = GeometryCollection
+        return cls._read_wkt(reader)
+
+    @staticmethod
+    def from_wkt(wkt):
+        reader = WktReader(wkt)
+        srid = reader.get_srid()
+        return Geometry._read_wkt_geom(reader)
+
 
     @staticmethod
     def from_shapely(sgeom, srid=None):
@@ -778,6 +807,18 @@ class Point(Geometry):
         elif dimm:
             writer.add_double(self.m)
 
+    @staticmethod
+    def _read_wkt_coordinates(reader):
+        reader.get_openpar()
+        coords = reader.get_coordinates()
+        reader.get_closepar()
+        return coords
+
+    @staticmethod
+    def _read_wkt(reader):
+        coords = Point._read_wkt_coordinates(reader)
+        return Point(coords, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
+
 
 class LineString(Geometry):
     """
@@ -889,6 +930,23 @@ class LineString(Geometry):
         for vertex in self.vertices:
             vertex._write_wkb(writer, dimz, dimm)
 
+    @staticmethod
+    def _read_wkt_coordinates(reader):
+        reader.get_openpar()
+        vertices = [reader.get_coordinates()]
+        while reader.get_comma(req=False):
+            coords = reader.get_coordinates()
+            vertices.append(coords)
+        reader.get_closepar()
+        return vertices
+
+    @staticmethod
+    def _read_wkt(reader):
+        vertices = LineString._read_wkt_coordinates(reader)
+        if len(vertices) < 2:
+            raise WktError("LineStrings must have at least 2 vertices")
+        return LineString(vertices, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
+
 
 class Polygon(Geometry):
     """
@@ -917,7 +975,7 @@ class Polygon(Geometry):
             self._srid = srid
             self._dimz = dimz
             self._dimm = dimm
-            self._rings = Polygon._from_coordinates(rings, dimz, dimm)
+            self._rings = Polygon._from_coordinates(rings, dimz=dimz, dimm=dimm)
             self._set_dimensionality(self._rings)
 
     @property
@@ -963,7 +1021,7 @@ class Polygon(Geometry):
 
     @property
     def dimm(self):
-        """
+        """LineString([(0, 0, 0, 0), (1, 1, 0, 0), (2, 2, 0, 0)])
         Whether the geometry has a M dimension.
 
         :getter: ``True`` if the geometry has a M dimension.
@@ -991,7 +1049,7 @@ class Polygon(Geometry):
 
     @staticmethod
     def _from_coordinates(rings, dimz, dimm):
-        return [LineString(vertices, dimz, dimm) for vertices in rings]
+        return [LineString(vertices, dimz=dimz, dimm=dimm) for vertices in rings]
 
     def _load_geometry(self):
         rings = Polygon._read_wkb(self._reader, self._dimz, self._dimm)
@@ -1012,6 +1070,21 @@ class Polygon(Geometry):
         writer.add_int(len(self.rings))
         for ring in self.rings:
             ring._write_wkb(writer, dimz, dimm)
+
+    @staticmethod
+    def _read_wkt_coordinates(reader):
+        reader.get_openpar()
+        rings = [LineString._read_wkt_coordinates(reader)]
+        while reader.get_comma(req=False):
+            ring = LineString._read_wkt_coordinates(reader)
+            rings.append(ring)
+        reader.get_closepar()
+        return rings
+
+    @staticmethod
+    def _read_wkt(reader):
+        rings = Polygon._read_wkt_coordinates(reader)
+        return Polygon(rings, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
 
 
 class MultiPoint(_MultiGeometry):
@@ -1043,6 +1116,15 @@ class MultiPoint(_MultiGeometry):
         """
         return self.geometries
 
+    @staticmethod
+    def _read_wkt(reader):
+        reader.get_openpar()
+        points = [Point._read_wkt(reader)]
+        while reader.get_comma(req=False):
+            point = Point._read_wkt(reader)
+            points.append(point)
+        reader.get_closepar()
+        return MultiPoint(points, srid=reader.srid)
 
 class MultiLineString(_MultiGeometry):
     """
@@ -1072,6 +1154,16 @@ class MultiLineString(_MultiGeometry):
         List of all component lines.
         """
         return self.geometries
+
+    @staticmethod
+    def _read_wkt(reader):
+        reader.get_openpar()
+        linestrings = [LineString._read_wkt(reader)]
+        while reader.get_comma(req=False):
+            linestring = LineString._read_wkt(reader)
+            linestrings.append(linestring)
+        reader.get_closepar()
+        return MultiLineString(linestrings, srid=reader.srid)
 
 
 class MultiPolygon(_MultiGeometry):
@@ -1103,6 +1195,16 @@ class MultiPolygon(_MultiGeometry):
         """
         return self.geometries
 
+    @staticmethod
+    def _read_wkt(reader):
+        reader.get_openpar()
+        polygons = [Polygon._read_wkt(reader)]
+        while reader.get_comma(req=False):
+            polygon = Polygon._read_wkt(reader)
+            polygons.append(polygon)
+        reader.get_closepar()
+        return MultiPolygon(polygons, srid=reader.srid)
+
 
 class GeometryCollection(_MultiGeometry):
     """
@@ -1130,3 +1232,13 @@ class GeometryCollection(_MultiGeometry):
         geometries = [g._to_geojson() for g in self._geometries]
         geojson = {"type": self.type, "geometries": geometries}
         return geojson
+
+    @staticmethod
+    def _read_wkt(reader):
+        reader.get_openpar()
+        geoms = [Geometry._read_wkt_geom(reader)]
+        while reader.get_comma(req=False):
+            geom = Geometry._read_wkt_geom(reader)
+            geoms.append(geom)
+        reader.get_closepar()
+        return GeometryCollection(geoms, srid=reader.srid)
