@@ -56,7 +56,8 @@ class WktError(Exception):
     Exception for problems in parsing WKTs.
     """
 
-    def __init__(self, pos, msg=None, expected=None):
+    def __init__(self, reader, msg=None, expected=None):
+        pos = reader.pos
         if not msg:
             if expected is None:
                 msg = f"Unreadable WKT at position {pos+1}."

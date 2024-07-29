@@ -174,7 +174,10 @@ class Geometry:
     def from_wkt(wkt):
         reader = WktReader(wkt)
         reader.get_srid()
-        return Geometry._read_wkt_geom(reader)
+        geom = Geometry._read_wkt_geom(reader)
+        reader.close()
+        return geom
+
 
 
     @staticmethod
@@ -970,8 +973,6 @@ class LineString(Geometry):
     @staticmethod
     def _read_wkt(reader):
         vertices = LineString._read_wkt_coordinates(reader)
-        if len(vertices) < 2:
-            raise WktError("LineStrings must have at least 2 vertices")
         return LineString(vertices, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
 
     def _to_wkt_coordinates(self, writer):

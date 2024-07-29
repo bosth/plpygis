@@ -19,19 +19,26 @@ class WktReader:
 
     def __init__(self, wkt, offset=0):
         self._data = wkt.upper().strip()
-        self._ini_offset = offset
-        self._cur_offset = offset
+        self._start = offset
+        self.pos = offset
+
+    def close(self):
+        """
+        Terminate reading and raise error if unconsumed characters remain.
+        """
+        if self.pos != len(self._data):
+            raise WktError(self, expected="end of WKT")
 
     def reset(self):
         """
         Start reading from the initial position again.
         """
-        self._cur_offset = self._ini_offset
+        self.pos = self._start
 
     def _get_value(self, expr):
-        match = expr.match(self._data, pos=self._cur_offset)
+        match = expr.match(self._data, pos=self.pos)
         if match:
-            self._cur_offset = match.end()
+            self.pos = match.end()
             return match.group().strip()
         else:
             return None
@@ -39,13 +46,13 @@ class WktReader:
     def _get_number(self):
         value = self._get_value(self._NUMBER)
         if not value:
-            raise WktError(self._cur_offset, expected="number")
+            raise WktError(self, expected="number")
         return float(value)
 
     def get_type(self):
         value = self._get_value(self._TYPE)
         if not value:
-            raise WktError(self._cur_offset, expected="geometry type")
+            raise WktError(self, expected="geometry type")
         else:
             return value
 
@@ -69,20 +76,20 @@ class WktReader:
     def get_empty(self):
         value = self._get_value(self._EMPTY)
         if value:
-            raise WktError(self._cur_offset, "Geometries with no coordiantes are not supported in WKT.")
+            raise WktError(self, "Geometries with no coordiantes are not supported in WKT.")
         return False
 
     def get_openpar(self):
         value = self._get_value(self._OP)
         if not value:
-            raise WktError(self._cur_offset, expected="opening parenthesis")
+            raise WktError(self, expected="opening parenthesis")
         return True
 
     def get_closepar(self, req=True):
         value = self._get_value(self._CP)
         if not value:
             if req:
-                raise WktError(self._cur_offset, expected="closing parenthesis")
+                raise WktError(self, expected="closing parenthesis")
             else:
                 return False
         return True
@@ -100,7 +107,7 @@ class WktReader:
         value = self._get_value(self._COMMA)
         if not value:
             if req:
-                raise WktError(self._cur_offset, expected="comma")
+                raise WktError(self, expected="comma")
             else:
                 return False
         return True
