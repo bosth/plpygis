@@ -1,6 +1,6 @@
 # plpygis
 
-`plpygis` is a pure Python module with no dependencies that can convert geometries between [Well-known binary](https://en.wikipedia.org/wiki/Well-known_binary) (WKB), Extended Well-known Binary (EWKB) and GeoJSON representations. `plpygis` is mainly intended for use in PostgreSQL [PL/Python](https://www.postgresql.org/docs/current/plpython.html) functions to augment [PostGIS](https://postgis.net/)'s native capabilities.
+`plpygis` is a pure Python module with no dependencies that can convert geometries between [Well-known binary](https://en.wikipedia.org/wiki/Well-known_binary) (WKB/EWKB), [Well-known Text](https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry) (WKT/EWKT) and GeoJSON representations. `plpygis` is mainly intended for use in PostgreSQL [PL/Python](https://www.postgresql.org/docs/current/plpython.html) functions to augment [PostGIS](https://postgis.net/)'s native capabilities.
 
 ## Basic usage
 

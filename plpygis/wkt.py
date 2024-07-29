@@ -124,4 +124,49 @@ class WktReader:
 
 
 class WktWriter:
-    pass
+    """
+    A writer for Well-Knownn Text.
+    """
+    def __init__(self, geom, use_srid=True):
+        self.geom = geom
+        self.dims = False
+        self.add_srid(use_srid)
+        
+    def add_srid(self, use_srid):
+        if use_srid and self.geom.srid:
+            self.wkt = f"SRID={self.geom.srid};"
+        else:
+            self.wkt = ""
+
+    def add_dims(self):
+        if self.dims:
+            return ""
+        self.dims = True
+        if self.geom.dimz and self.geom.dimm:
+            return " ZM"
+        elif self.geom.dimz:
+            return " Z"
+        elif self.geom.dimm:
+            return " M"
+        else:
+            return ""
+
+    def type(self, geom):
+        wkt = geom.type.upper()
+        wkt += self.add_dims()
+        return wkt
+
+    def add(self, text):
+        self.wkt += text
+
+    @staticmethod
+    def format(coords):
+        return " ".join([str(c) for c in coords])
+
+    @staticmethod
+    def wrap(text):
+        return f"({text})"
+
+    @staticmethod
+    def join(items):
+        return ",".join(items)

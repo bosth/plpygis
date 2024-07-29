@@ -173,7 +173,7 @@ class Geometry:
     @staticmethod
     def from_wkt(wkt):
         reader = WktReader(wkt)
-        srid = reader.get_srid()
+        reader.get_srid()
         return Geometry._read_wkt_geom(reader)
 
 
@@ -237,6 +237,13 @@ class Geometry:
         return self._to_wkb(use_srid=True, dimz=self.dimz, dimm=self.dimm)
 
     @property
+    def wkt(self):
+        """
+        Get the geometry as an (E)WKT.
+        """
+        return self._to_wkt(use_srid=True)
+
+    @property
     def shapely(self):
         """
         Get the geometry as a Shapely geometry. If the geometry has an SRID,
@@ -290,6 +297,13 @@ class Geometry:
         self._write_wkb_header(writer, use_srid, dimz, dimm)
         self._write_wkb(writer, dimz, dimm)
         return writer.data
+    
+    def _to_wkt(self, use_srid):
+        writer = WktWriter(self, use_srid)
+        writer.add(
+            self._as_wkt(writer)
+        )
+        return writer.wkt
 
     def _to_shapely(self):
         if SHAPELY:
@@ -379,6 +393,12 @@ class Geometry:
         if use_srid and self.srid:
             writer.add_int(self.srid)
         return writer
+
+    def _as_wkt(self, writer):
+        coords = WktWriter.wrap(
+                self._to_wkt_coordinates(writer)
+            )
+        return f"{writer.type(self)} {coords}"
 
 
 class _MultiGeometry(Geometry):
@@ -568,6 +588,11 @@ class _MultiGeometry(Geometry):
         for geometry in self._geometries:
             geometry._write_wkb_header(writer, False, dimz, dimm)
             geometry._write_wkb(writer, dimz, dimm)
+
+    def _to_wkt_coordinates(self, writer):
+        return WktWriter.join(
+            [WktWriter.wrap(geom._to_wkt_coordinates(writer)) for geom in self.geometries]
+        )
 
 
 class Point(Geometry):
@@ -819,6 +844,8 @@ class Point(Geometry):
         coords = Point._read_wkt_coordinates(reader)
         return Point(coords, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
 
+    def _to_wkt_coordinates(self, writer):
+        return WktWriter.format(self.coordinates)
 
 class LineString(Geometry):
     """
@@ -947,6 +974,10 @@ class LineString(Geometry):
             raise WktError("LineStrings must have at least 2 vertices")
         return LineString(vertices, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
 
+    def _to_wkt_coordinates(self, writer):
+        return WktWriter.join(
+            [v._to_wkt_coordinates(writer) for v in self.vertices]
+        )
 
 class Polygon(Geometry):
     """
@@ -1086,6 +1117,12 @@ class Polygon(Geometry):
         rings = Polygon._read_wkt_coordinates(reader)
         return Polygon(rings, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
 
+    def _to_wkt_coordinates(self, writer):
+        return WktWriter.wrap(
+            WktWriter.join(
+                [r._to_wkt_coordinates(writer) for r in self.rings]
+            )
+        )
 
 class MultiPoint(_MultiGeometry):
     """
@@ -1125,6 +1162,7 @@ class MultiPoint(_MultiGeometry):
             points.append(point)
         reader.get_closepar()
         return MultiPoint(points, srid=reader.srid)
+
 
 class MultiLineString(_MultiGeometry):
     """
@@ -1242,3 +1280,8 @@ class GeometryCollection(_MultiGeometry):
             geoms.append(geom)
         reader.get_closepar()
         return GeometryCollection(geoms, srid=reader.srid)
+
+    def _to_wkt_coordinates(self, writer):
+        return WktWriter.join(
+            [geom._as_wkt(writer) for geom in self.geometries]
+        )

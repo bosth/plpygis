@@ -7,6 +7,7 @@
 * Overloaded `len` and `[]` for multigeometries
 * Overloaded `+` and `+=` operators
 * `__deepcopy__()` for geometries
+* `from_wkt()` to read Well-Known Text
 
 ### Changed
 
