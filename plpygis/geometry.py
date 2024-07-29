@@ -298,8 +298,8 @@ class Geometry:
         self._write_wkb(writer, dimz, dimm)
         return writer.data
     
-    def _to_wkt(self, use_srid):
-        writer = WktWriter(self, use_srid)
+    def _to_wkt(self, use_srid, prec=6):
+        writer = WktWriter(self, use_srid, prec)
         writer.add(
             self._as_wkt(writer)
         )
@@ -395,7 +395,7 @@ class Geometry:
         return writer
 
     def _as_wkt(self, writer):
-        coords = WktWriter.wrap(
+        coords = writer.wrap(
                 self._to_wkt_coordinates(writer)
             )
         return f"{writer.type(self)} {coords}"
@@ -590,8 +590,8 @@ class _MultiGeometry(Geometry):
             geometry._write_wkb(writer, dimz, dimm)
 
     def _to_wkt_coordinates(self, writer):
-        return WktWriter.join(
-            [WktWriter.wrap(geom._to_wkt_coordinates(writer)) for geom in self.geometries]
+        return writer.join(
+            [writer.wrap(geom._to_wkt_coordinates(writer)) for geom in self.geometries]
         )
 
 
@@ -845,7 +845,7 @@ class Point(Geometry):
         return Point(coords, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
 
     def _to_wkt_coordinates(self, writer):
-        return WktWriter.format(self.coordinates)
+        return writer.format(self.coordinates)
 
 class LineString(Geometry):
     """
@@ -975,7 +975,7 @@ class LineString(Geometry):
         return LineString(vertices, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
 
     def _to_wkt_coordinates(self, writer):
-        return WktWriter.join(
+        return writer.join(
             [v._to_wkt_coordinates(writer) for v in self.vertices]
         )
 
@@ -1118,8 +1118,8 @@ class Polygon(Geometry):
         return Polygon(rings, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
 
     def _to_wkt_coordinates(self, writer):
-        return WktWriter.wrap(
-            WktWriter.join(
+        return writer.wrap(
+            writer.join(
                 [r._to_wkt_coordinates(writer) for r in self.rings]
             )
         )
@@ -1282,6 +1282,6 @@ class GeometryCollection(_MultiGeometry):
         return GeometryCollection(geoms, srid=reader.srid)
 
     def _to_wkt_coordinates(self, writer):
-        return WktWriter.join(
+        return writer.join(
             [geom._as_wkt(writer) for geom in self.geometries]
         )
