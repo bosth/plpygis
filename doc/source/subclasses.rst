@@ -1,16 +1,6 @@
 ``Geometry`` subclasses
 =======================
 
-Creating a new ``plpygis`` geometry from a WKB, GeoJSON or Shapely instance, will produce a new subclass of the base :class:`Geometry <plpygis.geometry.Geometry>` class:
-
-* :class:`Point <plpygis.geometry.Point>`
-* :class:`LineString <plpygis.geometry.LineString>`
-* :class:`Polygon <plpygis.geometry.Polygon>`
-* :class:`MultiPoint <plpygis.geometry.MultiPoint>`
-* :class:`LineString <plpygis.geometry.MultiLineString>`
-* :class:`MultiPolygon <plpygis.geometry.MultiPolygon>`
-* :class:`GeometryCollection <plpygis.geometry.GeometryCollection>`
-
 Creation
 --------
 
@@ -21,6 +11,19 @@ New instances of the three base shapes (points, lines and polygons) may be creat
     >>> point = Point((0, 0))
     >>> line = LineString([(0, 0), (0, 1)])
     >>> poly = Polygon([[(0, 0), (0, 10), (10, 10), (10, 0), (0, 0)], [(4, 4), (4, 6), (6, 6), (6, 4), (4, 4)]])
+
+Conversion
+----------
+
+Converting to a new ``plpygis`` geometry from a WKB, WKT GeoJSON or Shapely instance, will produce a new subclass of the base :class:`Geometry <plpygis.geometry.Geometry>` class:
+
+* :class:`Point <plpygis.geometry.Point>`
+* :class:`LineString <plpygis.geometry.LineString>`
+* :class:`Polygon <plpygis.geometry.Polygon>`
+* :class:`MultiPoint <plpygis.geometry.MultiPoint>`
+* :class:`MultiLineString <plpygis.geometry.MultiLineString>`
+* :class:`MultiPolygon <plpygis.geometry.MultiPolygon>`
+* :class:`GeometryCollection <plpygis.geometry.GeometryCollection>`
 
 Editing
 -------
@@ -149,7 +152,7 @@ Multigeometries
     >>> mp[0].geojson
     {'type': 'Point', 'coordinates': [0, 0]}
 
-:meth:`type <plpygis.geometry._MultiGeometry.geometries>` returns an immutable tuple of the geometries in the multigeometry. The individual geometries may be modified, but none of the individual geometries may be replaced or remobed from the multigeomery, not can new geometries be added. The correct way to modify the geometries is using ``[]`` or ``+=``. There is strict checking of geometry types when added to a multigeometry.
+:meth:`geometries <plpygis.geometry._MultiGeometry.geometries>` returns an immutable tuple of the geometries in the multigeometry. The individual geometries may be modified, but none of the individual geometries may be replaced or remobed from the multigeomery, nor can new geometries be added. The correct way to add a new geometry or replace an existing geometry is by using ``+=`` or ``[]`` respectively. There is strict checking of types in both cases. An element may be removed using :meth:`pop <plpygis.geometry._MultiGeometry.pop>`.
 
     >>> p0 = Point((0, 0))
     >>> p1 = Point((1, 1))
