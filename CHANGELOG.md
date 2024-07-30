@@ -6,8 +6,10 @@
 
 * Overloaded `len` and `[]` for multigeometries
 * Overloaded `+` and `+=` operators
+* `pop()` for multigeometries
 * `__deepcopy__()` for geometries
-* `from_wkt()` to read Well-Known Text
+* `from_wkt()` to read Well-known Text
+* `wkt` property to write Well-known Text
 
 ### Changed
 

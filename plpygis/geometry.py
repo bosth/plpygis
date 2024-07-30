@@ -152,7 +152,6 @@ class Geometry:
     def _read_wkt_geom(reader):
         type_ = reader.get_type()
         dimz, dimm = reader.get_dims()
-        reader.get_empty()
 
         if type_ == "POINT":
             cls = Point
@@ -168,6 +167,7 @@ class Geometry:
             cls = MultiPolygon
         elif type_ == "GEOMETRYCOLLECTION":
             cls = GeometryCollection
+
         return cls._read_wkt(reader)
 
     @staticmethod
@@ -177,8 +177,6 @@ class Geometry:
         geom = Geometry._read_wkt_geom(reader)
         reader.close()
         return geom
-
-
 
     @staticmethod
     def from_shapely(sgeom, srid=None):
@@ -398,10 +396,12 @@ class Geometry:
         return writer
 
     def _as_wkt(self, writer):
-        coords = writer.wrap(
-                self._to_wkt_coordinates(writer)
-            )
-        return f"{writer.type(self)} {coords}"
+        coords = self._to_wkt_coordinates(writer)
+        if coords is None:
+            return f"{writer.type(self)} EMPTY"
+        else:
+            coords = writer.wrap(coords)
+            return f"{writer.type(self)} {coords}"
 
 
 class _MultiGeometry(Geometry):
@@ -433,7 +433,7 @@ class _MultiGeometry(Geometry):
         return self._geometries[index]
 
     def __setitem__(self, index, value):
-        if not issubclass(type(value), self.multitype):
+        if not issubclass(type(value), self.MULTITYPE):
             raise CollectionError(
                     f"Can not add {type(value)} to a {type(self)}")
         self._geometries[index] = value
@@ -449,7 +449,7 @@ class _MultiGeometry(Geometry):
         if type(other) is type(self):
             new_geom = copy(self)
             new_geom._geometries.extend(other._geometries)
-        elif type(other) is self.multitype:
+        elif type(other) is self.MULTITYPE:
             new_geom = copy(self)
             new_geom._geometries.append(other)
         else:
@@ -469,12 +469,18 @@ class _MultiGeometry(Geometry):
                 self._geometries.append(other)
         elif type(self) is type(other):
             self._geometries.extend(other.geometries)
-        elif type(other) is self.multitype:
+        elif type(other) is self.MULTITYPE:
             self._geometries.append(other)
         else:
             raise CollectionError(
                     f"Can not add a {type(other)} to a {type(self)}")
         return self
+
+    def pop(self, index=-1):
+        """
+        Remove a geometry from the multigeometry.
+        """
+        return self._geometries.pop(index)
 
     @property
     def geometries(self):
@@ -586,6 +592,19 @@ class _MultiGeometry(Geometry):
             raise WkbError() from e
         return geometries
 
+    @classmethod
+    def _read_wkt(cls, reader):
+        if reader.get_empty():
+            geoms = []
+        else:
+            reader.get_openpar()
+            geoms = [cls.MULTITYPE._read_wkt(reader)]
+            while reader.get_comma(req=False):
+                geom = cls.MULTITYPE._read_wkt(reader)
+                geoms.append(geom)
+            reader.get_closepar()
+        return cls(geoms, srid=reader.srid)
+
     def _write_wkb(self, writer, dimz, dimm):
         writer.add_int(len(self.geometries))
         for geometry in self._geometries:
@@ -593,6 +612,9 @@ class _MultiGeometry(Geometry):
             geometry._write_wkb(writer, dimz, dimm)
 
     def _to_wkt_coordinates(self, writer):
+        if not self.geometries:
+            return None
+
         return writer.join(
             [writer.wrap(geom._to_wkt_coordinates(writer)) for geom in self.geometries]
         )
@@ -837,6 +859,8 @@ class Point(Geometry):
 
     @staticmethod
     def _read_wkt_coordinates(reader):
+        if reader.get_empty():
+            raise WktError(reader, "Points with no coordinates are not supported in WKT.")
         reader.get_openpar()
         coords = reader.get_coordinates()
         reader.get_closepar()
@@ -972,12 +996,14 @@ class LineString(Geometry):
 
     @staticmethod
     def _read_wkt(reader):
+        if reader.get_empty():
+            raise WktError(reader, "LineStrings with no coordinates are not supported in WKT.")
         vertices = LineString._read_wkt_coordinates(reader)
         return LineString(vertices, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
 
     def _to_wkt_coordinates(self, writer):
         return writer.join(
-            [v._to_wkt_coordinates(writer) for v in self.vertices]
+                    [v._to_wkt_coordinates(writer) for v in self.vertices]
         )
 
 class Polygon(Geometry):
@@ -1115,15 +1141,16 @@ class Polygon(Geometry):
 
     @staticmethod
     def _read_wkt(reader):
+        if reader.get_empty():
+            raise WktError(reader, "Polygons with no coordinates are not supported in WKT.")
         rings = Polygon._read_wkt_coordinates(reader)
         return Polygon(rings, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
 
     def _to_wkt_coordinates(self, writer):
-        return writer.wrap(
-            writer.join(
-                [r._to_wkt_coordinates(writer) for r in self.rings]
-            )
+        return writer.join(
+                [writer.wrap(r._to_wkt_coordinates(writer)) for r in self.rings]
         )
+
 
 class MultiPoint(_MultiGeometry):
     """
@@ -1142,7 +1169,7 @@ class MultiPoint(_MultiGeometry):
     """
 
     _LWGEOMTYPE = 4
-    multitype = Point
+    MULTITYPE = Point
 
     def __init__(self, points=None, srid=None):
         super().__init__(Point, geometries=points, srid=srid)
@@ -1153,16 +1180,6 @@ class MultiPoint(_MultiGeometry):
         List of all component points.
         """
         return self.geometries
-
-    @staticmethod
-    def _read_wkt(reader):
-        reader.get_openpar()
-        points = [Point._read_wkt(reader)]
-        while reader.get_comma(req=False):
-            point = Point._read_wkt(reader)
-            points.append(point)
-        reader.get_closepar()
-        return MultiPoint(points, srid=reader.srid)
 
 
 class MultiLineString(_MultiGeometry):
@@ -1182,7 +1199,7 @@ class MultiLineString(_MultiGeometry):
     """
 
     _LWGEOMTYPE = 5
-    multitype = LineString
+    MULTITYPE = LineString
 
     def __init__(self, linestrings=None, srid=None):
         super().__init__(LineString, geometries=linestrings, srid=srid)
@@ -1193,16 +1210,6 @@ class MultiLineString(_MultiGeometry):
         List of all component lines.
         """
         return self.geometries
-
-    @staticmethod
-    def _read_wkt(reader):
-        reader.get_openpar()
-        linestrings = [LineString._read_wkt(reader)]
-        while reader.get_comma(req=False):
-            linestring = LineString._read_wkt(reader)
-            linestrings.append(linestring)
-        reader.get_closepar()
-        return MultiLineString(linestrings, srid=reader.srid)
 
 
 class MultiPolygon(_MultiGeometry):
@@ -1222,7 +1229,7 @@ class MultiPolygon(_MultiGeometry):
     """
 
     _LWGEOMTYPE = 6
-    multitype = Polygon
+    MULTITYPE = Polygon
 
     def __init__(self, polygons=None, srid=None):
         super().__init__(Polygon, geometries=polygons, srid=srid)
@@ -1233,16 +1240,6 @@ class MultiPolygon(_MultiGeometry):
         List of all component polygons.
         """
         return self.geometries
-
-    @staticmethod
-    def _read_wkt(reader):
-        reader.get_openpar()
-        polygons = [Polygon._read_wkt(reader)]
-        while reader.get_comma(req=False):
-            polygon = Polygon._read_wkt(reader)
-            polygons.append(polygon)
-        reader.get_closepar()
-        return MultiPolygon(polygons, srid=reader.srid)
 
 
 class GeometryCollection(_MultiGeometry):
@@ -1262,7 +1259,7 @@ class GeometryCollection(_MultiGeometry):
     """
 
     _LWGEOMTYPE = 7
-    multitype = Geometry
+    MULTITYPE = Geometry
 
     def __init__(self, geometries=None, srid=None):
         super().__init__(Geometry, geometries=geometries, srid=srid)
@@ -1272,17 +1269,20 @@ class GeometryCollection(_MultiGeometry):
         geojson = {"type": self.type, "geometries": geometries}
         return geojson
 
-    @staticmethod
-    def _read_wkt(reader):
-        reader.get_openpar()
-        geoms = [Geometry._read_wkt_geom(reader)]
-        while reader.get_comma(req=False):
-            geom = Geometry._read_wkt_geom(reader)
-            geoms.append(geom)
-        reader.get_closepar()
-        return GeometryCollection(geoms, srid=reader.srid)
-
     def _to_wkt_coordinates(self, writer):
         return writer.join(
-            [geom._as_wkt(writer) for geom in self.geometries]
+                    [geom._as_wkt(writer) for geom in self.geometries]
         )
+
+    @classmethod
+    def _read_wkt(cls, reader):
+        if reader.get_empty():
+            geoms = []
+        else:
+            reader.get_openpar()
+            geoms = [Geometry._read_wkt_geom(reader)]
+            while reader.get_comma(req=False):
+                geom = Geometry._read_wkt_geom(reader)
+                geoms.append(geom)
+            reader.get_closepar()
+        return GeometryCollection(geoms, srid=reader.srid)

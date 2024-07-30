@@ -74,10 +74,7 @@ class WktReader:
         return self.dimz, self.dimm
 
     def get_empty(self):
-        value = self._get_value(self._EMPTY)
-        if value:
-            raise WktError(self, "Geometries with no coordiantes are not supported in WKT.")
-        return False
+        return self._get_value(self._EMPTY)
 
     def get_openpar(self):
         value = self._get_value(self._OP)
@@ -174,4 +171,4 @@ class WktWriter:
         return f"({text})"
 
     def join(self, items):
-        return ",".join(items)
+        return ", ".join(items)

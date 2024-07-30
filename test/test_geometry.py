@@ -1189,8 +1189,32 @@ def test_ewkt_read_collection():
 def test_ewkt_read_point():
     with pytest.raises(WktError):
         p = Geometry.from_wkt("SRID=hello;POINT Z (0 1 1)")
+
+def test_ewkt_read_empty():
+    with pytest.raises(WktError):
+        Geometry.from_wkt("POINT Z EMPTY")
+    with pytest.raises(WktError):
+        Geometry.from_wkt("LINESTRING ZM EMPTY")
+    with pytest.raises(WktError):
+        Geometry.from_wkt("POLYGON EMPTY")
+
+    mg = Geometry.from_wkt("MULTIPOINT EMPTY")
+    assert mg.type == "MultiPoint"
+    assert len(mg) == 0
+
+    mg = Geometry.from_wkt("MULTILINESTRING EMPTY")
+    assert mg.type == "MultiLineString"
+    assert len(mg) == 0
+
+    mg = Geometry.from_wkt("MULTIPOLYGON EMPTY")
+    assert mg.type == "MultiPolygon"
+    assert len(mg) == 0
+
+    mg = Geometry.from_wkt("GEOMETRYCOLLECTION EMPTY")
+    assert mg.type == "GeometryCollection"
+    assert len(mg) == 0
         
-def test_wkt_malformed():
+def test_read_wkt_malformed():
     with pytest.raises(WktError):
         p = Geometry.from_wkt("POINT(0 1 1)")
 
@@ -1205,3 +1229,48 @@ def test_wkt_malformed():
 
     with pytest.raises(WktError):
         p = Geometry.from_wkt("POLYGON (0 1)")
+
+    with pytest.raises(WktError):
+        p = Geometry.from_wkt("POLYGON (0 1) extra")
+
+def test_wkt_write_empty_collection():
+    mp = MultiPoint([])
+    assert mp.type == "MultiPoint"
+    assert len(mp) == 0
+    assert mp.wkt == "MULTIPOINT EMPTY"
+
+def test_wkt_write_point():
+    wkt = "SRID=900913;POINT ZM (0 1 2 3)"
+    geom = Geometry.from_wkt(wkt)
+    assert geom.wkt == wkt
+
+def test_wkt_write_linestring():
+    wkt = "LINESTRING (0 0, 0 1, 1 2)"
+    geom = Geometry.from_wkt(wkt)
+    assert geom.wkt == wkt
+    
+def test_wkt_write_polygon():
+    wkt = "POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 1 2, 2 2, 2 1, 1 1))"
+    geom = Geometry.from_wkt(wkt)
+    assert geom.wkt == wkt
+    
+def test_wkt_write_multipoint():
+    wkt = "MULTIPOINT ((0 0), (1 1))"
+    geom = Geometry.from_wkt(wkt)
+    assert geom.wkt == wkt
+    
+def test_wkt_write_multilinestring():
+    wkt = "MULTILINESTRING ((0 0, 1 1), (2 2, 3 3))"
+    geom = Geometry.from_wkt(wkt)
+    assert geom.wkt == wkt
+    
+def test_wkt_write_multipolygon():
+    wkt = "MULTIPOLYGON (((1 1, 1 3, 3 3, 3 1, 1 1)), ((4 3, 6 3, 6 1, 4 1, 4 3)), ((1 1, 1 3, 3 3, 3 1, 1 1)), ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 1 2, 2 2, 2 1, 1 1)))"
+    geom = Geometry.from_wkt(wkt)
+    assert geom.wkt == wkt
+    
+def test_wkt_write_linestring():
+    wkt = "GEOMETRYCOLLECTION (MULTIPOINT ((0 0), (1 1)), POINT (3 4), LINESTRING (2 3, 3 4))"
+    geom = Geometry.from_wkt(wkt)
+    assert geom.wkt == wkt
+    
