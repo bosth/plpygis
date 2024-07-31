@@ -397,15 +397,17 @@ class Geometry:
         return lwgeomtype, dimz, dimm, srid
 
     def _write_wkb_header(self, writer, use_srid, dimz, dimm):
+        if not self.srid:
+            use_srid = False
         writer.add_order()
         header = (
             self._LWGEOMTYPE
             | (Geometry._WKBZFLAG if dimz else 0)
             | (Geometry._WKBMFLAG if dimm else 0)
-            | (Geometry._WKBSRIDFLAG if self.srid else 0)
+            | (Geometry._WKBSRIDFLAG if use_srid else 0)
         )
         writer.add_int(header)
-        if use_srid and self.srid:
+        if use_srid:
             writer.add_int(self.srid)
         return writer
 
