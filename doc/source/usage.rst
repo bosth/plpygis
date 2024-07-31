@@ -67,7 +67,9 @@ Conversion
 * :meth:`geojson <plpygis.geometry.Geometry.geojson>`
 * :meth:`shapely <plpygis.geometry.Geometry.shapely>`
 * :meth:`wkb <plpygis.geometry.Geometry.wkb>`
+* :meth:`ewkb <plpygis.geometry.Geometry.ewkb>`
 * :meth:`wkt <plpygis.geometry.Geometry.wkt>`
+* :meth:`ewkt <plpygis.geometry.Geometry.ewkt>`
 
 .. code-block:: python
 

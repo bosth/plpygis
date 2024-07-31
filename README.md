@@ -9,7 +9,7 @@
 ```python
 >>> from plpygis import Point
 >>> p = Point((-124.005, 49.005), srid=4326)
->>> print(p.wkb)
+>>> print(p.ewkb)
 0101000020e6100000b81e85eb51005fc0713d0ad7a3804840
 >>> print(p.geojson)
 {'type': 'Point', 'coordinates': [-124.005, 49.005]}

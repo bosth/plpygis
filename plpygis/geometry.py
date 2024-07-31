@@ -233,14 +233,28 @@ class Geometry:
     @property
     def wkb(self):
         """
-        Get the geometry as an (E)WKB.
+        Get the geometry as an WKB.
         """
-        return self._to_wkb(use_srid=True, dimz=self.dimz, dimm=self.dimm)
+        return self._to_wkb(use_srid=False, dimz=self.dimz, dimm=self.dimm)
 
     @property
     def wkt(self):
         """
-        Get the geometry as an (E)WKT.
+        Get the geometry as an WKT.
+        """
+        return self._to_wkt(use_srid=False)
+
+    @property
+    def ewkb(self):
+        """
+        Get the geometry as an EWKB.
+        """
+        return self._to_wkb(use_srid=True, dimz=self.dimz, dimm=self.dimm)
+
+    @property
+    def ewkt(self):
+        """
+        Get the geometry as an EWKT.
         """
         return self._to_wkt(use_srid=True)
 
@@ -326,7 +340,7 @@ class Geometry:
         return f"<{self.type}: '{self.postgis_type}'>"
 
     def __str__(self):
-        return self.wkb.__str__()
+        return self.ewkb.__str__()
 
     @property
     def __geo_interface__(self):

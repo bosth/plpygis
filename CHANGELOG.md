@@ -5,14 +5,16 @@
 ### Added
 
 * Overloaded `len` and `[]` for multigeometries
-* Overloaded `+` and `+=` operators
+* Overloaded `+` and `+=` operators for geometries
 * `pop()` for multigeometries
 * `__deepcopy__()` for geometries
 * `from_wkt()` to read Well-known Text
-* `wkt` property to write Well-known Text
+* `ewkb` to explicitly request an SRID
+* `wkt` and `ewkt` properties to write Well-known Text
 
 ### Changed
 
+* `wkb` now always returns a WKB and not a EWKB
 * `__copy__()` now performs a shallow copy for multigeometries
 * `geometries` is immutable (make changes to members using overloaded operators to ensure type checking)
 

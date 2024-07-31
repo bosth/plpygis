@@ -26,7 +26,6 @@ wkb_mpg = "010600000002000000010300000001000000040000000000000000004440000000000
 wkb_gc = "0107000000020000000101000000000000000000000000000000000000000102000000020000000000000000000000000000000000F03F000000000000F03F000000000000F03F"
 wkb_mpt_srid = "0104000020e8030000020000000101000000000000000000000000000000000000000101000000000000000000f03f000000000000f03f"
 
-
 def test_missing_ewkb():
     """
     Error on missing EWKB
@@ -102,6 +101,8 @@ def test_read_ewkb_point_srid():
     assert geom.postgis_type == postgis_type
     assert geom.__repr__() == "<Point: 'geometry(Point,4326)'>"
     geom.srid = geom.srid # clear cached WKB
+    assert geom.ewkb == wkb.lower()
+    assert geom.wkb != geom.ewkb
     assert geom.__str__().lower() == wkb.lower()
 
 def test_read_ewkb_pointz():
@@ -118,6 +119,8 @@ def test_read_ewkb_pointz():
     assert geom.postgis_type == postgis_type
     assert geom.__repr__() == "<Point: 'geometry(PointZ,4326)'>"
     geom.srid = geom.srid # clear cached WKB
+    assert geom.ewkb == wkb.lower()
+    assert geom.wkb != geom.ewkb
     assert geom.__str__().lower() == wkb.lower()
 
 def test_read_ewkb_pointm():
@@ -134,6 +137,8 @@ def test_read_ewkb_pointm():
     assert geom.postgis_type == postgis_type
     assert geom.__repr__() == "<Point: 'geometry(PointM,4326)'>"
     geom.srid = geom.srid # clear cached WKB
+    assert geom.ewkb == wkb.lower()
+    assert geom.wkb != geom.ewkb
     assert geom.__str__().lower() == wkb.lower()
 
 def test_read_ewkb_pointzm():
@@ -151,6 +156,8 @@ def test_read_ewkb_pointzm():
     assert geom.postgis_type == postgis_type
     assert geom.__repr__() == "<Point: 'geometry(PointZM,4326)'>"
     geom.srid = geom.srid # clear cached WKB
+    assert geom.ewkb == wkb.lower()
+    assert geom.wkb != geom.ewkb
     assert geom.__str__().lower() == wkb.lower()
 
 def test_read_wkb_data_error():
@@ -355,7 +362,7 @@ def test_multigeometry_srid():
     p1 = Point((0, 0), srid=1000)
     p2 = Point((1, 1), srid=1000)
     mp = MultiPoint([p1, p2], srid=1000)
-    assert mp.wkb == wkb_mpt_srid
+    assert mp.ewkb == wkb_mpt_srid
 
 def test_multigeometry_srid_exception():
     """
@@ -1242,7 +1249,8 @@ def test_wkt_write_empty_collection():
 def test_wkt_write_point():
     wkt = "SRID=900913;POINT ZM (0 1 2 3)"
     geom = Geometry.from_wkt(wkt)
-    assert geom.wkt == wkt
+    assert geom.wkt == wkt.split(";")[1]
+    assert geom.ewkt == wkt
 
 def test_wkt_write_linestring():
     wkt = "LINESTRING (0 0, 0 1, 1 2)"
