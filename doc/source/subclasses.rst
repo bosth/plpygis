@@ -15,7 +15,7 @@ New instances of the three base shapes (points, lines and polygons) may be creat
 Conversion
 ----------
 
-Converting to a new ``plpygis`` geometry from a WKB, WKT GeoJSON or Shapely instance, will produce a new subclass of the base :class:`Geometry <plpygis.geometry.Geometry>` class:
+Converting to a new ``plpygis`` geometry from a WKB, WKT, GeoJSON or Shapely instance, will produce a new subclass of the base :class:`Geometry <plpygis.geometry.Geometry>` class:
 
 * :class:`Point <plpygis.geometry.Point>`
 * :class:`LineString <plpygis.geometry.LineString>`

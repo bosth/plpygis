@@ -13,6 +13,9 @@
 0101000020e6100000b81e85eb51005fc0713d0ad7a3804840
 >>> print(p.geojson)
 {'type': 'Point', 'coordinates': [-124.005, 49.005]}
+>>> p.z = 1
+>>> print(p.wkt)
+POINT Z (-124.005 49.005 1)
 ```
 
 ## Usage with PostGIS
@@ -25,13 +28,13 @@ CREATE OR REPLACE FUNCTION add_elevation(geom geometry(POINT))
 AS $$
   from plpygis import Geometry
   from requests import get
-  point = Geometry(geom)
+  p = Geometry(geom)
 
-  response = get(f'https://api.open-meteo.com/v1/elevation?longitude={point.x}&latitude={point.y}')
+  response = get(f'https://api.open-meteo.com/v1/elevation?longitude={p.x}&latitude={p.y}')
   if response.status_code == 200:
       content = response.json()
-      point.z = content['elevation'][0]
-      return point
+      p.z = content['elevation'][0]
+      return p
   else:
       return None
 $$ LANGUAGE plpython3u;
@@ -42,7 +45,11 @@ The `Geometry()` constructor will convert a PostGIS `geometry` that has been pas
 The function above can be called as part of an SQL query:
 
 ```pgsql
-SELECT name, ST_AsText(add_elevation(geom)) FROM city;
+SELECT
+    name,
+    add_elevation(geom)
+FROM
+    city;
 ```
 
 ## Documentation

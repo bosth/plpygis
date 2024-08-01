@@ -8,6 +8,12 @@
 
 ## [0.5.0] - 2024-07-31
 
+### Changed
+
+* `wkb` now always returns a WKB and not a EWKB
+* `__copy__()` now performs a shallow copy for multigeometries
+* `geometries` is immutable (make changes to members using overloaded operators to ensure type checking)
+
 ### Added
 
 * Overloaded `len` and `[]` for multigeometries
@@ -18,12 +24,6 @@
 * `ewkb` to explicitly request an SRID
 * `wkt` and `ewkt` properties to write Well-known Text
 
-### Changed
-
-* `wkb` now always returns a WKB and not a EWKB
-* `__copy__()` now performs a shallow copy for multigeometries
-* `geometries` is immutable (make changes to members using overloaded operators to ensure type checking)
-
 ## [0.4.2] - 2024-07-21
 
 ### Fixed
@@ -33,13 +33,13 @@
 
 ## [0.4.1] - 2024-04-30
 
-### Added
-
-* New exception: `CollectionError`.
-
 ### Changed
 
 * Raise `WkbError` on malformed WKBs.
+
+### Added
+
+* New exception: `CollectionError`.
 
 ## [0.4.0] - 2024-04-22
 
@@ -48,11 +48,6 @@
 * All the `Geometry` classes now have a `coordinates` property, and this is also used in the generation of GeoJSONs.
 * The `Geometry` classes also now have a `__copy__()` method.
 * Two new exceptions were added `CoordinateError` and `GeojsonError`.
-
-### Chnaged
-
-* plpygis has been migrated to use `pyproject.toml` instead of `setup.py`.
-* The testing framework has been redone using `pytest`.
 
 ### Fixed
 
@@ -75,10 +70,6 @@
 * The license was updated to conform to the SPDX standard (https://github.com/bosth/plpygis/issues/9).
 
 ## [0.2.1] - 2023-03-11
-
-### Changed
-
-* The documentation was updated.
 
 ### Fixed
 

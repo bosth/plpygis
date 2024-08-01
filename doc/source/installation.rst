@@ -29,7 +29,7 @@ The package sources are available at https://github.com/bosth/plpygis. Building 
 Tests
 ~~~~~
 
-Tests require `pytest <https://docs.pytest.org/>`.
+Tests require `pytest <https://docs.pytest.org/>`_.
 
 .. code-block:: console
 
