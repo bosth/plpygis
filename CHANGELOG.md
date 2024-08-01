@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.1] - 2024-08-01
+
+### Fixed
+
+* Invalid WKB in certain circumstances
+
 ## [0.5.0] - 2024-07-31
 
 ### Added
@@ -97,6 +103,7 @@
 ## [0.0.2] - 2017-08-06
 ## [0.0.1] - 2017-07-30
 
+[0.5.1]: https://github.com/bosth/plpygis/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bosth/plpygis/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/bosth/plpygis/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/bosth/plpygis/compare/v0.4.0...v0.4.1
