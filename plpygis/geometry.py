@@ -172,6 +172,9 @@ class Geometry:
 
     @staticmethod
     def from_wkt(wkt):
+        """
+        Create a Geometry from a WKT or EWKT.
+        """
         reader = WktReader(wkt)
         reader.get_srid()
         geom = Geometry._read_wkt_geom(reader)
@@ -220,6 +223,9 @@ class Geometry:
 
     @property
     def coordinates(self):
+        """
+        Get the geometry's coordinates.
+        """
         return self._coordinates()
 
     @property
@@ -307,7 +313,12 @@ class Geometry:
 
     def _to_wkb(self, use_srid, dimz, dimm):
         if self._wkb is not None:
-            return self._wkb
+            # use cached WKB if it is an EWKB and user requested EWKB
+            if use_srid and self.srid is not None:
+                return self._wkb
+            # use cached WKB if it is a WKB and user requested WKB
+            if not use_srid and self.srid is None:
+                return self._wkb
         writer = HexWriter("<")
         self._write_wkb_header(writer, use_srid, dimz, dimm)
         self._write_wkb(writer, dimz, dimm)

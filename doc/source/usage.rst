@@ -1,7 +1,7 @@
 Basic usage
 ===========
 
-``plpygis`` is a Python conveter to and from the PostGIS `geometry <https://postgis.net/docs/using_postgis_dbmanagement.html#RefObject>`_ type, WKB, EWKB, GeoJSON, Shapely geometries and any object that supports ``__geo_interface__``. ``plpygis`` is intended for use in PL/Python, allowing procedural Python code to complement PostGIS types and functions.
+``plpygis`` is a Python converter to and from the PostGIS `geometry <https://postgis.net/docs/using_postgis_dbmanagement.html#RefObject>`_ type, WKB, EWKB, WKT, EWKT, GeoJSON, Shapely geometries and any object that supports ``__geo_interface__``. ``plpygis`` is intended for use in PL/Python, allowing procedural Python code to complement PostGIS types and functions.
 
 :class:`Geometry <plpygis.geometry.Geometry>`
 ---------------------------------------------

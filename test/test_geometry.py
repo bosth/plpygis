@@ -286,6 +286,29 @@ def test_read_wkb_geometrycollection():
     assert geom.geometries[1].type == "LineString"
     assert wkb == geom.wkb
 
+def test_read_wkb_srid():
+    wkb_mpt_srid = "0104000020e8030000020000000101000000000000000000000000000000000000000101000000000000000000f03f000000000000f03f"
+    geom = Geometry(wkb_mpt_srid)
+    wkb = geom.wkb
+    ewkb = geom.ewkb
+    assert wkb != ewkb
+
+def test_write_wkb_srid():
+    p = Point([100, 100], srid=4236)
+    p2 = Geometry(p.wkb)
+    assert p.x == p2.x
+    assert p.y == p2.y
+    assert p.dimz == p2.dimz
+    assert p.dimm == p2.dimm
+    assert p2.srid == None
+
+    p3 = Geometry(p.ewkb)
+    assert p.x == p3.x
+    assert p.y == p3.y
+    assert p.dimz == p3.dimz
+    assert p.dimm == p3.dimm
+    assert p.srid == p3.srid
+
 def test_multigeometry_raise_error():
     """
     raise error when adding wrong type to a multigeometry
@@ -669,8 +692,11 @@ def test_modify_point():
     assert p.__str__().lower() == wkb.lower()
 
 def test_binary_wkb_roundtrip():
-    wkb = b'\x01\x01\x00\x00\x20\xe6\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
-    assert Geometry(wkb).wkb == wkb
+    ewkb = b'\x01\x01\x00\x00\x20\xe6\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    geom = Geometry(ewkb)
+    assert geom.ewkb == ewkb
+    assert geom.srid == 4326
+    assert geom.wkb != ewkb
 
 def test_byte_array_wkb_string():
     wkb = bytearray(b'010100000000000000000000000000000000000000')
@@ -1281,4 +1307,3 @@ def test_wkt_write_linestring():
     wkt = "GEOMETRYCOLLECTION (MULTIPOINT ((0 0), (1 1)), POINT (3 4), LINESTRING (2 3, 3 4))"
     geom = Geometry.from_wkt(wkt)
     assert geom.wkt == wkt
-    

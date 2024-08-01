@@ -152,7 +152,7 @@ Multigeometries
     >>> mp[0].geojson
     {'type': 'Point', 'coordinates': [0, 0]}
 
-:meth:`geometries <plpygis.geometry._MultiGeometry.geometries>` returns an immutable tuple of the geometries in the multigeometry. The individual geometries may be modified, but none of the individual geometries may be replaced or remobed from the multigeomery, nor can new geometries be added. The correct way to add a new geometry or replace an existing geometry is by using ``+=`` or ``[]`` respectively. There is strict checking of types in both cases. An element may be removed using :meth:`pop <plpygis.geometry._MultiGeometry.pop>`.
+:meth:`geometries <plpygis.geometry._MultiGeometry.geometries>` returns an immutable tuple of the geometries in the multigeometry. The individual geometries may be modified, but none of the individual geometries may be replaced or removed from the multigeomery, nor can new geometries be added. The correct way to add a new geometry or replace an existing geometry is by using ``+=`` or ``[]`` respectively. There is strict checking of types in both cases. An element may be removed using :meth:`pop <plpygis.geometry._MultiGeometry.pop>`.
 
     >>> p0 = Point((0, 0))
     >>> p1 = Point((1, 1))
@@ -201,7 +201,7 @@ Getting the following property relies on the presence of the WKB (cached or gene
 
 * :meth:`shapely <plpygis.geometry.Geometry.shapely>`
 
-If the :class:`Geometry <plpygis.geometry.Geometry>` was created from a WKB, the follwing actions will trigger a full parse and will clear the cached copy of the WKB:
+If the :class:`Geometry <plpygis.geometry.Geometry>` was created from a WKB, the following actions will trigger a full parse and will clear the cached copy of the WKB:
 
 * getting :meth:`geojson <plpygis.geometry.Geometry.geojson>` and :meth:`__geo_interface__ <plpygis.geometry.Geometry.__geo_interface__>`
 * getting :meth:`shapely <plpygis.geometry.Geometry.shapely>`
