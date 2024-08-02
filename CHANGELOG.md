@@ -20,7 +20,7 @@
 
 ### Changed
 
-* `wkb` now always returns a WKB and not a EWKB
+* **Breaking change**: `wkb` now always returns a WKB and not a EWKB
 * `__copy__()` now performs a shallow copy for multigeometries
 * `geometries` is immutable (make changes to members using overloaded operators to ensure type checking)
 
