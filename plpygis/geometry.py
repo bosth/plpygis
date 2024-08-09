@@ -324,8 +324,8 @@ class Geometry:
         self._write_wkb(writer, dimz, dimm)
         return writer.data
     
-    def _to_wkt(self, use_srid, prec=6):
-        writer = WktWriter(self, use_srid, prec)
+    def _to_wkt(self, use_srid):
+        writer = WktWriter(self, use_srid)
         writer.add(
             self._as_wkt(writer)
         )

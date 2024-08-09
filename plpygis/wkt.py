@@ -131,10 +131,9 @@ class WktWriter:
     """
     A writer for Well-Knownn Text.
     """
-    def __init__(self, geom, use_srid=True, prec=6):
+    def __init__(self, geom, use_srid=True):
         self.geom = geom
         self.dims = False
-        self.prec = prec
         self.add_srid(use_srid)
         
     def add_srid(self, use_srid):
@@ -165,7 +164,7 @@ class WktWriter:
         self.wkt += text
 
     def format(self, coords):
-        return " ".join([f"{c:.{self.prec}f}".rstrip("0").rstrip(".") for c in coords])
+        return " ".join([f"{c}".rstrip("0").rstrip(".") for c in coords])
 
     def wrap(self, text):
         return f"({text})"
