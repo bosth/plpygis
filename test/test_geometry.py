@@ -3,10 +3,9 @@ Test Geometry
 """
 
 import pytest
-from shapely import geometry
 from plpygis import Geometry, Point, LineString, Polygon
 from plpygis import MultiPoint, MultiLineString, MultiPolygon, GeometryCollection
-from plpygis.exceptions import WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError, CollectionError, WktError
+from plpygis.exceptions import WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError, CollectionError, WktError, DependencyError
 from copy import copy, deepcopy
 
 geojson_pt = {"type":"Point","coordinates":[0.0,0.0]}
@@ -498,16 +497,28 @@ def test_shapely_dump():
     convert to Shapely
     """
     point = Point((123,123))
-    sgeom = point.shapely
-    assert sgeom.wkb == point.wkb
+    try:
+        from shapely import geometry
+        sgeom = point.shapely
+        assert sgeom.wkb == point.wkb
+    except ImportError:
+        with pytest.raises(DependencyError):
+            sgeom = point.shapely
 
 def test_shapely_load():
     """
     convert from Shapely
     """
-    sgeom = geometry.Point(99,-99)
-    point = Geometry.from_shapely(sgeom)
-    assert sgeom.wkb_hex == point.wkb
+    try:
+        import shapely
+        from shapely import geometry
+        sgeom = geometry.Point(99,-99)
+        point = Geometry.from_shapely(sgeom)
+        assert point.wkb == sgeom.wkb
+        assert point.ewkb == shapely.to_wkb(sgeom, include_srid=True)
+    except ImportError:
+        with pytest.raises(DependencyError):
+            point = Geometry.from_shapely(1)
 
 def test_strip_srid():
     """

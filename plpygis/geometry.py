@@ -13,14 +13,6 @@ from .exceptions import (
 from .hex import HexReader, HexWriter, HexBytes
 from .wkt import WktReader, WktWriter
 
-try:
-    import shapely
-    import shapely.wkb
-
-    SHAPELY = True
-except ImportError:
-    SHAPELY = False
-
 class Geometry:
     r"""A representation of a PostGIS geometry.
 
@@ -188,12 +180,14 @@ class Geometry:
 
         The Shapely geometry will not be modified.
         """
-        if SHAPELY:
+        try:
+            import shapely
             if srid:
                 sgeom = shapely.set_srid(sgeom, srid)
             wkb_hex = shapely.to_wkb(sgeom, include_srid=True, hex=True)
             return Geometry(wkb_hex)
-        raise DependencyError("Shapely")
+        except ImportError:
+            raise DependencyError("Shapely")
 
     @staticmethod
     def shape(shape, srid=None):
@@ -332,15 +326,19 @@ class Geometry:
         return writer.wkt
 
     def _to_shapely(self):
-        if SHAPELY:
-            sgeom = shapely.wkb.loads(self.wkb)
+        try:
+            import shapely
+            import shapely.wkb
+
+            sgeom = shapely.wkb.loads(self.ewkb)
             srid = shapely.get_srid(sgeom)
             if srid == 0:
                 srid = None
             if (srid or self.srid) and srid != self.srid:
                 raise SridError(f"SRID mismatch: {srid} {self.srid}")
             return sgeom
-        raise DependencyError("Shapely")
+        except ImportError:
+            raise DependencyError("Shapely")
 
     def _to_geojson(self):
         coordinates = self._to_geojson_coordinates()
