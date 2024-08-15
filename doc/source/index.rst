@@ -7,7 +7,7 @@
 Welcome to plpygis's documentation!
 ###################################
 
-``plpygis`` is a Python conveter to and from the PostGIS ``geometry`` type, WKB, EWKB, GeoJSON and Shapely geometries and additionally supports ``__geo_interface__``. ``plpygis`` is intended for use in PL/Python functions.
+``plpygis`` is a pure Python module that can convert geometries to and from the PostGIS ``geometry`` type, WKB, EWKB, WKT, EWKT, GeoJSON and Shapely formats in addition to implementing the ``__geo_interface__`` standard. ``plpygis`` is intended for use in PL/Python functions but it can also be used in general-purpose Python code that requires support for geospatial types.
 
 .. toctree::
    :maxdepth: 2
