@@ -1318,3 +1318,7 @@ def test_wkt_write_linestring():
     wkt = "GEOMETRYCOLLECTION (MULTIPOINT ((0 0), (1 1)), POINT (3 4), LINESTRING (2 3, 3 4))"
     geom = Geometry.from_wkt(wkt)
     assert geom.wkt == wkt
+
+def test_wkt_rounding():
+    p = Point((1, 1000, 1000.0000, 1.1000))
+    assert p.wkt == "POINT ZM (1 1000 1000 1.1)"

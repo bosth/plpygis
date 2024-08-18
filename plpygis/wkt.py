@@ -164,7 +164,7 @@ class WktWriter:
         self.wkt += text
 
     def format(self, coords):
-        return " ".join([f"{c}".rstrip("0").rstrip(".") for c in coords])
+        return " ".join([f"{float(c)}".rstrip("0").rstrip(".") for c in coords])
 
     def wrap(self, text):
         return f"({text})"

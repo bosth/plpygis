@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.3] - 2024-08-18
+
+### Fixed
+
+* Bug in WKTs when there is an integer ending in 0
+
 ## [0.5.2] - 2024-08-09
 
 ### Changed
@@ -104,6 +110,7 @@
 ## [0.0.2] - 2017-08-06
 ## [0.0.1] - 2017-07-30
 
+[0.5.3]: https://github.com/bosth/plpygis/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/bosth/plpygis/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/bosth/plpygis/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/bosth/plpygis/compare/v0.4.2...v0.5.0
