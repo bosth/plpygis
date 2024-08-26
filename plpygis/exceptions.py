@@ -51,7 +51,7 @@ class WkbError(PlpygisError):
         super().__init__(msg)
 
 
-class WktError(Exception):
+class WktError(PlpygisError):
     """
     Exception for problems in parsing WKTs.
     """
