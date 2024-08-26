@@ -299,7 +299,7 @@ def test_write_wkb_srid():
     assert p.y == p2.y
     assert p.dimz == p2.dimz
     assert p.dimm == p2.dimm
-    assert p2.srid == None
+    assert p2.srid is None
 
     p3 = Geometry(p.ewkb)
     assert p.x == p3.x
@@ -332,23 +332,23 @@ def test_multigeometry_raise_error():
 def test_multigeometry_nochangedimensionality():
     mp = MultiPoint([Point((0, 1, 2)), Point((5, 6, 7))])
     mp.dimz = True
-    assert mp.dimz == True
+    assert mp.dimz is True
     mp.dimm = False
-    assert mp.dimm == False
+    assert mp.dimm is False
 
 def test_point_nullifyzm():
     p = Point((0, 1, 2, 3))
-    assert p.dimz == True
+    assert p.dimz is True
     p.z = None
-    assert p.dimz == False
+    assert p.dimz is False
     p.dimz = False
-    assert p.dimz == False
+    assert p.dimz is False
 
-    assert p.dimm == True
+    assert p.dimm is True
     p.m = None
-    assert p.dimm == False
+    assert p.dimm is False
     p.dimm = False
-    assert p.dimm == False
+    assert p.dimm is False
 
 def test_multigeometry_changedimensionality():
     """
@@ -980,8 +980,6 @@ def test_geometry_add():
     p1 = Point((1, 1, 1))
     p2 = Point((2, 2, 2))
     p3 = Point((3, 3, 3))
-    p4 = Point((4, 4, 4))
-    p5 = Point((5, 5, 5))
 
     mp1 = p1 + p2
     assert type(mp1) == MultiPoint
@@ -1002,8 +1000,6 @@ def test_geometry_add():
     mp4 = mp2 + p1
     assert type(mp4) == MultiPoint
     assert len(mp4) == 3
-
-    ls = LineString([(3, 4, 5), (9, 10, 11)])
 
 def test_geometry_add_ls():
     ls1 = LineString([(3, 4, 5), (9, 10, 11)])
@@ -1089,6 +1085,7 @@ def test_geometry_add_srid():
 
     with pytest.raises(CollectionError):
         mp3 = mp1 + mp2
+        assert len(mp3) == 3
 
 def test_multigeometry_getset():
     p0 = Point((0, 0))
@@ -1129,8 +1126,8 @@ def test_wkt_read_point():
     p = Geometry.from_wkt("POINT Z (0 1 1)")
     assert p.type == "Point"
     assert p.x == 0
-    assert p.dimz == True
-    assert p.dimm == False
+    assert p.dimz is True
+    assert p.dimm is False
 
 def test_wkt_read_linestring():
     l = Geometry.from_wkt("LINESTRING (30 10, 10 30.5, 40 40) ")
@@ -1139,8 +1136,8 @@ def test_wkt_read_linestring():
     assert l.vertices[0].y == 10
     assert l.vertices[1].x == 10
     assert l.vertices[1].y == 30.5
-    assert l.dimz == False
-    assert l.dimm == False
+    assert l.dimz is False
+    assert l.dimm is False
 
 def test_wkt_read_polygon():
     p = Geometry.from_wkt("POLYGON ((99 0, 1 0, 1 1, 0 1, 0 0))")
@@ -1149,8 +1146,8 @@ def test_wkt_read_polygon():
     assert len(p.exterior.vertices) == 5
     assert p.exterior.vertices[0].x == 99
     assert p.interior == []
-    assert p.dimz == False
-    assert p.dimm == False
+    assert p.dimz is False
+    assert p.dimm is False
 
 def test_wkt_read_polygon_interior():
     p = Geometry.from_wkt("POLYGON M ((7.5 1 9, 4 0 -1, 4 4 44, 0 4 0.5, 0 0 1), (1 1 -9, 1 1 2, 2 2 2, 0 2 1, 0.5 1 1))")
@@ -1161,8 +1158,8 @@ def test_wkt_read_polygon_interior():
     assert p.exterior.vertices[0].m == 9
     assert len(p.interior) == 1
     assert len(p.interior[0].vertices) == 5
-    assert p.dimz == False
-    assert p.dimm == True
+    assert p.dimz is False
+    assert p.dimm is True
 
 def test_wkt_read_multipoint():
     mp = Geometry.from_wkt("MULTIPOINT ((0 1), (2 3))")
@@ -1172,24 +1169,24 @@ def test_wkt_read_multipoint():
     assert mp[0].y == 1
     assert mp[1].x == 2
     assert mp[1].y == 3
-    assert mp.dimz == False
-    assert mp.dimm == False
+    assert mp.dimz is False
+    assert mp.dimm is False
 
 def test_wkt_read_multilinestring():
     ml = Geometry.from_wkt("MULTILINESTRING ((0 0, 1 1), (2 2, 3 3))")
     assert ml.type == "MultiLineString"
     assert len(ml) == 2
     assert str(ml[0].wkb) == "01020000000200000000000000000000000000000000000000000000000000f03f000000000000f03f"
-    assert ml.dimz == False
-    assert ml.dimm == False
+    assert ml.dimz is False
+    assert ml.dimm is False
 
 def test_wkt_read_multipolygon():
     mp = Geometry.from_wkt("MULTIPOLYGON (((1 1, 1 3, 3 3, 3 1, 1 1)), ((4 3, 6 3, 6 1, 4 1, 4 3)))  ")
     assert mp.type == "MultiPolygon"
     assert len(mp) == 2
     assert str(mp[0].wkb) == "01030000000100000005000000000000000000f03f000000000000f03f000000000000f03f0000000000000840000000000000084000000000000008400000000000000840000000000000f03f000000000000f03f000000000000f03f"
-    assert mp.dimz == False
-    assert mp.dimm == False
+    assert mp.dimz is False
+    assert mp.dimm is False
 
 def test_wkt_read_collection():
     mp = Geometry.from_wkt("GEOMETRYCOLLECTION (MULTIPOINT((0 0), (1 1)), POINT(3 4), LINESTRING(2 3, 3 4))")
@@ -1201,20 +1198,20 @@ def test_wkt_read_collection():
     assert mp[1].x == 3
     assert mp[1].y == 4
     assert str(mp[0].wkb) == "0104000000020000000101000000000000000000000000000000000000000101000000000000000000f03f000000000000f03f"
-    assert mp.dimz == False
-    assert mp.dimm == False
+    assert mp.dimz is False
+    assert mp.dimm is False
 
 def test_wkt_read_collection_dimensions():
     with pytest.raises(DimensionalityError):
-        mp = Geometry.from_wkt("GEOMETRYCOLLECTION (MULTIPOINT((0 0), (1 1)), POINT M (3 4 1), LINESTRING(2 3, 3 4))")
+        Geometry.from_wkt("GEOMETRYCOLLECTION (MULTIPOINT((0 0), (1 1)), POINT M (3 4 1), LINESTRING(2 3, 3 4))")
 
 def test_ewkt_read_point():
     p = Geometry.from_wkt("SRID=4326;POINT Z (0 1 1)")
     assert p.type == "Point"
     assert p.srid == 4326
     assert p.x == 0
-    assert p.dimz == True
-    assert p.dimm == False
+    assert p.dimz is True
+    assert p.dimm is False
 
 def test_ewkt_read_collection():
     mp = Geometry.from_wkt("SRID=4326;GEOMETRYCOLLECTION (MULTIPOINT((0 0), (1 1)), POINT(3 4), LINESTRING(2 3, 3 4))")
@@ -1227,12 +1224,12 @@ def test_ewkt_read_collection():
     assert mp[1].x == 3
     assert mp[1].y == 4
     assert str(mp[0].wkb) == "0104000000020000000101000000000000000000000000000000000000000101000000000000000000f03f000000000000f03f"
-    assert mp.dimz == False
-    assert mp.dimm == False
+    assert mp.dimz is False
+    assert mp.dimm is False
 
 def test_ewkt_read_point():
     with pytest.raises(WktError):
-        p = Geometry.from_wkt("SRID=hello;POINT Z (0 1 1)")
+        Geometry.from_wkt("SRID=hello;POINT Z (0 1 1)")
 
 def test_ewkt_read_empty():
     with pytest.raises(WktError):
@@ -1260,22 +1257,22 @@ def test_ewkt_read_empty():
         
 def test_read_wkt_malformed():
     with pytest.raises(WktError):
-        p = Geometry.from_wkt("POINT(0 1 1)")
+        Geometry.from_wkt("POINT(0 1 1)")
 
     with pytest.raises(WktError):
-        p = Geometry.from_wkt("POINT ZMX (0 1 1)")
+        Geometry.from_wkt("POINT ZMX (0 1 1)")
 
     with pytest.raises(WktError):
-        p = Geometry.from_wkt("POINT EMPTY")
+        Geometry.from_wkt("POINT EMPTY")
 
     with pytest.raises(WktError):
-        p = Geometry.from_wkt("HELLO")
+        Geometry.from_wkt("HELLO")
 
     with pytest.raises(WktError):
-        p = Geometry.from_wkt("POLYGON (0 1)")
+        Geometry.from_wkt("POLYGON (0 1)")
 
     with pytest.raises(WktError):
-        p = Geometry.from_wkt("POLYGON (0 1) extra")
+        Geometry.from_wkt("POLYGON (0 1) extra")
 
 def test_wkt_write_empty_collection():
     mp = MultiPoint([])
