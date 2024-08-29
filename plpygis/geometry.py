@@ -163,7 +163,7 @@ class Geometry:
         return cls._read_wkt(reader)
 
     @staticmethod
-    def from_wkt(wkt):
+    def from_wkt(wkt, srid=None):
         """
         Create a Geometry from a WKT or EWKT.
         """
@@ -171,6 +171,8 @@ class Geometry:
         reader.get_srid()
         geom = Geometry._read_wkt_geom(reader)
         reader.close()
+        if srid:
+            geom.srid = srid
         return geom
 
     @staticmethod

@@ -1319,3 +1319,13 @@ def test_wkt_write_linestring():
 def test_wkt_rounding():
     p = Point((1, 1000, 1000.0000, 1.1000))
     assert p.wkt == "POINT ZM (1 1000 1000 1.1)"
+
+def test_wkt_read_srid():
+    p = Geometry.from_wkt("POINT (0 1)", srid=1234)
+    assert p.type == "Point"
+    assert p.srid == 1234
+
+def test_ewkt_read_srid():
+    p = Geometry.from_wkt("SRID=4326;POINT (0 1)", srid=1234)
+    assert p.type == "Point"
+    assert p.srid == 1234
