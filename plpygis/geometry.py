@@ -343,7 +343,7 @@ class Geometry:
             raise DependencyError("Shapely")
 
     def _to_geojson(self):
-        coordinates = self._to_geojson_coordinates()
+        coordinates = self._coordinates(dimm=False, tpl=False)
         geojson = {"type": self.type, "coordinates": coordinates}
         return geojson
 
@@ -598,9 +598,6 @@ class _MultiGeometry(Geometry):
     def _coordinates(self, dimz=True, dimm=True, tpl=True):
         return [g._coordinates(dimz, dimm, tpl) for g in self.geometries]
 
-    def _to_geojson_coordinates(self):
-        return self._coordinates(dimm=False, tpl=False)
-
     def _load_geometry(self):
         self._geometries = _MultiGeometry._read_wkb(
             self._reader, self._dimz, self._dimm
@@ -841,9 +838,6 @@ class Point(Geometry):
             return coordinates
         return list(coordinates)
 
-    def _to_geojson_coordinates(self):
-        return self._coordinates(dimm=False, tpl=False)
-
     def _bounds(self):
         return (self.x, self.y, self.x, self.y)
 
@@ -978,9 +972,6 @@ class LineString(Geometry):
 
     def _coordinates(self, dimz=True, dimm=True, tpl=True):
         return [v._coordinates(dimz, dimm, tpl) for v in self.vertices]
-
-    def _to_geojson_coordinates(self):
-        return self._coordinates(dimz=False, tpl=False)
 
     def _bounds(self):
         x = [v.x for v in self.vertices]
@@ -1125,9 +1116,6 @@ class Polygon(Geometry):
 
     def _coordinates(self, dimz=True, dimm=True, tpl=True):
         return [r._coordinates(dimz, dimm, tpl) for r in self.rings]
-
-    def _to_geojson_coordinates(self):
-        return self._coordinates(dimz=False, tpl=False)
 
     def _bounds(self):
         return self.exterior.bounds
