@@ -55,7 +55,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "plpygis"
-copyright = "2017, Benjamin Trigona-Harany"
+copyright = "2024, Benjamin Trigona-Harany"
 author = "Benjamin Trigona-Harany"
 
 # The version info for the project you're documenting, acts as replacement for

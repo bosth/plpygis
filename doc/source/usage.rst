@@ -82,16 +82,18 @@ Conversion
 
 Conversion to GeoJSON or Shapely will result in the M dimension being lost as these representation only support X, Y and Z coordinates (see `RFC 7946 <ttps://tools.ietf.org/html/rfc7946#section-3.1.1>`_).
 
+The precision of coordinates in WKT/EWKT can be controlled by setting :attr:`plpygis.wkt.PRECISION <plpygis.wkt.PRECISION>`; by default, this value is 6.
+
 Exceptions
 ----------
 
 All ``plpygis`` exceptions inherit from the :class:`PlpygisError <plpygis.exceptions.PlpygisError>` class. The specific exceptions that may be raised are:
 
-* :class:`DependencyError <plpygis.exceptions.DependencyError>`: missing dependency required for an optional feature, such as :meth:`shapely <plpygis.geometry.Geometry.shapely>`
-* :class:`CollectionError <plpygis.exceptions.CollectionError>`: error when attempting to create a multigeometry or geometry collection
-* :class:`CoordinateError <plpygis.exceptions.CoordinateError>`: error in the coordinates used to create a :class:`Geometry <plpygis.geometry.Geometry>`
-* :class:`DimensionalityError <plpygis.exceptions.DimensionalityError>`: error pertaining to the Z or M coordinates of a :class:`Geometry <plpygis.geometry.Geometry>`
-* :class:`GeojsonError <plpygis.exceptions.GeojsonError>`: error reading a GeoJSON
-* :class:`SridError <plpygis.exceptions.SridError>`: error pertaining to a :class:`Geometry <plpygis.geometry.Geometry>`'s SRIDs
-* :class:`WkbError <plpygis.exceptions.WkbError>`: error reading or writing a WKB
-* :class:`WktError <plpygis.exceptions.WktError>`: error reading or writing a WKT
+* :py:exc:`DependencyError <plpygis.exceptions.DependencyError>`: missing dependency required for an optional feature, such as :meth:`shapely <plpygis.geometry.Geometry.shapely>`
+* :py:exc:`CollectionError <plpygis.exceptions.CollectionError>`: error when attempting to create a multigeometry or geometry collection
+* :py:exc:`CoordinateError <plpygis.exceptions.CoordinateError>`: error in the coordinates used to create a :class:`Geometry <plpygis.geometry.Geometry>`
+* :py:exc:`DimensionalityError <plpygis.exceptions.DimensionalityError>`: error pertaining to the Z or M coordinates of a :class:`Geometry <plpygis.geometry.Geometry>`
+* :py:exc:`GeojsonError <plpygis.exceptions.GeojsonError>`: error reading a GeoJSON
+* :py:exc:`SridError <plpygis.exceptions.SridError>`: error pertaining to a :class:`Geometry <plpygis.geometry.Geometry>`'s SRIDs
+* :py:exc:`WkbError <plpygis.exceptions.WkbError>`: error reading or writing a WKB
+* :py:exc:`WktError <plpygis.exceptions.WktError>`: error reading or writing a WKT

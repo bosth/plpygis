@@ -1329,3 +1329,18 @@ def test_ewkt_read_srid():
     p = Geometry.from_wkt("SRID=4326;POINT (0 1)", srid=1234)
     assert p.type == "Point"
     assert p.srid == 1234
+
+def test_wkt_write_precision():
+    p = Point((0.00000000000001, 1000000000000000))
+    assert p.wkt == "POINT (0 1000000000000000)"
+
+    p = Point((-0.123456789, 0.123456789))
+    assert p.wkt == "POINT (-0.123457 0.123457)"
+
+    from plpygis import wkt
+
+    wkt.PRECISION = 1
+    assert p.wkt == "POINT (-0.1 0.1)"
+
+    wkt.PRECISION = 6
+    assert p.wkt == "POINT (-0.123457 0.123457)"

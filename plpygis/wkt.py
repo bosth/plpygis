@@ -1,6 +1,8 @@
 import re
 from .exceptions import WktError
 
+PRECISION = 6
+
 def _regex(expr):
     return re.compile(fr"\s*{expr}\s*")
 
@@ -131,6 +133,7 @@ class WktWriter:
     """
     A writer for Well-Knownn Text.
     """
+
     def __init__(self, geom, use_srid=True):
         self.geom = geom
         self.dims = False
@@ -164,7 +167,7 @@ class WktWriter:
         self.wkt += text
 
     def format(self, coords):
-        return " ".join([f"{float(c)}".rstrip("0").rstrip(".") for c in coords])
+        return " ".join([f"{float(c):#.{PRECISION}f}".rstrip("0").rstrip(".") for c in coords])
 
     def wrap(self, text):
         return f"({text})"

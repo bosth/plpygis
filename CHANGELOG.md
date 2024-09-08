@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.5] - 
+
+### Changed
+
+* WKTs again default to 6 decimal places of precision but this is now controllable
+
+### Fixed
+
+* `geojson` could return `m` instead of `z` for LineStrings and Polygons 
+* Elminated possibility of scientific notation in (E)WKT output
+
 ## [0.5.4] - 2024-08-29
 
 ### Changed
