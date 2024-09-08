@@ -8,7 +8,7 @@
 * Run `git tag vX.X.X`
 * Run `git push origin vX.X.X`
 * Run `python -m build`
-* Run `twine upload dist/plpygis-X.X.X.tar.gz dist/plpygis-X.X.X-*whl`
+* Run `twine upload dist/plpygis-X.X.X*`
 * On https://github.com/bosth/plpygis/tags, create a release from the new tag
    - Use vX.X.X tag
    - Use vX.X.X as the title

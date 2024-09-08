@@ -1,15 +1,16 @@
 # Changelog
 
-## [0.5.5] - 
+## [0.5.5] - 2024-09-08
 
 ### Changed
 
-* WKTs again default to 6 decimal places of precision but this is now controllable
+* WKTs again default to 6 decimal places of precision but this is now configurable
+* Check the number of coordinates in LineString and Polygon when reading from (E)WKT
 
 ### Fixed
 
-* `geojson` could return `m` instead of `z` for LineStrings and Polygons 
-* Elminated possibility of scientific notation in (E)WKT output
+* `geojson` no longer returns `m` values instead of `z` values for LineStrings and Polygons 
+* Eliminated possibility of scientific notation in (E)WKT output
 
 ## [0.5.4] - 2024-08-29
 
@@ -131,6 +132,7 @@
 ## [0.0.2] - 2017-08-06
 ## [0.0.1] - 2017-07-30
 
+[0.5.5]: https://github.com/bosth/plpygis/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/bosth/plpygis/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/bosth/plpygis/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/bosth/plpygis/compare/v0.5.1...v0.5.2
