@@ -1003,12 +1003,13 @@ class LineString(Geometry):
             vertex._write_wkb(writer, dimz, dimm)
 
     @staticmethod
-    def _read_wkt_coordinates(reader):
+    def _read_wkt_coordinates(reader, required=2):
         reader.get_openpar()
         vertices = [reader.get_coordinates()]
-        while reader.get_comma(req=False):
+        while reader.get_comma(req=(required>1)):
             coords = reader.get_coordinates()
             vertices.append(coords)
+            required -= 1
         reader.get_closepar()
         return vertices
 
@@ -1147,9 +1148,9 @@ class Polygon(Geometry):
     @staticmethod
     def _read_wkt_coordinates(reader):
         reader.get_openpar()
-        rings = [LineString._read_wkt_coordinates(reader)]
+        rings = [LineString._read_wkt_coordinates(reader, required=4)]
         while reader.get_comma(req=False):
-            ring = LineString._read_wkt_coordinates(reader)
+            ring = LineString._read_wkt_coordinates(reader, required=4)
             rings.append(ring)
         reader.get_closepar()
         return rings

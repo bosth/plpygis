@@ -5,14 +5,14 @@ Test Geometry
 import pytest
 from plpygis import Geometry, Point, LineString, Polygon
 from plpygis import MultiPoint, MultiLineString, MultiPolygon, GeometryCollection
-from plpygis.exceptions import WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError, CollectionError, WktError, DependencyError
+from plpygis.exceptions import PlpygisError, WkbError, SridError, DimensionalityError, CoordinateError, GeojsonError, CollectionError, WktError, DependencyError
 from copy import copy, deepcopy
 
 geojson_pt = {"type":"Point","coordinates":[0.0,0.0]}
 geojson_ln = {"type":"LineString","coordinates":[[107,60],[102,59]]}
 geojson_pg = {"type":"Polygon","coordinates":[[[100,0],[101.0,0.0],[101.0,1.0],[100.0,1.0],[100.0,0.0]]]}
 geojson_mpt = {"type":"MultiPoint","coordinates":[[0,0],[1,1]]}
-geojson_mln = {"type":"MultiLineString","coordinates":[[[0,0],[1,1]],[[2,2],[3,3]]]}
+geojson_mln = {"type":"MultiLineString","coordinates":[[[0.1,0.2,0.3],[1.1,1.2,1.3]],[[2.1,2.2,2.3],[3.1,3.2,3.3]]]}
 geojson_mpg = {"type":"MultiPolygon","coordinates":[[[[1,0],[111,0.0],[101.0,1.0],[100.0,1.0],[1,0]]],[[[100,0],[101.0,0.0],[101.0,1.0],[100.0,1.0],[100.0,0.0]]]]}
 geojson_gc = {"type":"GeometryCollection","geometries":[{"type":"Point","coordinates":[10,0]},{"type":"LineString","coordinates":[[11,0],[12,1]]}]}
 geojson_err = {"type":"Hello","coordinates":[0.0,0.0]}
@@ -407,8 +407,7 @@ def test_translate_geojson_pt():
     geom = Geometry.from_geojson(geojson_pt)
     assert geom.srid == 4326
     assert Point == type(geom)
-    geojson = geom.geojson
-    assert geojson == geojson_pt
+    assert geom.geojson == geojson_pt
 
 def test_translate_geojson_ln():
     """
@@ -417,8 +416,7 @@ def test_translate_geojson_ln():
     geom = Geometry.from_geojson(geojson_ln)
     assert geom.srid == 4326
     assert LineString == type(geom)
-    geojson = geom.geojson
-    assert geojson == geojson_ln
+    assert geom.geojson == geojson_ln
 
 def test_translate_geojson_pg():
     """
@@ -427,8 +425,7 @@ def test_translate_geojson_pg():
     geom = Geometry.from_geojson(geojson_pg)
     assert geom.srid == 4326
     assert Polygon == type(geom)
-    geojson = geom.geojson
-    assert geojson == geojson_pg
+    assert geom.geojson == geojson_pg
 
 def test_translate_geojson_mpt():
     """
@@ -437,8 +434,7 @@ def test_translate_geojson_mpt():
     geom = Geometry.from_geojson(geojson_mpt)
     assert geom.srid == 4326
     assert MultiPoint == type(geom)
-    geojson = geom.geojson
-    assert geojson == geojson_mpt
+    assert geom.geojson == geojson_mpt
 
 def test_translate_geojson_mln():
     """
@@ -447,8 +443,7 @@ def test_translate_geojson_mln():
     geom = Geometry.from_geojson(geojson_mln)
     assert geom.srid == 4326
     assert MultiLineString == type(geom)
-    geojson = geom.geojson
-    assert geojson == geojson_mln
+    assert geom.geojson == geojson_mln
 
 def test_translate_geojson_mpg():
     """
@@ -457,8 +452,7 @@ def test_translate_geojson_mpg():
     geom = Geometry.from_geojson(geojson_mpg)
     assert geom.srid == 4326
     assert MultiPolygon == type(geom)
-    geojson = geom.geojson
-    assert geojson == geojson_mpg
+    assert geom.geojson == geojson_mpg
 
 def test_translate_geojson_gc():
     """
@@ -467,8 +461,11 @@ def test_translate_geojson_gc():
     geom = Geometry.from_geojson(geojson_gc)
     assert geom.srid == 4326
     assert GeometryCollection == type(geom)
-    geojson = geom.geojson
-    assert geojson == geojson_gc
+    assert geom.geojson == geojson_gc
+
+def test_translate_geojson_zm():
+    geom = Point((0, 1, 2, 3))
+    assert geom.geojson == {"type":"Point","coordinates":[0.0,1.0,2.0]}
 
 def test_translate_geojson_error():
     """
@@ -585,10 +582,10 @@ def test_bounds_multilinestring():
     """
     geom = Geometry.from_geojson(geojson_mln)
     bounds = geom.bounds
-    assert bounds[0] == 0
-    assert bounds[1] == 0
-    assert bounds[2] == 3
-    assert bounds[3] == 3
+    assert bounds[0] == 0.1
+    assert bounds[1] == 0.2
+    assert bounds[2] == 3.1
+    assert bounds[3] == 3.2
 
 def test_bounds_multipolygon():
     """
@@ -747,6 +744,15 @@ def test_linestring_coordinates():
     assert ls._coordinates(dimz=False, tpl=False) == [[1, 2, 4], [6, 7, 9]]
     assert ls._coordinates(dimz=False, dimm=False, tpl=False) == [[1, 2], [6, 7]]
 
+def test_linestring_coordinates_setm():
+    """
+    set m on a a LineString
+    """
+    coordinates = [(1, 2, 3), (6, 7, 8)]
+    ls = LineString(coordinates)
+    ls.dimm = True
+    assert ls._coordinates(tpl=False) == [[1, 2, 3, 0], [6, 7, 8, 0]]
+
 def test_polygon_coordinates():
     """
     get coordinates of a Polygon
@@ -758,6 +764,17 @@ def test_polygon_coordinates():
 
     coordinates = [list(map(list, sub)) for sub in coordinates]
     assert p._coordinates(dimm=True, dimz=True, tpl=False) == coordinates
+
+def test_polygon_coordinates_setm():
+    """
+    set m on a Polygon
+    """
+    coordinates = [[(1, 2, 3), (6, 7, 8), (10, 11, 12), (1, 2, 3)]]
+    p = Polygon(coordinates)
+    p.dimm = True
+    assert p._coordinates(tpl=True) == [[(1, 2, 3, 0), (6, 7, 8, 0), (10, 11, 12, 0), (1, 2, 3, 0)]]
+    p.dimm = True
+    assert p._coordinates(tpl=True) == [[(1, 2, 3, 0), (6, 7, 8, 0), (10, 11, 12, 0), (1, 2, 3, 0)]]
 
 def test_multipoint_coordinates():
     """
@@ -1269,10 +1286,28 @@ def test_read_wkt_malformed():
         Geometry.from_wkt("HELLO")
 
     with pytest.raises(WktError):
+        Geometry.from_wkt("LINESTRING (0 0)")
+
+    with pytest.raises(WktError):
+        Geometry.from_wkt("LINESTRING ((0 0, 1 1))")
+
+    with pytest.raises(WktError):
         Geometry.from_wkt("POLYGON (0 1)")
 
     with pytest.raises(WktError):
-        Geometry.from_wkt("POLYGON (0 1) extra")
+        Geometry.from_wkt("POLYGON ((0 0, 1 1, 2 2))")
+
+    with pytest.raises(WktError):
+        Geometry.from_wkt("POLYGON ((0 0, 1 1, 2 2, 3 3), (0 0, 1 1, 2 2)")
+
+    with pytest.raises(WktError):
+        Geometry.from_wkt("POINT (0 1) extra")
+
+    with pytest.raises(WktError):
+        Geometry.from_wkt("POINT (0 1")
+
+    with pytest.raises(WktError):
+        Geometry.from_wkt("POINT (0 )")
 
 def test_wkt_write_empty_collection():
     mp = MultiPoint([])
@@ -1344,3 +1379,31 @@ def test_wkt_write_precision():
 
     wkt.PRECISION = 6
     assert p.wkt == "POINT (-0.123457 0.123457)"
+
+def test_raise_exception():
+    with pytest.raises(PlpygisError):
+        geom = Point((0,1))
+        raise CoordinateError(geom)
+
+    with pytest.raises(PlpygisError):
+        raise CollectionError()
+
+    with pytest.raises(PlpygisError):
+        raise DependencyError("module")
+
+    with pytest.raises(PlpygisError):
+        raise WkbError()
+
+    with pytest.raises(PlpygisError):
+        class WktReaderMock:
+            pos = 1
+        raise WktError(reader=WktReaderMock())
+
+    with pytest.raises(PlpygisError):
+        raise DimensionalityError()
+
+    with pytest.raises(PlpygisError):
+        raise SridError()
+
+    with pytest.raises(PlpygisError):
+        raise GeojsonError()

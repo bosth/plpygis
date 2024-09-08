@@ -84,13 +84,10 @@ class WktReader:
             raise WktError(self, expected="opening parenthesis")
         return True
 
-    def get_closepar(self, req=True):
+    def get_closepar(self):
         value = self._get_value(self._CP)
         if not value:
-            if req:
-                raise WktError(self, expected="closing parenthesis")
-            else:
-                return False
+            raise WktError(self, expected="closing parenthesis")
         return True
 
     def get_srid(self):

@@ -34,9 +34,8 @@ class DependencyError(PlpygisError, ImportError):
     Exception for a missing dependency.
     """
 
-    def __init__(self, dep, msg=None):
-        if msg is None:
-            msg = f"Dependency '{dep}' is not available."
+    def __init__(self, dep):
+        msg = f"Dependency '{dep}' is not available."
         super().__init__(msg)
 
 
