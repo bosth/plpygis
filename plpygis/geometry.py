@@ -297,8 +297,8 @@ class Geometry:
                 reader = HexReader(wkb, "<")  # little-endian reader
             else:
                 raise WkbError("First byte in WKB must be 0 or 1.")
-        except TypeError as e:
-            raise WkbError() from e
+        except Exception as e:
+            raise WkbError("Error reading WKB") from e
         return Geometry._get_wkb_type(reader) + (reader,)
 
     def _check_cache(self):

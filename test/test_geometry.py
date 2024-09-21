@@ -993,6 +993,13 @@ def test_multigeometry_iadd():
     assert len(gc) == 5
     assert type(gc) == GeometryCollection
 
+def test_multigeometry_iadd_mixed_srid():
+    p1 = Point((1, 1, 1), srid=1000)
+    p2 = Point((2, 2, 2), srid=2000)
+
+    with pytest.raises(CollectionError):
+        p1 + p2
+
 def test_geometry_add():
     p1 = Point((1, 1, 1))
     p2 = Point((2, 2, 2))
@@ -1103,6 +1110,19 @@ def test_geometry_add_srid():
     with pytest.raises(CollectionError):
         mp3 = mp1 + mp2
         assert len(mp3) == 3
+
+def test_polygon_change_srid():
+    p = Geometry(wkb_pg)
+    p.dimz = True
+    assert p.dimz is True
+    for ring in p.rings:
+        for v in ring.vertices:
+            assert v.dimz is True
+    p.dimz = False
+    assert p.dimz is False
+    for ring in p.rings:
+        for v in ring.vertices:
+            assert v.dimz is False
 
 def test_multigeometry_getset():
     p0 = Point((0, 0))
