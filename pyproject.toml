@@ -7,7 +7,7 @@ name = "plpygis"
 dynamic = ["version"]
 description = "Python tools for PostGIS"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 authors = [{name = "Benjamin Trigona-Harany", email = "plpygis@jaxartes.net"}]
 license = {text = "GPL-3.0-only"}
 classifiers = [
