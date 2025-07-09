@@ -21,7 +21,7 @@ Prior to using PL/Python, it must be loaded in the current database:
 Python 2 and Python 3
 ~~~~~~~~~~~~~~~~~~~~~
 
-``plpygis`` is compatible with both Python 2 and Python 3. For Python 3, the language is ``plpython3u`` and for Python 2 it is ``plpython2u`` (the generic ``plpythonu`` currently refers to Python 2 in PostgreSQL but this may change in the future).
+``plpygis`` is not tested on Python 2 and only officially supports Python 3. When using PL/Python, therefore, ensure that the language is ``plpython3u`` and not ``plpythonu`` or ``plpython2u``.
 
 Function declarations
 ---------------------
