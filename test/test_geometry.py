@@ -1268,6 +1268,14 @@ def test_ewkt_read_point():
     with pytest.raises(WktError):
         Geometry.from_wkt("SRID=hello;POINT Z (0 1 1)")
 
+def test_ewkt_read_with_spaces():
+    g = Geometry.from_wkt("   SRID=123 ; POINT Z (    -1     3      9.3  )")
+    assert g.srid == 123
+    assert g.dimz == True
+    assert g.x == -1
+    assert g.y == 3
+    assert g.z == 9.3
+
 def test_ewkt_read_empty():
     with pytest.raises(WktError):
         Geometry.from_wkt("POINT Z EMPTY")
@@ -1319,6 +1327,9 @@ def test_read_wkt_malformed():
 
     with pytest.raises(WktError):
         Geometry.from_wkt("POLYGON ((0 0, 1 1, 2 2, 3 3), (0 0, 1 1, 2 2)")
+
+    with pytest.raises(WktError):
+        Geometry.from_wkt("POLYGON((1 1), (2 2), (3 1), (1 1))")
 
     with pytest.raises(WktError):
         Geometry.from_wkt("POINT (0 1) extra")

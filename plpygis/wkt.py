@@ -17,10 +17,14 @@ class WktReader:
     _CP = _regex("[)]")
     _COMMA = _regex("[,]")
     _NUMBER = _regex("[-]?[0-9]+[.]?[0-9]*")
-    _SRID = _regex("SRID=[0-9]+;")
+    _SRID = _regex("SRID=[0-9]+\s*;")
 
-    def __init__(self, wkt, offset=0):
-        self._data = wkt.upper().strip()
+    def __init__(self, wkt):
+        offset = 0
+        while wkt[offset] == " ":
+            offset += 1
+
+        self.data = wkt.upper()
         self._start = offset
         self.pos = offset
 
@@ -28,7 +32,7 @@ class WktReader:
         """
         Terminate reading and raise error if unconsumed characters remain.
         """
-        if self.pos != len(self._data):
+        if self.pos != len(self.data):
             raise WktError(self, expected="end of WKT")
 
     def reset(self):
@@ -38,7 +42,7 @@ class WktReader:
         self.pos = self._start
 
     def _get_value(self, expr):
-        match = expr.match(self._data, pos=self.pos)
+        match = expr.match(self.data, pos=self.pos)
         if match:
             self.pos = match.end()
             return match.group().strip()

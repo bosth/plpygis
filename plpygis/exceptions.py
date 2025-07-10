@@ -59,9 +59,9 @@ class WktError(PlpygisError):
         pos = reader.pos
         if not msg:
             if expected is None:
-                msg = f"Unreadable WKT at position {pos+1}."
+                msg = f"Unreadable WKT at position {pos}."
             else:
-                msg = f"Expected {expected} at position {pos+1}."
+                msg = f"Expected {expected} at position {pos}"
         super().__init__(msg)
 
 
