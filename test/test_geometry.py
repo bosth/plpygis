@@ -479,7 +479,12 @@ def test_geo_interface():
     access using __geo_interface__
     """
     geom = Geometry.from_geojson(geojson_pt)
-    assert geojson_pt == geom.__geo_interface__
+    gj_coord = geojson_pt["coordinates"]
+    gi_coord = geom.__geo_interface__["coordinates"]
+    assert type(gj_coord) == list
+    assert type(gi_coord) == tuple
+    assert gj_coord[0] == gi_coord[0]
+    assert gj_coord[1] == gi_coord[1]
 
 def test_shape():
     """

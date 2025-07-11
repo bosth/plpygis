@@ -342,8 +342,8 @@ class Geometry:
         except ImportError:
             raise DependencyError("Shapely")
 
-    def _to_geojson(self):
-        coordinates = self._coordinates(dimm=False, tpl=False)
+    def _to_geojson(self, tpl=False):
+        coordinates = self._coordinates(dimm=False, tpl=tpl)
         geojson = {"type": self.type, "coordinates": coordinates}
         return geojson
 
@@ -355,7 +355,7 @@ class Geometry:
 
     @property
     def __geo_interface__(self):
-        return self.geojson
+        return self._to_geojson(tpl=True)
 
     def _set_dimensionality(self, geometries):
         self._dimz = None
