@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.6.0] - 2025-07-11
+
+### Changed
+
+* Report position of errors in WKT better
+* Be more forgiving for spaces in WKTs
+* Remove references to support for Python 2
+* Change minimum Python version to 3.9
+* Follow __geo_interface__ conventions on using tuples instead of lists for coordinate pairs
+
 ## [0.5.5] - 2024-09-08
 
 ### Changed
@@ -132,6 +142,7 @@
 ## [0.0.2] - 2017-08-06
 ## [0.0.1] - 2017-07-30
 
+[0.6.0]: https://github.com/bosth/plpygis/compare/v0.5.5...v0.6.0
 [0.5.5]: https://github.com/bosth/plpygis/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/bosth/plpygis/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/bosth/plpygis/compare/v0.5.2...v0.5.3
