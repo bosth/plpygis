@@ -423,12 +423,8 @@ class Geometry:
         return writer
 
     def _as_wkt(self, writer):
-        coords = self._to_wkt_coordinates(writer)
-        if coords is None:
-            return f"{writer.type(self)} EMPTY"
-        else:
-            coords = writer.wrap(coords)
-            return f"{writer.type(self)} {coords}"
+        coords = writer.wrap(self._to_wkt_coordinates(writer))
+        return f"{writer.type(self)} {coords}"
 
 
 class _MultiGeometry(Geometry):
@@ -1016,8 +1012,9 @@ class LineString(Geometry):
     @staticmethod
     def _read_wkt(reader):
         if reader.get_empty():
-            raise WktError(reader, "LineStrings with no coordinates are not supported in WKT.")
-        vertices = LineString._read_wkt_coordinates(reader)
+            vertices = []
+        else:
+            vertices = LineString._read_wkt_coordinates(reader)
         return LineString(vertices, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
 
     def _to_wkt_coordinates(self, writer):
@@ -1158,8 +1155,9 @@ class Polygon(Geometry):
     @staticmethod
     def _read_wkt(reader):
         if reader.get_empty():
-            raise WktError(reader, "Polygons with no coordinates are not supported in WKT.")
-        rings = Polygon._read_wkt_coordinates(reader)
+            rings = []
+        else:
+            rings = Polygon._read_wkt_coordinates(reader)
         return Polygon(rings, dimz=reader.dimz, dimm=reader.dimm, srid=reader.srid)
 
     def _to_wkt_coordinates(self, writer):
