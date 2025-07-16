@@ -406,7 +406,7 @@ def test_translate_geojson_pt():
     """
     geom = Geometry.from_geojson(geojson_pt)
     assert geom.srid == 4326
-    assert Point == type(geom)
+    assert Point is type(geom)
     assert geom.geojson == geojson_pt
 
 def test_translate_geojson_ln():
@@ -415,7 +415,7 @@ def test_translate_geojson_ln():
     """
     geom = Geometry.from_geojson(geojson_ln)
     assert geom.srid == 4326
-    assert LineString == type(geom)
+    assert LineString is type(geom)
     assert geom.geojson == geojson_ln
 
 def test_translate_geojson_pg():
@@ -424,7 +424,7 @@ def test_translate_geojson_pg():
     """
     geom = Geometry.from_geojson(geojson_pg)
     assert geom.srid == 4326
-    assert Polygon == type(geom)
+    assert Polygon is type(geom)
     assert geom.geojson == geojson_pg
 
 def test_translate_geojson_mpt():
@@ -433,7 +433,7 @@ def test_translate_geojson_mpt():
     """
     geom = Geometry.from_geojson(geojson_mpt)
     assert geom.srid == 4326
-    assert MultiPoint == type(geom)
+    assert MultiPoint is type(geom)
     assert geom.geojson == geojson_mpt
 
 def test_translate_geojson_mln():
@@ -442,7 +442,7 @@ def test_translate_geojson_mln():
     """
     geom = Geometry.from_geojson(geojson_mln)
     assert geom.srid == 4326
-    assert MultiLineString == type(geom)
+    assert MultiLineString is type(geom)
     assert geom.geojson == geojson_mln
 
 def test_translate_geojson_mpg():
@@ -451,7 +451,7 @@ def test_translate_geojson_mpg():
     """
     geom = Geometry.from_geojson(geojson_mpg)
     assert geom.srid == 4326
-    assert MultiPolygon == type(geom)
+    assert MultiPolygon is type(geom)
     assert geom.geojson == geojson_mpg
 
 def test_translate_geojson_gc():
@@ -460,7 +460,7 @@ def test_translate_geojson_gc():
     """
     geom = Geometry.from_geojson(geojson_gc)
     assert geom.srid == 4326
-    assert GeometryCollection == type(geom)
+    assert GeometryCollection is type(geom)
     assert geom.geojson == geojson_gc
 
 def test_translate_geojson_zm():
@@ -481,8 +481,8 @@ def test_geo_interface():
     geom = Geometry.from_geojson(geojson_pt)
     gj_coord = geojson_pt["coordinates"]
     gi_coord = geom.__geo_interface__["coordinates"]
-    assert type(gj_coord) == list
-    assert type(gi_coord) == tuple
+    assert type(gj_coord) is list
+    assert type(gi_coord) is tuple
     assert gj_coord[0] == gi_coord[0]
     assert gj_coord[1] == gi_coord[1]
 
@@ -951,13 +951,13 @@ def test_multigeometry_add():
     mpX = mp1 + p1
     assert len(mp1) == 2
     assert len(mpX) == 3
-    assert type(mpX) == MultiPoint
+    assert type(mpX) is MultiPoint
     
     ls = LineString([(3, 4, 5), (9, 10, 11)])
 
     mg = mp1 + ls
     assert len(mg) == 3
-    assert type(mg) == GeometryCollection
+    assert type(mg) is GeometryCollection
 
     mp2 = MultiPoint([p3, p4])
     mp3 = mp1 + mp2
@@ -966,7 +966,7 @@ def test_multigeometry_add():
     assert mp3[2].x == 3
     assert mp3[3].x == 4
     assert len(mp3) == 4
-    assert type(mp3) == MultiPoint
+    assert type(mp3) is MultiPoint
 
 def test_multigeometry_iadd():
     p1 = Point((1, 1, 1))
@@ -978,12 +978,12 @@ def test_multigeometry_iadd():
     mp1 = MultiPoint([p1, p2])
     mp1 += p3
     assert len(mp1) == 3
-    assert type(mp1) == MultiPoint
+    assert type(mp1) is MultiPoint
 
     mp2 = MultiPoint([p4, p5])
     mp1 += mp2
     assert len(mp1) == 5
-    assert type(mp1) == MultiPoint
+    assert type(mp1) is MultiPoint
 
     ls = LineString([(3, 4, 5), (9, 10, 11)])
     with pytest.raises(CollectionError):
@@ -992,11 +992,11 @@ def test_multigeometry_iadd():
     gc = GeometryCollection([p1, ls])
     gc += p2
     assert len(gc) == 3
-    assert type(gc) == GeometryCollection
+    assert type(gc) is GeometryCollection
 
     gc += mp2
     assert len(gc) == 5
-    assert type(gc) == GeometryCollection
+    assert type(gc) is GeometryCollection
 
 def test_multigeometry_iadd_mixed_srid():
     p1 = Point((1, 1, 1), srid=1000)
@@ -1011,7 +1011,7 @@ def test_geometry_add():
     p3 = Point((3, 3, 3))
 
     mp1 = p1 + p2
-    assert type(mp1) == MultiPoint
+    assert type(mp1) is MultiPoint
     assert len(mp1) == 2
     assert mp1[0].x == 1
     assert mp1[0].y == 1
@@ -1023,11 +1023,11 @@ def test_geometry_add():
     mp2 = MultiPoint([p2, p3])
 
     mp3 = p1 + mp2
-    assert type(mp3) == MultiPoint
+    assert type(mp3) is MultiPoint
     assert len(mp3) == 3
 
     mp4 = mp2 + p1
-    assert type(mp4) == MultiPoint
+    assert type(mp4) is MultiPoint
     assert len(mp4) == 3
 
 def test_geometry_add_ls():
@@ -1036,7 +1036,7 @@ def test_geometry_add_ls():
 
     mls = ls1 + ls2
     assert len(mls) == 2
-    assert type(mls) == MultiLineString
+    assert type(mls) is MultiLineString
 
 def test_geometry_add_pg():
     geojson_pg = {"type":"Polygon","coordinates":[[[100,0],[101.0,0.0],[101.0,1.0],[100.0,1.0],[100.0,0.0]]]}
@@ -1046,7 +1046,7 @@ def test_geometry_add_pg():
 
     mpg = pg1 + pg2
     assert len(mpg) == 2
-    assert type(mpg) == MultiPolygon
+    assert type(mpg) is MultiPolygon
     
 def test_geometry_add_gc():
     p1 = Point((1, 1, 1))
@@ -1054,15 +1054,15 @@ def test_geometry_add_gc():
     ls = LineString([(3, 4, 5), (9, 10, 11)])
     mg1 = p1 + ls
     assert len(mg1) == 2
-    assert type(mg1) == GeometryCollection
+    assert type(mg1) is GeometryCollection
 
     mg2 = mg1 + p2
     assert len(mg2) == 3
-    assert type(mg2) == GeometryCollection
+    assert type(mg2) is GeometryCollection
 
     mg3 = p2 + mg1
     assert len(mg3) == 3
-    assert type(mg3) == GeometryCollection
+    assert type(mg3) is GeometryCollection
 
 def test_geometry_add_srid():
     p1 = Point((1, 1, 1), srid=4326)
@@ -1075,7 +1075,6 @@ def test_geometry_add_srid():
     mp = p1 + p2
     assert len(mp) == 2
 
-def test_geometry_add_srid():
     p1 = Point((0, 0), 4326)
     p2 = Point((1, 1), 4326)
     p3 = Point((2, 2), 1234)
@@ -1095,7 +1094,6 @@ def test_geometry_add_srid():
     assert mp3.srid == 3857
     assert len(mp3) == 4
 
-def test_geometry_add_srid():
     p1 = Point((0, 0))
     p2 = Point((1, 1), 4326)
     p3 = Point((2, 2))
@@ -1154,14 +1152,14 @@ def test_multigeometry_getset():
     with pytest.raises(CollectionError):
         mp[0] = gc
     gc[0] = mp
-    assert type(gc[0]) == MultiPoint
+    assert type(gc[0]) is MultiPoint
 
 def test_interior_ring():
     p = Geometry.from_geojson(geojson_pg_ring)
     exterior = p.exterior
     interior = p.interior
 
-    assert type(exterior) == LineString
+    assert type(exterior) is LineString
     assert len(interior) == 1
 
 def test_wkt_read_point():
@@ -1172,14 +1170,15 @@ def test_wkt_read_point():
     assert p.dimm is False
 
 def test_wkt_read_linestring():
-    l = Geometry.from_wkt("LINESTRING (30 10, 10 30.5, 40 40) ")
-    assert l.type == "LineString"
-    assert l.vertices[0].x == 30
-    assert l.vertices[0].y == 10
-    assert l.vertices[1].x == 10
-    assert l.vertices[1].y == 30.5
-    assert l.dimz is False
-    assert l.dimm is False
+    ls = Geometry.from_wkt("LINESTRING (30 10, 10 30.5, 40 40) ")
+    assert type(ls) is LineString
+    assert ls.type == "LineString"
+    assert ls.vertices[0].x == 30
+    assert ls.vertices[0].y == 10
+    assert ls.vertices[1].x == 10
+    assert ls.vertices[1].y == 30.5
+    assert ls.dimz is False
+    assert ls.dimm is False
 
 def test_wkt_read_polygon():
     p = Geometry.from_wkt("POLYGON ((99 0, 1 0, 1 1, 0 1, 0 0))")
@@ -1269,14 +1268,14 @@ def test_ewkt_read_collection():
     assert mp.dimz is False
     assert mp.dimm is False
 
-def test_ewkt_read_point():
+def test_ewkt_read_point_error():
     with pytest.raises(WktError):
         Geometry.from_wkt("SRID=hello;POINT Z (0 1 1)")
 
 def test_ewkt_read_with_spaces():
     g = Geometry.from_wkt("   SRID=123 ; POINT Z (    -1     3      9.3  )")
     assert g.srid == 123
-    assert g.dimz == True
+    assert g.dimz
     assert g.x == -1
     assert g.y == 3
     assert g.z == 9.3
@@ -1392,7 +1391,7 @@ def test_wkt_write_multipolygon():
     geom = Geometry.from_wkt(wkt)
     assert geom.wkt == wkt
     
-def test_wkt_write_linestring():
+def test_wkt_write_geometrycollection():
     wkt = "GEOMETRYCOLLECTION (MULTIPOINT ((0 0), (1 1)), POINT (3 4), LINESTRING (2 3, 3 4))"
     geom = Geometry.from_wkt(wkt)
     assert geom.wkt == wkt
