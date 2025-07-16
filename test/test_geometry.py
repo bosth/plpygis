@@ -1284,26 +1284,36 @@ def test_ewkt_read_with_spaces():
 def test_ewkt_read_empty():
     with pytest.raises(WktError):
         Geometry.from_wkt("POINT Z EMPTY")
-    with pytest.raises(WktError):
-        Geometry.from_wkt("LINESTRING ZM EMPTY")
-    with pytest.raises(WktError):
-        Geometry.from_wkt("POLYGON EMPTY")
 
-    mg = Geometry.from_wkt("MULTIPOINT EMPTY")
+    mg = Geometry.from_wkt("MULTIPOINT Z EMPTY")
     assert mg.type == "MultiPoint"
     assert len(mg) == 0
 
-    mg = Geometry.from_wkt("MULTILINESTRING EMPTY")
+    mg = Geometry.from_wkt("MULTILINESTRING Z EMPTY")
     assert mg.type == "MultiLineString"
     assert len(mg) == 0
 
-    mg = Geometry.from_wkt("MULTIPOLYGON EMPTY")
+    mg = Geometry.from_wkt("MULTIPOLYGON Z EMPTY")
     assert mg.type == "MultiPolygon"
     assert len(mg) == 0
 
-    mg = Geometry.from_wkt("GEOMETRYCOLLECTION EMPTY")
+    mg = Geometry.from_wkt("GEOMETRYCOLLECTION Z EMPTY")
     assert mg.type == "GeometryCollection"
     assert len(mg) == 0
+
+def test_wkt_write_empty():
+    geom = LineString([])
+    assert geom.wkt == "LINESTRING EMPTY"
+    geom = Polygon([])
+    assert geom.wkt == "POLYGON EMPTY"
+    geom = MultiPoint([])
+    assert geom.wkt == "MULTIPOINT EMPTY"
+    geom = MultiLineString([])
+    assert geom.wkt == "MULTILINESTRING EMPTY"
+    geom = MultiPolygon([])
+    assert geom.wkt == "MULTIPOLYGON EMPTY"
+    geom = GeometryCollection([])
+    assert geom.wkt == "GEOMETRYCOLLECTION EMPTY"
         
 def test_read_wkt_malformed():
     with pytest.raises(WktError):

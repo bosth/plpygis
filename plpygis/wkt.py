@@ -10,14 +10,14 @@ class WktReader:
     """
     A reader for Well-Knownn Text.
     """
-    _TYPE = _regex("(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION)")
-    _DIMS = _regex("(ZM|Z|M)")
-    _EMPTY = _regex("EMPTY")
-    _OP = _regex("[(]")
-    _CP = _regex("[)]")
-    _COMMA = _regex("[,]")
-    _NUMBER = _regex("[-]?[0-9]+[.]?[0-9]*")
-    _SRID = _regex("SRID=[0-9]+\s*;")
+    _TYPE = _regex(r"(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION)")
+    _DIMS = _regex(r"(ZM|Z|M)")
+    _EMPTY = _regex(r"EMPTY")
+    _OP = _regex(r"[(]")
+    _CP = _regex(r"[)]")
+    _COMMA = _regex(r"[,]")
+    _NUMBER = _regex(r"[-]?[0-9]+[.]?[0-9]*")
+    _SRID = _regex(r"SRID=[0-9]+\s*;")
 
     def __init__(self, wkt):
         offset = 0
@@ -171,7 +171,10 @@ class WktWriter:
         return " ".join([f"{float(c):#.{PRECISION}f}".rstrip("0").rstrip(".") for c in coords])
 
     def wrap(self, text):
-        return f"({text})"
+        if text:
+            return f"({text})"
+        else:
+            return "EMPTY"
 
     def join(self, items):
         return ", ".join(items)
