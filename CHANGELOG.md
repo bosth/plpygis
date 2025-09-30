@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1] - 2025-09-30
+
+### Fixed
+
+* Bug in WKT parser (https://github.com/bosth/plpygis/issues/14)
+* Support EMPTY in more WKTs
+
 ## [0.6.0] - 2025-07-11
 
 ### Changed
@@ -142,6 +149,7 @@
 ## [0.0.2] - 2017-08-06
 ## [0.0.1] - 2017-07-30
 
+[0.6.1]: https://github.com/bosth/plpygis/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/bosth/plpygis/compare/v0.5.5...v0.6.0
 [0.5.5]: https://github.com/bosth/plpygis/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/bosth/plpygis/compare/v0.5.3...v0.5.4
