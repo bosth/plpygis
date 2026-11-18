@@ -460,6 +460,7 @@ class _MultiGeometry(Geometry):
             raise CollectionError(
                     f"Can not add {type(value)} to a {type(self)}")
         self._geometries[index] = value
+        self._set_multi_metadata()
 
     def __len__(self):
         return len(self._geometries)
@@ -497,13 +498,16 @@ class _MultiGeometry(Geometry):
         else:
             raise CollectionError(
                     f"Can not add a {type(other)} to a {type(self)}")
+        self._set_multi_metadata()
         return self
 
     def pop(self, index=-1):
         """
         Remove a geometry from the multigeometry.
         """
-        return self._geometries.pop(index)
+        value = self._geometries.pop(index)
+        self._set_multi_metadata()
+        return value
 
     @property
     def geometries(self):
@@ -552,7 +556,9 @@ class _MultiGeometry(Geometry):
         self._dimm = value
 
     def _bounds(self):
-        bounds = [g.bounds for g in self.geometries]
+        bounds = [g.bounds for g in self.geometries if g.bounds is not None]
+        if not bounds:
+            return None
         minx = min(b[0] for b in bounds)
         miny = min(b[1] for b in bounds)
         maxx = max(b[2] for b in bounds)
@@ -664,6 +670,10 @@ class Point(Geometry):
             self._z = None
             self._m = None
         else:
+            if not coordinates:
+                raise CoordinateError(coordinates)
+            if len(coordinates) < 2:
+                raise CoordinateError(coordinates)
             for c in coordinates:
                 if c is None:
                     continue
@@ -679,7 +689,7 @@ class Point(Geometry):
                 raise DimensionalityError(
                     f"Maximum dimensionality supported for coordinates is 4: {coordinates}"
                 )
-            if num == 2:  # fill in Z and M if we are supposed to have them, else None
+            if num == 2:
                 if dimz and dimm:
                     self._z = 0
                     self._m = 0
@@ -692,7 +702,7 @@ class Point(Geometry):
                 else:
                     self._z = None
                     self._m = None
-            elif num == 3:  # use the 3rd coordinate for Z or M as directed or as Z
+            elif num == 3:
                 if dimz and dimm:
                     self._z = coordinates[2]
                     self._m = 0
@@ -702,7 +712,7 @@ class Point(Geometry):
                 else:
                     self._z = coordinates[2]
                     self._m = None
-            else:  # use both the 3rd and 4th coordinates, ensure not None
+            else:
                 self._z = coordinates[2]
                 self._m = coordinates[3]
 
@@ -970,6 +980,8 @@ class LineString(Geometry):
         return [v._coordinates(dimz, dimm, tpl) for v in self.vertices]
 
     def _bounds(self):
+        if not self.vertices:
+            return None
         x = [v.x for v in self.vertices]
         y = [v.y for v in self.vertices]
         return (min(x), min(y), max(x), max(y))
@@ -1116,6 +1128,8 @@ class Polygon(Geometry):
         return [r._coordinates(dimz, dimm, tpl) for r in self.rings]
 
     def _bounds(self):
+        if not self.rings:
+            return None
         return self.exterior.bounds
 
     @staticmethod

@@ -20,8 +20,11 @@ class WktReader:
     _SRID = _regex(r"SRID=[0-9]+\s*;")
 
     def __init__(self, wkt):
+        self.pos = 0
+        if not isinstance(wkt, str):
+            raise WktError(self, "Unreadable WKT")
         offset = 0
-        while wkt[offset] == " ":
+        while offset < len(wkt) and wkt[offset] == " ":
             offset += 1
 
         self.data = wkt.upper()

@@ -1024,11 +1024,11 @@ def test_geometry_add():
 
     mp3 = p1 + mp2
     assert type(mp3) is MultiPoint
-    assert len(mp3) == 3
+    assert len(mp3) is 3
 
     mp4 = mp2 + p1
     assert type(mp4) is MultiPoint
-    assert len(mp4) == 3
+    assert len(mp4) is 3
 
 def test_geometry_add_ls():
     ls1 = LineString([(3, 4, 5), (9, 10, 11)])
@@ -1452,3 +1452,29 @@ def test_raise_exception():
 
     with pytest.raises(PlpygisError):
         raise GeojsonError()
+
+def test_empty_input_regression():
+    with pytest.raises(WktError):
+        Geometry.from_wkt("")
+    with pytest.raises(WktError):
+        Geometry.from_wkt("   ")
+    with pytest.raises(CoordinateError):
+        Point(None)
+
+
+def test_empty_geometry_bounds():
+    assert LineString([]).bounds is None
+    assert Polygon([]).bounds is None
+    assert MultiPoint([]).bounds is None
+    assert GeometryCollection([]).bounds is None
+
+
+def test_collection_mutation_recalculates_metadata():
+    p2d = Point((0, 0))
+    p3d = Point((1, 1, 1))
+    mp = MultiPoint([p2d])
+    mp += p2d
+    assert mp.dimz is False
+
+    with pytest.raises(DimensionalityError):
+        mp[0] = p3d
