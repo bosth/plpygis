@@ -463,6 +463,7 @@ class _MultiGeometry(Geometry):
         self._set_multi_metadata()
 
     def __len__(self):
+        self._check_cache()
         return len(self._geometries)
 
     def __add__(self, other):
@@ -556,14 +557,21 @@ class _MultiGeometry(Geometry):
         self._dimm = value
 
     def _bounds(self):
-        bounds = [g.bounds for g in self.geometries if g.bounds is not None]
-        if not bounds:
+        if not self._geometries:
             return None
-        minx = min(b[0] for b in bounds)
-        miny = min(b[1] for b in bounds)
-        maxx = max(b[2] for b in bounds)
-        maxy = max(b[3] for b in bounds)
-        return (minx, miny, maxx, maxy)
+        result = None
+        for geometry in self._geometries:
+            bounds = geometry.bounds
+            if bounds is None:
+                continue
+            if result is None:
+                result = list(bounds)
+            else:
+                result[0] = min(result[0], bounds[0])
+                result[1] = min(result[1], bounds[1])
+                result[2] = max(result[2], bounds[2])
+                result[3] = max(result[3], bounds[3])
+        return tuple(result) if result is not None else None
 
     @staticmethod
     def _multi_from_geojson(geojson, cls):
@@ -598,7 +606,8 @@ class _MultiGeometry(Geometry):
                 geometry._srid = None
 
     def _coordinates(self, dimz=True, dimm=True, tpl=True):
-        return [g._coordinates(dimz, dimm, tpl) for g in self.geometries]
+        self._check_cache()
+        return [g._coordinates(dimz, dimm, tpl) for g in self._geometries]
 
     def _load_geometry(self):
         self._geometries = _MultiGeometry._read_wkb(
@@ -689,7 +698,7 @@ class Point(Geometry):
                 raise DimensionalityError(
                     f"Maximum dimensionality supported for coordinates is 4: {coordinates}"
                 )
-            if num == 2:
+            if num == 2:  # fill in Z and M if we are supposed to have them, else None
                 if dimz and dimm:
                     self._z = 0
                     self._m = 0
@@ -702,7 +711,7 @@ class Point(Geometry):
                 else:
                     self._z = None
                     self._m = None
-            elif num == 3:
+            elif num == 3:  # use the 3rd coordinate for Z or M as directed or as Z
                 if dimz and dimm:
                     self._z = coordinates[2]
                     self._m = 0
@@ -712,7 +721,7 @@ class Point(Geometry):
                 else:
                     self._z = coordinates[2]
                     self._m = None
-            else:
+            else:  # use both the 3rd and 4th coordinates, ensure not None
                 self._z = coordinates[2]
                 self._m = coordinates[3]
 
@@ -828,24 +837,24 @@ class Point(Geometry):
         self._dimm = value
 
     def _coordinates(self, dimz=True, dimm=True, tpl=True):
+        self._check_cache()
         dimz = dimz & self.dimz
         dimm = dimm & self.dimm
 
         if dimz and dimm:
-            coordinates = (self.x, self.y, self.z, self.m)
+            coordinates = (self._x, self._y, self._z, self._m)
         elif dimz:
-            coordinates = (self.x, self.y, self.z)
+            coordinates = (self._x, self._y, self._z)
         elif dimm:
-            coordinates = (self.x, self.y, self.m)
+            coordinates = (self._x, self._y, self._m)
         else:
-            coordinates = (self.x, self.y)
+            coordinates = (self._x, self._y)
 
-        if tpl:
-            return coordinates
-        return list(coordinates)
+        return coordinates if tpl else list(coordinates)
 
     def _bounds(self):
-        return (self.x, self.y, self.x, self.y)
+        self._check_cache()
+        return (self._x, self._y, self._x, self._y)
 
     def _load_geometry(self):
         self._x, self._y, self._z, self._m = Point._read_wkb(
@@ -980,11 +989,24 @@ class LineString(Geometry):
         return [v._coordinates(dimz, dimm, tpl) for v in self.vertices]
 
     def _bounds(self):
-        if not self.vertices:
+        self._check_cache()
+        if not self._vertices:
             return None
-        x = [v.x for v in self.vertices]
-        y = [v.y for v in self.vertices]
-        return (min(x), min(y), max(x), max(y))
+        first = self._vertices[0]
+        first._check_cache()
+        minx = maxx = first._x
+        miny = maxy = first._y
+        for vertex in self._vertices[1:]:
+            vertex._check_cache()
+            if vertex._x < minx:
+                minx = vertex._x
+            elif vertex._x > maxx:
+                maxx = vertex._x
+            if vertex._y < miny:
+                miny = vertex._y
+            elif vertex._y > maxy:
+                maxy = vertex._y
+        return (minx, miny, maxx, maxy)
 
     @staticmethod
     def _from_coordinates(vertices, dimz, dimm):
