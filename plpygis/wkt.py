@@ -141,13 +141,18 @@ class WktWriter:
     def __init__(self, geom, use_srid=True):
         self.geom = geom
         self.dims = False
+        self._parts = []
         self.add_srid(use_srid)
-        
+
+    @property
+    def wkt(self):
+        return "".join(self._parts)
+
     def add_srid(self, use_srid):
         if use_srid and self.geom.srid:
-            self.wkt = f"SRID={self.geom.srid};"
+            self._parts.append(f"SRID={self.geom.srid};")
         else:
-            self.wkt = ""
+            self._parts.append("")
 
     def add_dims(self):
         if self.dims:
@@ -168,7 +173,7 @@ class WktWriter:
         return wkt
 
     def add(self, text):
-        self.wkt += text
+        self._parts.append(text)
 
     def format(self, coords):
         return " ".join([f"{float(c):#.{PRECISION}f}".rstrip("0").rstrip(".") for c in coords])
