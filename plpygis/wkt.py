@@ -4,11 +4,11 @@ from .exceptions import WktError
 PRECISION = 6
 
 def _regex(expr):
-    return re.compile(fr"\s*{expr}\s*")
+    return re.compile(fr"\s*({expr})\s*")
 
 class WktReader:
     """
-    A reader for Well-Knownn Text.
+    A reader for Well-Known Text.
     """
     _TYPE = _regex(r"(POINT|LINESTRING|POLYGON|MULTIPOINT|MULTILINESTRING|MULTIPOLYGON|GEOMETRYCOLLECTION)")
     _DIMS = _regex(r"(ZM|Z|M)")
@@ -48,7 +48,7 @@ class WktReader:
         match = expr.match(self.data, pos=self.pos)
         if match:
             self.pos = match.end()
-            return match.group().strip()
+            return match.group(1)
         else:
             return None
 
